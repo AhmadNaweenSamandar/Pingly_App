@@ -1,0 +1,238 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Sparkles, Briefcase, Bell, MoreVertical, User, Settings, MessageSquare, LogOut } from "lucide-react";
+
+interface Notification {
+  id: number;
+  type: string;
+  message: string;
+  time: string;
+  read: boolean;
+}
+
+const professionalNotifications: Notification[] = [
+  { id: 1, type: "project", message: "New project posted: AI Study Assistant", time: "5m ago", read: false },
+  { id: 2, type: "join", message: "Sarah joined your project 'Web Dev Course'", time: "1h ago", read: false },
+  { id: 3, type: "wish", message: "Alex sent best wishes to your project", time: "2h ago", read: true },
+  { id: 4, type: "answer", message: "Your question received a new answer", time: "3h ago", read: true },
+];
+
+const socialNotifications: Notification[] = [
+  { id: 1, type: "match", message: "You matched with Emma Wilson!", time: "10m ago", read: false },
+  { id: 2, type: "message", message: "New message from Alex Park", time: "30m ago", read: false },
+  { id: 3, type: "schedule", message: "Mike posted a new study schedule", time: "1h ago", read: true },
+];
+
+interface HeaderProps {
+  mode: "professional" | "social";
+  onModeChange: (mode: "professional" | "social") => void;
+  onProfileClick: () => void;
+  onSettingsClick: () => void;
+  onFeedbackClick: () => void;
+  onSignOut: () => void;
+}
+
+export function Header({ mode, onModeChange, onProfileClick, onSettingsClick, onFeedbackClick, onSignOut }: HeaderProps) {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  
+  const notifications = mode === "professional" ? professionalNotifications : socialNotifications;
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  return (
+    <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-gray-200 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <motion.h1 
+            className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            Pingly
+          </motion.h1>
+          
+          {/* Mode Toggle - Centered on desktop, hidden on mobile */}
+          <div className="hidden sm:block absolute left-1/2 -translate-x-1/2">
+            <motion.div
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-purple-100 p-1.5 rounded-full shadow-inner"
+              layout
+            >
+              <motion.button
+                onClick={() => onModeChange("professional")}
+                className={`relative px-4 sm:px-6 py-2 sm:py-2.5 rounded-full flex items-center gap-2 transition-all text-sm sm:text-base ${
+                  mode === "professional" ? "text-white" : "text-gray-600"
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {mode === "professional" && (
+                  <motion.div
+                    layoutId="mode-indicator"
+                    className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-full shadow-lg"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <Briefcase className="w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
+                <span className="relative z-10 hidden sm:inline">Professional</span>
+              </motion.button>
+              
+              <motion.button
+                onClick={() => onModeChange("social")}
+                className={`relative px-4 sm:px-6 py-2 sm:py-2.5 rounded-full flex items-center gap-2 transition-all text-sm sm:text-base ${
+                  mode === "social" ? "text-white" : "text-gray-600"
+                }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {mode === "social" && (
+                  <motion.div
+                    layoutId="mode-indicator"
+                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 rounded-full shadow-lg"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
+                <span className="relative z-10 hidden sm:inline">Social</span>
+              </motion.button>
+            </motion.div>
+          </div>
+
+          {/* Right Side - Notifications & Menu */}
+          <div className="flex items-center gap-3">
+            {/* Notification Icon */}
+            <div className="relative">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setShowNotifications(!showNotifications);
+                  setShowMenu(false);
+                }}
+                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <Bell className="w-6 h-6 text-gray-600" />
+                {unreadCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs"
+                  >
+                    {unreadCount}
+                  </motion.div>
+                )}
+              </motion.button>
+
+              {/* Notifications Dropdown */}
+              <AnimatePresence>
+                {showNotifications && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden"
+                  >
+                    <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+                      <h3 className="text-gray-800">Notifications</h3>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                            !notification.read ? "bg-blue-50/50" : ""
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-gray-800">{notification.message}</p>
+                              <p className="text-gray-500 mt-1">{notification.time}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Three Dots Menu */}
+            <div className="relative">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  setShowMenu(!showMenu);
+                  setShowNotifications(false);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <MoreVertical className="w-6 h-6 text-gray-600" />
+              </motion.button>
+
+              {/* Menu Dropdown */}
+              <AnimatePresence>
+                {showMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
+                  >
+                    <button className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700" onClick={onProfileClick}>
+                      <User className="w-5 h-5" />
+                      Profile
+                    </button>
+                    <button className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700" onClick={onSettingsClick}>
+                      <Settings className="w-5 h-5" />
+                      Settings
+                    </button>
+                    <button className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-3 text-gray-700" onClick={onFeedbackClick}>
+                      <MessageSquare className="w-5 h-5" />
+                      Feedback
+                    </button>
+                    <div className="border-t border-gray-200">
+                      <button className="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors flex items-center gap-3 text-red-600" onClick={onSignOut}>
+                        <LogOut className="w-5 h-5" />
+                        Sign Out
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Mode Toggle - Fixed at bottom */}
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
+          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-purple-100 p-1.5 rounded-full shadow-inner">
+            <button
+              onClick={() => onModeChange("professional")}
+              className={`flex-1 py-2.5 rounded-full flex items-center justify-center gap-2 transition-all ${
+                mode === "professional" ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg" : "text-gray-600"
+              }`}
+            >
+              <Briefcase className="w-5 h-5" />
+              <span>Professional</span>
+            </button>
+            
+            <button
+              onClick={() => onModeChange("social")}
+              className={`flex-1 py-2.5 rounded-full flex items-center justify-center gap-2 transition-all ${
+                mode === "social" ? "bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg" : "text-gray-600"
+              }`}
+            >
+              <Sparkles className="w-5 h-5" />
+              <span>Social</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
