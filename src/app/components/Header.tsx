@@ -28,7 +28,9 @@ interface Notification {
   read: boolean;
 }
 
-//here the instances of notification are created for both modes
+//here the instances of notification are created for porfessional mode
+//Notification[] indicates that these bunch of hard coded notifications are list of arrays
+//all the Notification interface variables must be declared here other than that the code will give an error
 const professionalNotifications: Notification[] = [
   { id: 1, type: "project", message: "New project posted: AI Study Assistant", time: "5m ago", read: false },
   { id: 2, type: "join", message: "Sarah joined your project 'Web Dev Course'", time: "1h ago", read: false },
@@ -36,6 +38,7 @@ const professionalNotifications: Notification[] = [
   { id: 4, type: "answer", message: "Your question received a new answer", time: "3h ago", read: true },
 ];
 
+//here the instances of notification are created for social mode
 const socialNotifications: Notification[] = [
   { id: 1, type: "match", message: "You matched with Emma Wilson!", time: "10m ago", read: false },
   { id: 2, type: "message", message: "New message from Alex Park", time: "30m ago", read: false },
@@ -73,19 +76,64 @@ interface HeaderProps {
   onSignOut: () => void;
 }
 
-export function Header({ mode, onModeChange, onProfileClick, onSettingsClick, onFeedbackClick, onSignOut }: HeaderProps) {
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+
+// This defines the functional component named 'Header'.
+// We 'destructure' the props immediately inside the ({ ... }) to make them easier to use.
+// ': HeaderProps' ensures these inputs match the interface we defined earlier.
+export function Header({
+    mode, 
+    onModeChange, 
+    onProfileClick, 
+    onSettingsClick, 
+    onFeedbackClick, 
+    onSignOut 
+}: HeaderProps) {
+
+   // --- LOCAL UI STATE ---
+  // These variables track the temporary state of the Header's UI.
   
+  // Controls the visibility of the Notification dropdown (Bell icon).
+  // false = hidden (default), true = visible.
+  const [showNotifications, setShowNotifications] = useState(false);
+  // Controls the visibility of the Profile Menu (three dots).
+  // false = hidden (default), true = visible.
+  const [showMenu, setShowMenu] = useState(false);
+
+
+  // --- DERIVED LOGIC ---
+  // These variables are calculated on the fly every time the component renders.
+
+  // 1. SELECT DATA:
+  // A 'Ternary Operator' (shorthand if/else) to pick the right list of data.
+  // IF mode is "professional" -> use professionalNotifications.
+  // ELSE -> use socialNotifications.
   const notifications = mode === "professional" ? professionalNotifications : socialNotifications;
+
+  // 2. CALCULATE BADGE:
+  // We take the selected list above and filter it.
+  // We keep only items where 'read' is false (the unread ones).
+  // Then we count them (.length) to get the number for the red badge.
+  // This is a count number on top right corner of notification icon.
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
+    /* --- MAIN CONTAINER ---
+     *  <header>: The semantic HTML tag for the top section.
+     *  'sticky top-0': Pins the header to the very top of the viewport.
+     *  'z-50': Sets the Z-Index high (50) to ensure the header floats ON TOP of other content.
+     *  'backdrop-blur-lg bg-white/80': Creates the semi-transparent "frosted glass" effect.*/
     <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-gray-200 shadow-sm">
+        {/* --- LAYOUT WRAPPER ---
+          *  Limits the width of the content to '7xl' (standard wide screen width).
+          *  'mx-auto': Centers the container in the middle of the screen.*/}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
+        {/* --- ANIMATED LOGO --- */}
+        {/* motion.h1 comes from the 'framer-motion' library */}
           {/* Logo */}
           <motion.h1 
+            /*  'bg-clip-text text-transparent': Makes the text color transparent so the background gradient shows through.
+             *  'from-blue-600 to-purple-600': The specific colors for your Pingly brand gradient.*/
             className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -99,6 +147,7 @@ export function Header({ mode, onModeChange, onProfileClick, onSettingsClick, on
               className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-purple-100 p-1.5 rounded-full shadow-inner"
               layout
             >
+            {/*motion used form motion library with professional toggle button*/}
               <motion.button
                 onClick={() => onModeChange("professional")}
                 className={`relative px-4 sm:px-6 py-2 sm:py-2.5 rounded-full flex items-center gap-2 transition-all text-sm sm:text-base ${
@@ -118,6 +167,7 @@ export function Header({ mode, onModeChange, onProfileClick, onSettingsClick, on
                 <span className="relative z-10 hidden sm:inline">Professional</span>
               </motion.button>
               
+              {/*motion for social button toggle*/}
               <motion.button
                 onClick={() => onModeChange("social")}
                 className={`relative px-4 sm:px-6 py-2 sm:py-2.5 rounded-full flex items-center gap-2 transition-all text-sm sm:text-base ${
