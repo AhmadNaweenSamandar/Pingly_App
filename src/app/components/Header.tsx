@@ -42,12 +42,34 @@ const socialNotifications: Notification[] = [
   { id: 3, type: "schedule", message: "Mike posted a new study schedule", time: "1h ago", read: true },
 ];
 
+// 'interface' defines the requirements for the Header component.
+// This is a contract: The Parent (App) MUST provide these exact items to the Child (Header).
 interface HeaderProps {
+  
+  // 1. DATA (State)
+  // The current visual state of the application.
+  // It is restricted to ONLY "professional" or "social" (Union Type).
   mode: "professional" | "social";
+
+  // 2. ACTIONS (Event Handlers)
+  // A function that notifies the parent when the user toggles the switch.
+  // It passes the *new* mode back to the parent so the state can update.
   onModeChange: (mode: "professional" | "social") => void;
+
+  // Triggered when the user clicks their avatar/name.
+  // Usually redirects to the Profile page in three doted menu.
   onProfileClick: () => void;
+
+  // Triggered when the user clicks the gear icon.
+  // Opens the settings page in three doted menu.
   onSettingsClick: () => void;
+
+  // Triggered when the user clicks the "Help" or "Feedback" button.
+  // Important for beta testing to gather user thoughts.
   onFeedbackClick: () => void;
+
+  // Triggered when the user clicks "Log Out".
+  // The Header doesn't log them out; it just tells the Parent "User wants to leave."
   onSignOut: () => void;
 }
 
