@@ -2,14 +2,33 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkles, Briefcase, Bell, MoreVertical, User, Settings, MessageSquare, LogOut } from "lucide-react";
 
+
+// 'interface' defines a custom data type called 'Notification'.
+// Any variable or object labeled as a 'Notification' MUST have exactly these properties.
 interface Notification {
+  
+  // A unique number to identify this specific notification (like a primary key in a database).
+  // Example: 1, 42, 105
   id: number;
+
+  // A text string indicating the category or kind of notification.
+  // Example: "success", "error", "friend_request", "system_alert"
   type: string;
+
+  // The actual text content that will be shown to the user.
+  // Example: "Ahmad sent you a message."
   message: string;
+
+  // A string representing when the notification happened.
+  // This could be a raw date ("2025-12-18") or relative text ("2 mins ago").
   time: string;
+
+  // A true/false flag to track if the user has looked at this notification.
+  // true = read (don't show badge), false = unread (show badge).
   read: boolean;
 }
 
+//here the instances of notification are created for both modes
 const professionalNotifications: Notification[] = [
   { id: 1, type: "project", message: "New project posted: AI Study Assistant", time: "5m ago", read: false },
   { id: 2, type: "join", message: "Sarah joined your project 'Web Dev Course'", time: "1h ago", read: false },
