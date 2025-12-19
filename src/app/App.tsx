@@ -36,6 +36,7 @@ export default function App() {
         ? "bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50" 
         : "bg-gradient-to-br from-pink-50 via-purple-50 to-rose-50"
     }`}>
+        
       {/* Header */}
       <Header 
         mode={mode} 
@@ -45,7 +46,7 @@ export default function App() {
         onFeedbackClick={() => setShowFeedbackModal(true)}
         onSignOut={handleSignOut}
       />
-      
+
     </div>
   );
 }
