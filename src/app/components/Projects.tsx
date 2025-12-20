@@ -238,6 +238,8 @@ return (
                 // Green gradient background and borders to match the section theme.
                 className="relative p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 hover:shadow-lg transition-all"
               ></motion.div>
+
+
                 {/* Three Dots Menu */}
                 {/* Three Dots (Kebab) Menu Trigger Container
                     - Positioned absolutely in the top-right corner of the card.
@@ -262,6 +264,8 @@ return (
                     {/* The Icon Component (Vertical dots) */}
                     <MoreVertical className="w-5 h-5 text-gray-600" />
                   </button>
+
+
 
                 {/* Menu Dropdown */}
                 {/* Menu Dropdown Container 
@@ -306,10 +310,15 @@ return (
                   </AnimatePresence>
                 </div>
 
+
+
                 {/* Rank Badge */}
                 <div className="absolute top-3 left-3 w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 text-white flex items-center justify-center shadow-md">
                   {index + 1}
                 </div>
+
+
+
                 {/* Project Content */}
                 {/* Project Content Body 
                     - mt-8: Adds significant top margin to clear the absolute positioned elements 
@@ -324,3 +333,210 @@ return (
                         This is critical for maintaining consistent card heights in the grid.
                   */}
                   <p className="text-gray-600 line-clamp-2 mb-3">{project.description}</p>
+
+
+                  
+                  {/* Members Section Container */}
+                  <div className="flex items-center gap-2 mb-3">
+                    {/* Section Icon (Users) */}
+                    <Users className="w-4 h-4 text-gray-500" />
+
+                    {/* Avatar Stack Container 
+                      - flex: Aligns avatars in a row.
+                      - -space-x-2: Negative margin creates the overlapping "stack" visual effect.
+                    */}
+                    <div className="flex -space-x-2">
+
+                    {/* Render Active Members (Limited to 3) 
+                        - slice(0, 3): Prevents UI clutter by only showing the first 3 avatars.
+                    */}
+                      {project.members.slice(0, 3).map((member, idx) => (
+                        <div
+                          key={idx}
+                          // Avatar Styling:
+                          // - Gradient background for visual pop.
+                          // - border-2 border-white: Creates a "cutout" effect between overlapping avatars.
+                          className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white border-2 border-white text-xs"
+                          // Tooltip: Shows the user's name on hover
+                          title={member.name}
+                        >
+                          {member.avatar}
+                        </div>
+                      ))}
+
+                      {/* Overflow Indicator (e.g., "+2")
+                        - Only renders if there are more than 3 members.
+                        */}
+                      {project.members.length > 3 && (
+                        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 border-2 border-white text-xs">
+                          +{project.members.length - 3}
+                        </div>
+                      )}
+                    </div>
+                    {/* Total Count Label */}
+                    <span className="text-gray-500 ml-1">{project.members.length} members</span>
+                  </div>
+                </div>
+
+
+                
+                {/* Chat Button */}
+                {/* Chat Action Area 
+                    - justify-end: Pushes the button to the far right of the card footer.
+                  */}
+                <div className="flex justify-end">
+
+                    {/* Floating Action Button (FAB) for Chat 
+                      - Uses Framer Motion for tactile feedback.
+                      */}
+                  <motion.button
+
+                  // Interaction Animations:
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+
+                    // Handler: Opens the chat interface and resets unread count
+                    onClick={() => handleChatOpen(project)}
+
+                    // Styling:
+                    // - rounded-full: Perfect circle
+                    // - shadow-lg: Elevates the button above the card
+                    // - relative: Necessary parent for the absolute positioned badge below
+                    className="relative p-3 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-xl transition-shadow"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+
+                    {/* Notification Badge
+                        - Conditional Rendering: Only show if there are actual unread messages.
+                    */}
+                    {project.unreadMessages > 0 && (
+                      <motion.div
+
+                      // Entrance Animation: Pop-in effect
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+
+                        // Badge Positioning:
+                        // - absolute: Taken out of flow
+                        // - -top-1 -right-1: Perched on the top-right corner of the button
+                        // - border-2 border-white: Creates a clean separation from the green button
+                        className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs border-2 border-white"
+                      >
+                        {project.unreadMessages}
+                      </motion.div>// End of individual Project Card
+                    )}
+                  </motion.button>
+                </div>
+              </motion.div> // End of individual Project Card
+            ))
+          )}
+        </div> {/* End of Grid Container */}
+      </motion.div> 
+
+
+
+      {/* Project Details Popup 
+          - Wraps the conditional rendering to allow for exit animations 
+            when 'detailsProject' state changes to null.
+      */}
+      <AnimatePresence>
+        {detailsProject && (
+          <>
+
+          {/* Backdrop Overlay 
+                - fixed inset-0: Covers the entire viewport.
+                - bg-black/50: Semi-transparent dark layer.
+                - backdrop-blur-sm: Blurs the content behind the modal for focus.
+                - z-50: High z-index to sit on top of everything.
+                - onClick: Clicking anywhere on the background closes the modal.
+            */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              onClick={() => setDetailsProject(null)}
+            />
+
+            {/* Modal Card Container 
+                - Positioned in the absolute center of the screen.
+            */}
+            <motion.div
+
+            // Entrance Animation: Slide up slightly and fade in
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+
+              // CRITICAL: Stop Propagation
+              // Prevents clicks inside the white modal box from triggering the 
+              // backdrop's onClick handler (which would close the modal).
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
+
+                {/* Close Button (X) - Top Right */}
+                <button
+                  onClick={() => setDetailsProject(null)}
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+
+                <h3 className="text-gray-800 mb-6">Project Details</h3>
+
+                <div className="space-y-4">
+                
+                {/* Field: Project Name */}
+                  <div>
+                    <label className="text-gray-500 mb-1 block">Project Name</label>
+                    <p className="text-gray-800">{detailsProject.name}</p>
+                  </div>
+
+                {/* Field: Full Member List 
+                      - Maps through ALL members (unlike the card view which sliced to 3).
+                  */}
+                  <div>
+                    <label className="text-gray-500 mb-1 block">Members</label>
+                    <div className="space-y-2">
+                      {detailsProject.members.map((member, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+                        
+                        {/* Member Avatar */}
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white">
+                            {member.avatar}
+                          </div>
+                        
+                        {/* Member Name */}
+                          <span className="text-gray-800">{member.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                {/* Field: Date Posted */}
+                  <div>
+                    <label className="text-gray-500 mb-1 block">Date Posted</label>
+                    <div className="flex items-center gap-2 text-gray-800">
+                      <Calendar className="w-4 h-4" />
+                      {formatDate(detailsProject.datePosted)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+            {/* Group Chat Popup */}
+      {showGroupChat && selectedProject && (
+        <GroupChatPopup
+          project={selectedProject}
+          onClose={() => setShowGroupChat(false)}
+        />
+      )}
+    </>
+  );
+}
