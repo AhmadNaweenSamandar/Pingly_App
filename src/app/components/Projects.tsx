@@ -237,10 +237,10 @@ return (
                 // Relative positioning for absolute children (like badges).
                 // Green gradient background and borders to match the section theme.
                 className="relative p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 hover:shadow-lg transition-all"
-              ></motion.div>
+              >
 
 
-                {/* Three Dots Menu */}
+
                 {/* Three Dots (Kebab) Menu Trigger Container
                     - Positioned absolutely in the top-right corner of the card.
                     - Parent container must have 'relative' class for this to work.
@@ -248,11 +248,11 @@ return (
                 <div className="absolute top-3 right-3">
                 {/* Menu Toggle Button */}
                   <button
-                /* Toggle Logic:
+                  /* Toggle Logic:
                        Checks if this specific project's menu is currently open (menuOpenId === project.id).
                        - If YES: Close it (set to null).
                        - If NO: Open it (set to project.id).
-                    */
+                      */
                     onClick={() => setMenuOpenId(menuOpenId === project.id ? null : project.id)}
                     /* Styling:
                        - p-1.5: Padding for touch target size.
