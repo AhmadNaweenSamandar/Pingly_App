@@ -239,5 +239,88 @@ export function QuestionCard({ question, delay }: QuestionCardProps) {
       </AnimatePresence>
 
 
+      {/* Replies Section 
+          - Conditional Rendering: Only displays if there are actually replies to show.
+      */}
+      {replies.length > 0 && (
+        <div className="border-t border-gray-200 pt-4 mt-4">
+
+          {/* Accordion Toggle Button 
+              - onClick: Flips the 'showReplies' boolean.
+              - text-purple-600: Uses the Q&A theme color.
+          */}
+          <button
+            onClick={() => setShowReplies(!showReplies)}
+            className="flex items-center gap-2 text-purple-600 hover:text-purple-700 transition-colors mb-3"
+          >
+
+            {/* Icon Swap: Shows Up arrow if open, Down arrow if closed */}
+            {showReplies ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
+
+            {/* Pluralization Logic: "1 answer" vs "2 answers" */}
+            <span>{replies.length} {replies.length === 1 ? 'answer' : 'answers'}</span>
+          </button>
+
+
+        {/* Collapsible List Container 
+              - AnimatePresence: Required for the collapsing 'exit' animation.
+          */}
+          <AnimatePresence>
+            {showReplies && (
+              <motion.div
+
+              // Container Animation: Slides height from 0 to auto
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-4"
+              >
+
+                {/* Map through the replies array */}
+                {replies.map((reply, index) => (
+                  <motion.div
+                    key={index}
+
+                    // Item Animation: Staggered slide-in from the left
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+
+                    // Visual Threading:
+                    // - border-l-2 border-purple-200: Creates the colored vertical line
+                    //   connecting the reply to the conversation.
+                    // - pl-4: Indents the content to the right of the line.
+                    className="flex gap-3 pl-4 border-l-2 border-purple-200"
+                  >
+
+                    {/* User Avatar (Initials) */}
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white flex-shrink-0">
+                        {/* Logic: Split name by space, take first letter of each part, join them.
+                          Example: "Jane Doe" -> ["Jane", "Doe"] -> ["J", "D"] -> "JD" 
+                      */}
+                      {reply.user.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    
+                    {/* Reply Text */}
+                    <div className="flex-1">
+                      <p className="text-gray-800 mb-1">{reply.user}</p>
+                      <p className="text-gray-700">{reply.text}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+
 
 
