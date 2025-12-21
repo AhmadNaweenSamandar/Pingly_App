@@ -91,6 +91,52 @@ export function QuestionCard({ question, delay }: QuestionCardProps) {
     }
   };
 
+    return (
+
+    {/* Main Question Card Container
+        - Uses Framer Motion for entrance animations.
+        - transition={{ delay }}: Staggers the appearance based on list index.
+    */}
+    <motion.div
+
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay }}
+
+      // Card Styling:
+      // - hover:shadow-xl: Lifts the card visually when hovered.
+      // - border-gray-100: Very subtle border for structure.
+      className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-xl transition-all"
+    >
+
+        {/* Header & Content Wrapper 
+          - flex items-start: Aligns content to the top (useful for long questions).
+      */}
+      <div className="flex items-start gap-4 mb-4">
+
+        {/* User Avatar 
+            - purple-to-pink gradient: Visual theme for the "Q&A" section.
+            - flex-shrink-0: Prevents avatar from squishing if text is wide.
+        */}
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white flex-shrink-0">
+          {question.user.avatar}
+        </div>
+
+        {/* Question Text Container 
+            - min-w-0: Standard fix for text truncation/wrapping inside Flexbox.
+        */}
+        <div className="flex-1 min-w-0">
+
+            {/* User Name */}
+          <h4 className="text-gray-800 mb-1">{question.user.name}</h4>
+
+          {/* The Actual Question 
+              - leading-relaxed: Increases line-height for better readability.
+          */}
+          <p className="text-gray-700 leading-relaxed">{question.question}</p>
+        </div>
+      </div>
+
 
 
 
