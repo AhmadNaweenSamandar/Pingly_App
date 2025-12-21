@@ -91,7 +91,8 @@ export function QuestionCard({ question, delay }: QuestionCardProps) {
     }
   };
 
-    return (
+
+  return (
 
     {/* Main Question Card Container
         - Uses Framer Motion for entrance animations.
@@ -135,6 +136,52 @@ export function QuestionCard({ question, delay }: QuestionCardProps) {
           */}
           <p className="text-gray-700 leading-relaxed">{question.question}</p>
         </div>
+      </div>
+
+      {/* Action Buttons Container 
+          - justify-end: Aligns the buttons to the right side of the card.
+          - mb-4: Adds spacing below the buttons (before the input box appears).
+      */}
+      <div className="flex items-center justify-end gap-2 mb-4">
+
+        {/* Vote / "Useful" Button 
+            - Uses Framer Motion for tactile micro-interactions (scale up/down).
+        */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleVote}
+
+          /* Conditional Styling:
+             - Checks 'hasVoted' to determine if the button should look "active".
+             - Active: Solid Blue-Purple gradient + Shadow.
+             - Inactive: Light Purple background + Border.
+          */
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
+            hasVoted
+              ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md"
+              : "bg-gradient-to-r from-blue-50 to-purple-50 text-purple-700 hover:from-blue-100 hover:to-purple-100 border border-purple-200"
+          }`}
+        >
+          <ThumbsUp className="w-4 h-4" />
+
+          {/* Display the current count of helpful votes */}
+          <span>{useful}</span>
+        </motion.button>
+
+
+        {/* Answer Toggle Button 
+            - Toggles the visibility of the input text area.
+            - Styled with Purple/Pink gradient to match the Q&A visual theme.
+        */}
+
+        <Button
+          onClick={() => setShowAnswerBox(!showAnswerBox)}
+          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
+        >
+          <MessageSquare className="w-4 h-4 mr-2" />
+          Answer
+        </Button>
       </div>
 
 
