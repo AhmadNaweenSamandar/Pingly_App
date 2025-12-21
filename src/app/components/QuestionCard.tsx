@@ -184,6 +184,60 @@ export function QuestionCard({ question, delay }: QuestionCardProps) {
         </Button>
       </div>
 
+      {/* Answer Input Section 
+          - AnimatePresence: Required to animate the 'exit' (collapse) state.
+      */}
+      <AnimatePresence>
+        {showAnswerBox && (
+          <motion.div
+
+            // Animation: Slide down (expand) and fade in
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+
+            // Styling:
+            // - overflow-hidden: CRITICAL. Prevents content from being seen 
+            //   outside the container while it's animating height.
+            className="overflow-hidden"
+          >
+
+            {/* Input Container 
+                - border-t: Separates the input from the action buttons above.
+                - pt-4: Adds breathing room.
+            */}
+            <div className="border-t border-gray-200 pt-4 space-y-3">
+
+              {/* Text Input Field */}
+              <Textarea
+                value={newAnswer}
+                onChange={(e) => setNewAnswer(e.target.value)}
+                placeholder="Write your answer..."
+                rows={3}
+
+                // resize-none: Keeps the UI clean by preventing user resizing
+                className="w-full resize-none"
+              />
+
+              {/* Submit Button Container 
+                  - justify-end: Aligns the button to the right.
+              */}
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleSendAnswer}
+
+                  // Styling: Matches the Purple/Pink theme of the "Answer" toggle button
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Send Answer
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
 
 
