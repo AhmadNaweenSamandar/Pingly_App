@@ -167,12 +167,12 @@ export function ProfessionalMode() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        {/* Grid 1: Gamification/Leaderboard 
+        {/* Grid 1: Point Table/Leaderboard 
             - Displays user points, rankings, or achievements.
         */}
         <PointTable />
 
-        {/* Grid 2: General Discussion 
+        {/* Grid 2: Discussion 
             - Displays trending topics or general community chat.
         */}
         <Discussion />
