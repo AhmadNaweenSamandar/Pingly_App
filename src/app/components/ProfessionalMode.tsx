@@ -178,5 +178,27 @@ export function ProfessionalMode() {
         <Discussion />
       </motion.div>
 
+      {/* Projects Dashboard Section 
+          - Wraps the main Projects widget (which contains the active collaboration list).
+      */}
+      <motion.div
+
+        // Animation: Continues the "waterfall" effect
+        // Starts 0.05s after the Points/Discussion grid appears
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+
+        // Styling:
+        // - mb-8: Adds consistent vertical spacing before the next section.
+        className="mb-8"
+      >
+
+        {/* The complex Projects component (with Chat/Details modals) built earlier and included in components folder */}
+        <Projects />
+      </motion.div>
+
+      
+
 
       
