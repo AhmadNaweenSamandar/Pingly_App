@@ -121,4 +121,125 @@ export function MatchingSchedule() {
     return `${Math.floor(hours / 24)}d ago`;
   };
 
+
+  return (
+    <>
+
+      {/* Main Schedule Card Container 
+          - h-fit: Allows the card to grow vertically as items are added.
+          - p-6: Comfortable internal padding.
+      */}
+      <motion.div
+        className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 h-fit"
+
+        // Hover Interaction:
+        // Applies a deeper, more diffuse shadow when the user hovers over the card.
+        whileHover={{ boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+      >
+
+        {/* Header Row 
+            - justify-between: Pushes the Title to the left and the (upcoming) Add Button to the right.
+        */}
+        <div className="flex items-center justify-between mb-6">
+
+          {/* Left Side: Icon & Title */}
+          <div className="flex items-center gap-3">
+
+            {/* Icon Container 
+                - Visual Theme: Orange/Pink Gradient (Time/Activity theme).
+            */}
+            <div className="bg-gradient-to-br from-orange-400 to-pink-500 p-3 rounded-xl">
+              <Calendar className="w-6 h-6 text-white" />
+            </div>
+
+            {/* Text Labels */}
+            <div>
+              <h3 className="text-gray-800">Matching Schedule</h3>
+              <p className="text-gray-500">Plan your activities</p>
+            </div>
+          </div>
+        </div>
+
+
+        {/* Schedules List */}
+        {/* Schedules List Container 
+            - max-h-[400px]: Constrains height to prevent layout shifts.
+            - overflow-y-auto: Enables internal scrolling for long lists.
+            - space-y-3: Adds consistent gaps between cards.
+        */}
+        <div className="space-y-3 mb-4 max-h-[400px] overflow-y-auto">
+
+          {/* Conditional Rendering: Empty State vs. List */}
+          {schedules.length === 0 ? (
+
+            // --- EMPTY STATE ---
+            <div className="text-center py-12 text-gray-400">
+              <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No schedules yet. Be the first to create one!</p>
+            </div>
+          ) : (
+
+            // --- LIST RENDERING ---
+            schedules.map((schedule, index) => (
+              <motion.div
+                key={schedule.id}
+
+                // Animation: Staggered "Waterfall" Entrance
+                // New items slide down slightly (y: -10 -> 0)
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}  // 0.1s delay per item
+
+
+                // Styling: 
+                // - Orange/Pink tint to match the widget theme.
+                // - hover:shadow-md: Subtle lift effect on mouseover.
+                className="p-4 rounded-xl bg-gradient-to-r from-orange-50 to-pink-50 border border-orange-200 hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-start gap-3">
+
+                  {/* User Avatar */}
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-pink-500 flex items-center justify-center text-white flex-shrink-0">
+                    {schedule.user.avatar}
+                  </div>
+
+                  {/* Content Column */}
+                  <div className="flex-1 min-w-0">
+
+                    {/* Header: Name & Relative Time */}
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-gray-800">{schedule.user.name}</h4>
+                      <span className="text-gray-400">{getTimeAgo(schedule.time)}</span>
+                    </div>
+
+                    {/* Activity Title (Orange text for emphasis) */}
+                    <p className="text-orange-600 mb-1">{schedule.activity}</p>
+
+                    {/* Description */}
+                    <p className="text-gray-600 mb-2">{schedule.description}</p>
+
+                    {/* Metadata Chips (Duration & Location) */}
+                    <div className="flex flex-wrap gap-2 text-gray-500">
+
+                      {/* Duration Chip */}
+                      <span className="flex items-center gap-1 text-sm bg-white/50 px-2 py-1 rounded-lg">
+                        <Clock className="w-3 h-3" />
+                        {schedule.duration}
+                      </span>
+
+                      {/* Location Chip (Conditional) */}
+                      {schedule.location && (
+                        <span className="flex items-center gap-1 text-sm bg-white/50 px-2 py-1 rounded-lg">
+                          <MapPin className="w-3 h-3" />
+                          {schedule.location}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+
 }
