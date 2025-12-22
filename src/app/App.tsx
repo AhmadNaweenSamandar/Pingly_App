@@ -49,7 +49,7 @@ export default function App() {
         onSignOut={handleSignOut}
       />
 
-            {/* Main Content */}
+      {/* Main Content */}
       <AnimatePresence mode="wait">
         {mode === "professional" ? (
           <motion.div
