@@ -161,4 +161,22 @@ export function MatchingFlipCards() {
     }, 300);
   };
 
+//empty state rendring
+// Check if the stack is empty. 
+// If so, return the "All Caught Up" view immediately
+  if (cards.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[600px] bg-gradient-to-br from-pink-50 to-purple-50 rounded-3xl border-2 border-dashed border-pink-200">
+        <div className="text-center">
+
+          {/* Icon: Large centered heart to keep the theme friendly */}
+          <Heart className="w-16 h-16 mx-auto mb-4 text-pink-400" />
+          {/* Feedback Message */}
+          <h3 className="text-gray-700 mb-2">No more profiles</h3>
+          <p className="text-gray-500">Check back later for new matches!</p>
+        </div>
+      </div>
+    );
+  }
+
 }
