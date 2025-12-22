@@ -265,6 +265,178 @@ export function ProfessionalMode() {
         </div>
       </motion.div>
 
+      {/* =========================================
+          MODAL: Post Project Idea
+          Triggered by the Blue "Post Project Idea" button.
+          ========================================= */}
+      <Dialog open={showProjectDialog} onOpenChange={setShowProjectDialog}>
+
+        {/* Modal Content Container 
+            - max-w-2xl: Makes the form wider than a standard alert, 
+              giving space for the description.
+        */}
+        <DialogContent className="max-w-2xl">
+
+          {/* Header */}
+          <DialogHeader>
+            <DialogTitle>Post a Project Idea</DialogTitle>
+          </DialogHeader>
+
+          {/* Form Body 
+              - space-y-4: Adds vertical spacing between input groups.
+              - mt-4: Separates form from the header.
+          */}
+          <div className="space-y-4 mt-4">
+
+            {/* Input: Title */}
+            <div>
+              <label className="block mb-2">Project Title</label>
+              <Input placeholder="Enter your project idea title..." />
+            </div>
+
+            {/* Input: Description 
+                - Uses Textarea with rows={6} to encourage detailed pitches.
+            */}
+            <div>
+              <label className="block mb-2">Description</label>
+              <Textarea 
+                placeholder="Describe your project idea in detail..."
+                rows={6}
+              />
+            </div>
+
+            {/* Input: Skills 
+                - Simple text input instructing user to use commas.
+                - In a V2, this could be a multi-select dropdown.
+            */}
+            <div>
+              <label className="block mb-2">Required Skills (comma separated)</label>
+              <Input placeholder="e.g., React, Node.js, MongoDB" />
+            </div>
+
+            {/* Footer / Actions 
+                - justify-end: Aligns buttons to the right.
+            */}
+            <div className="flex gap-3 justify-end">
+
+              {/* Cancel Action */}
+              <Button variant="outline" onClick={() => setShowProjectDialog(false)}>
+                Cancel
+              </Button>
+
+              {/* Submit Action 
+                  - Styled Blue to match the "Post Project" theme.
+              */}
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                Post Idea
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* =========================================
+          MODAL: Ask a Question
+          Triggered by the Purple "Ask Answer" button.
+          ========================================= */}
+      <Dialog open={showQuestionDialog} onOpenChange={setShowQuestionDialog}>
+
+        {/* Modal Container */}
+        <DialogContent className="max-w-2xl">
+
+          {/* Header */}
+          <DialogHeader>
+            <DialogTitle>Ask a Question</DialogTitle>
+          </DialogHeader>
+
+          {/* Form Body */}
+          <div className="space-y-4 mt-4">
+
+            {/* Question Input 
+                - Uses Textarea exclusively since questions are usually longer than a single line.
+            */}
+            <div>
+              <label className="block mb-2">Your Question</label>
+              <Textarea 
+                placeholder="What would you like to know?"
+                rows={6}
+              />
+            </div>
+
+            {/* Footer / Actions */}
+            <div className="flex gap-3 justify-end">
+
+              {/* Cancel Action */}
+              <Button variant="outline" onClick={() => setShowQuestionDialog(false)}>
+                Cancel
+              </Button>
+
+              {/* Submit Action 
+                  - Styled Purple to match the Q&A theme.
+              */}
+              <Button className="bg-purple-600 hover:bg-purple-700">
+                Post Question
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+      {/* =========================================
+          MODAL: Create Discussion
+          Triggered by the Indigo "Create Discussion" button.
+          ========================================= */}
+      <Dialog open={showDiscussionDialog} onOpenChange={setShowDiscussionDialog}>
+
+        {/* Modal Container */}
+        <DialogContent className="max-w-2xl">
+
+          {/* Header */}
+          <DialogHeader>
+            <DialogTitle>Create a Discussion</DialogTitle>
+          </DialogHeader>
+
+          {/* Form Body */}
+          <div className="space-y-4 mt-4">
+
+            {/* Topic Title Input */}
+            <div>
+              <label className="block mb-2">Discussion Topic</label>
+              <Input placeholder="Enter discussion topic..." />
+            </div>
+
+            {/* Message Body Input */}
+            <div>
+              <label className="block mb-2">Initial Message</label>
+              <Textarea 
+                placeholder="Start the conversation..."
+                rows={6}
+              />
+            </div>
+
+            {/* Footer / Actions */}
+            <div className="flex gap-3 justify-end">
+
+              {/* Cancel Action */}
+              <Button variant="outline" onClick={() => setShowDiscussionDialog(false)}>
+                Cancel
+              </Button>
+
+              {/* Submit Action 
+                  - Styled Indigo to match the Discussion theme.
+              */}
+              <Button className="bg-indigo-600 hover:bg-indigo-700">
+                Create Discussion
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 
 
 
