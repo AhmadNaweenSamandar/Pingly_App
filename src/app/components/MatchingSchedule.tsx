@@ -242,4 +242,174 @@ export function MatchingSchedule() {
           )}
         </div>
 
+
+        {/* Schedule Button */}
+
+        {/* Footer Actions Row 
+            - justify-end: Aligns the button to the right.
+        */}
+        <div className="flex justify-end">
+          <Button
+
+            // Interaction: Open the "Create Schedule" Modal
+            onClick={() => setShowScheduleForm(true)}
+
+            // Styling:
+            // - Gradient text/bg matches the widget's Orange/Pink theme.
+            // - shadow-lg: Gives the button "pop" to make it stand out as the primary action.
+            className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white shadow-lg"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Schedule
+          </Button>
+        </div>
+      </motion.div>
+
+
+
+      {/* Schedule Form Popup */}
+      {/* =========================================
+          MODAL: Create Schedule Form
+          - Wrapped in AnimatePresence to allow exit animations.
+          - conditionally rendered based on 'showScheduleForm'.
+          ========================================= */}
+      <AnimatePresence>
+        {showScheduleForm && (
+          <>
+
+
+            {/* 1. Backdrop Overlay 
+                - bg-black/50: Darkens the rest of the screen.
+                - backdrop-blur-sm: Blurs the content behind the modal.
+                - onClick: Closes modal if user clicks outside.
+            */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              onClick={() => setShowScheduleForm(false)}
+            />
+
+
+            {/* 2. Modal Content Card 
+                - Centered using fixed positioning + translations.
+                - z-50: Ensures it sits on top of everything.
+            */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl"
+
+              // CRITICAL: Stop click propagation so clicking the form doesn't close it
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
+
+                {/* Close Button (Top Right X) */}
+                <button
+                  onClick={() => setShowScheduleForm(false)}
+                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+
+                <h3 className="text-gray-800 mb-6">Create Matching Schedule</h3>
+
+
+                {/* Form Fields Stack */}
+                <div className="space-y-4">
+
+                  {/* Field: Activity Type (Dropdown) */}
+                  <div>
+                    <label className="block mb-2 text-gray-700">Activity Type</label>
+                    <Select
+                      value={formData.activity}
+                      onValueChange={(value) => setFormData({ ...formData, activity: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select activity type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Study Session">Study Session</SelectItem>
+                        <SelectItem value="Coffee Break">Coffee Break</SelectItem>
+                        <SelectItem value="Lunch">Lunch</SelectItem>
+                        <SelectItem value="Weekend Outing">Weekend Outing</SelectItem>
+                        <SelectItem value="Movie Night">Movie Night</SelectItem>
+                        <SelectItem value="Sports">Sports</SelectItem>
+                        <SelectItem value="Project Work">Project Work</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Field: Duration (Dropdown) */}
+                  <div>
+                    <label className="block mb-2 text-gray-700">Duration</label>
+                    <Select
+                      value={formData.duration}
+                      onValueChange={(value) => setFormData({ ...formData, duration: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select duration" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30 minutes">30 minutes</SelectItem>
+                        <SelectItem value="1 hour">1 hour</SelectItem>
+                        <SelectItem value="2 hours">2 hours</SelectItem>
+                        <SelectItem value="3 hours">3 hours</SelectItem>
+                        <SelectItem value="Half day">Half day</SelectItem>
+                        <SelectItem value="Full day">Full day</SelectItem>
+                        <SelectItem value="Weekend">Weekend</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+
+                  {/* Field: Location (Text Input) */}
+                  <div>
+                    <label className="block mb-2 text-gray-700">Location</label>
+                    <Input
+                      placeholder="e.g., Campus Library, Downtown Café"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    />
+                  </div>
+
+
+                  {/* Field: Description (Textarea) */}
+                  <div>
+                    <label className="block mb-2 text-gray-700">Description</label>
+                    <Textarea
+                      placeholder="Describe what you'd like to do..."
+                      rows={4}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="flex gap-3 justify-end pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowScheduleForm(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSubmit}
+                      className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+                    >
+                      Submit Schedule
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }
