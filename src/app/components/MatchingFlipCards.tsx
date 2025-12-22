@@ -137,4 +137,28 @@ export function MatchingFlipCards() {
     }
   };
 
+
+  /**
+   * Programmatically triggers a swipe action when buttons are clicked.
+   * Provides an alternative to gestures for accessibility or preference.
+   * @param {string} action - "like" or "pass"
+   */
+  const handleButtonClick = (action: "like" | "pass") => {
+
+    // 1. Trigger Animation: 
+    // Set direction state to force the card to animate off-screen (Right or Left)
+    setDragDirection(action === "like" ? "right" : "left");
+
+    // 2. Wait for Animation: 
+    // Allow 300ms for the exit transition/motion to visually complete
+    setTimeout(() => {
+
+      // 3. Update Data: Remove the card from the stack
+      removeCard(action);
+
+      // 4. Reset State: Clear direction so the NEW top card starts neutral
+      setDragDirection(null);
+    }, 300);
+  };
+
 }
