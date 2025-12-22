@@ -151,4 +151,32 @@ export function ProfessionalMode() {
       </motion.div>
 
 
+      {/* Top section: Leaderboard & Discussions Grids 
+          - Wrapper uses Framer Motion for entrance animations.
+      */}
+      <motion.div
+        // Layout Logic:
+        // - grid-cols-1: Stacks vertically on mobile/tablet.
+        // - lg:grid-cols-2: Splits into two equal columns on large screens (Desktop).
+        // - gap-6: Adds space between the two widgets.
+        className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
+
+        // Animation: Slide Up + Fade In
+        // - delay: 0.3s (Starts slightly after the action buttons above appear)
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        {/* Grid 1: Gamification/Leaderboard 
+            - Displays user points, rankings, or achievements.
+        */}
+        <PointTable />
+
+        {/* Grid 2: General Discussion 
+            - Displays trending topics or general community chat.
+        */}
+        <Discussion />
+      </motion.div>
+
+
       
