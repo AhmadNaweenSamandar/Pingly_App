@@ -93,12 +93,11 @@ export function QuestionCard({ question, delay }: QuestionCardProps) {
 
 
   return (
-
-    {/* Main Question Card Container
+    <motion.div
+    /* Main Question Card Container
         - Uses Framer Motion for entrance animations.
         - transition={{ delay }}: Staggers the appearance based on list index.
-    */}
-    <motion.div
+    */
 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
