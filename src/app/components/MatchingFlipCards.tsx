@@ -179,4 +179,239 @@ export function MatchingFlipCards() {
     );
   }
 
+
+  return (
+    /* Main Card Container 
+        - relative: Establishes context for absolute positioning of cards.
+        - h-[600px]: Fixed height ensures consistent swipe area.
+    */
+    <div className="relative h-[600px] flex items-center justify-center px-4 sm:px-0">
+
+      {/* AnimatePresence: Required to animate cards LEAVING the DOM (Exit animation) */}
+      <AnimatePresence>
+
+        {/* Render only the top 3 cards for performance */}
+        {cards.slice(0, 3).map((profile, index) => {
+          const isTop = index === 0;
+          return (
+            <motion.div
+              key={profile.id}
+
+              // Positioning: Stack cards on top of each other
+              className="absolute w-full max-w-md"
+              style={{
+
+                // Z-Index: Ensure the first card (index 0) is always physically on top
+                zIndex: cards.length - index,
+              }}
+
+              // --- INITIAL STATE ---
+              initial={{
+                scale: 1 - index * 0.05,  // 100%, 95%, 90%
+                y: index * -10,           // 0px, -10px, -20px
+                opacity: 1,
+              }}
+
+              // --- ACTIVE STATE ---
+              animate={{
+
+                // Maintain stack visuals
+                scale: 1 - index * 0.05,
+                y: index * -10,
+                opacity: 1 - index * 0.2,
+
+                // Programmatic Animation (Button Clicks):
+                // If buttons were clicked, rotate and move the card automatically.
+                rotateZ: isTop && dragDirection === "right" ? 10 : isTop && dragDirection === "left" ? -10 : 0,
+                x: isTop && dragDirection === "right" ? 300 : isTop && dragDirection === "left" ? -300 : 0,
+              }}
+
+              // --- EXIT STATE (Swipe Complete) ---
+              // Flies the card off-screen when removed from the arra
+              exit={{
+                x: dragDirection === "right" ? 500 : -500,
+                opacity: 0,
+                transition: { duration: 0.3 },
+              }}
+
+              // --- DRAG INTERACTION ---
+              drag={isTop ? "x" : false}  // Only allow horizontal drag on top card
+              dragConstraints={{ left: 0, right: 0 }} // Snap back to center if released early
+
+              // Live Drag Feedback
+              onDrag={(event, info) => {
+                if (isTop) {
+
+                  // Set direction state to trigger visual overlays (Like/Nope badges)
+                  if (info.offset.x > 50) setDragDirection("right");
+                  else if (info.offset.x < -50) setDragDirection("left");
+                  else setDragDirection(null);
+                }
+              }}
+
+              // Drag Completion
+              onDragEnd={(event, info) => isTop && handleDragEnd(event, info, info.offset.x > 0 ? "like" : "pass")}
+              className={`bg-white rounded-3xl shadow-2xl overflow-hidden ${
+                isTop ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
+              } ${index > 0 ? "hidden sm:block" : ""}`}
+            >
+
+
+              {/* Profile Image Container
+                  - relative: Establishes context for the gradient overlay.
+                  - h-96: Fixed height for the image area.
+                  - overflow-hidden: Ensures the image zooms/moves without breaking rounded corners.
+              */}
+              <div className="relative h-96 overflow-hidden">
+
+                {/* User Photo 
+                    - object-cover: Ensures the image fills the space without distortion 
+                      (crucial for user-uploaded content of varying aspect ratios).
+                */}
+                <img
+                  src={profile.image}
+                  alt={profile.name}
+                  className="w-full h-full object-cover"
+                />
+
+
+                {/* Contrast Gradient Overlay 
+                    - absolute inset-0: Covers the entire image area.
+                    - bg-gradient-to-t: Fades from dark at the bottom to transparent at the top.
+                    - PURPOSE: Makes white text (Name, Age) readable against any photo background.
+                */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+
+                {/* Like/Pass Indicators */}
+                {/* LIKE / PASS Stamps 
+                    - Only visible on the Top Card (isTop).
+                    - Only visible when the user is dragging (dragDirection is not null).
+                */}
+                {isTop && dragDirection && (
+                  <motion.div
+                    // Animation: "Pop" in effect (Scale up + Fade in)
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+
+                    // Positioning:
+                    // - If dragging Right (Like) -> Place stamp on the Right side.
+                    // - If dragging Left (Pass) -> Place stamp on the Left side.
+                    className={`absolute top-8 ${
+                      dragDirection === "right" ? "right-8" : "left-8"
+                    }`}
+                  >
+
+                    {/* Stamp Content */}
+                    <div
+                      className={`px-6 py-3 rounded-full text-white font-bold text-xl border-4 ${
+
+                        // Visual Styling:
+                        // - Right = Green (Positive)
+                        // - Left = Red (Negative/Neutral)
+                        dragDirection === "right"
+                          ? "bg-green-500 border-green-300"
+                          : "bg-red-500 border-red-300"
+                      }`}
+                    >
+
+                      {/* Text Label */}
+                      {dragDirection === "right" ? "LIKE" : "PASS"}
+                    </div>
+                  </motion.div>
+                )}
+
+
+
+
+                {/* Profile Info Overlay */}
+                {/* Profile Info Overlay 
+                    - absolute bottom-0: Anchors content to the bottom of the image container.
+                    - text-white: White text to contrast against the dark gradient overlay.
+                */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+
+                  {/* Name & Age Header */}
+                  <h2 className="mb-1">
+                    {profile.name}, {profile.age}
+                  </h2>
+
+                  {/* Major / Education Line 
+                      - flex items-center: Aligns the icon and text horizontally.
+                  */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <GraduationCap className="w-4 h-4" />
+                    <span>{profile.major}</span>
+                  </div>
+
+                  {/* Bio Text 
+                      - text-white/90: Slightly transparent to reduce visual weight compared to the name.
+                  */}
+                  <p className="text-white/90 mb-3">{profile.bio}</p>
+
+                  {/* Interests Tags 
+                      - flex-wrap: Allows tags to wrap to the next line if they run out of space.
+                  */}
+                  <div className="flex flex-wrap gap-2">
+                    {profile.interests.map((interest, idx) => (
+                      <span
+                        key={idx}
+                        // Glassmorphism Style:
+                        // - bg-white/20: 20% opacity white background.
+                        // - backdrop-blur-sm: Blurs the image behind the tag.
+                        className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm"
+                      >
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+
+
+              {/* Action Buttons */}
+              {/* Action Buttons Container 
+                    - Only visible if this is the Top Card (isTop).
+                    - p-6: Padding inside the card to space buttons from the text.
+                */}
+              {isTop && (
+                <div className="p-6 flex justify-center gap-6">
+
+                  {/* PASS Button (Red 'X') */}
+                  <motion.button
+                    // Micro-interactions for tactile feel
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+
+                    // Trigger Programmatic Swipe Left
+                    onClick={() => handleButtonClick("pass")}
+                    className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-red-500 flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-shadow"
+                  >
+                    <X className="w-8 h-8" />
+                  </motion.button>
+
+                  {/* LIKE Button (Pink 'Heart') 
+                        - Designed to be visually dominant (larger size, richer gradient).
+                    */}
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    // Trigger Programmatic Swipe Right
+                    onClick={() => handleButtonClick("like")}
+                    className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-400 via-pink-500 to-rose-500 flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-shadow"
+                  >
+
+                    {/* fill-current: Makes the heart solid white */}
+                    <Heart className="w-10 h-10 fill-current" />
+                  </motion.button>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+    </div>
+  );
+
 }
