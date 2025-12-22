@@ -114,4 +114,27 @@ export function MatchingFlipCards() {
     setDragDirection(null);
   };
 
+
+  /**
+   * Updates the state to remove the top card from the stack.
+   * Triggered after a successful swipe animation completes.
+   * @param {string} action - The type of interaction ("like" or "pass").
+   */
+  const removeCard = (action: "like" | "pass") => {
+
+    // 1. Update State: Remove index 0 (the top card)
+    // using slice(1) to create a new array starting from index 1.
+    setCards((prev) => prev.slice(1));
+
+    // 2. Process Action (Mock Logic)
+    // TODO: Replace console.log with API calls to backend.
+    if (action === "like") {
+      console.log("Liked:", cards[0]?.name);
+
+      // e.g., api.post('/like', { userId: cards[0].id })
+    } else {
+      console.log("Passed:", cards[0]?.name);
+    }
+  };
+
 }
