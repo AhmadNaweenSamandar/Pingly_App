@@ -231,7 +231,41 @@ export function ProfessionalMode() {
         </div>
       </motion.div>
 
-      
+
+      {/* Questions Feed Section 
+          - The final block of content in the main view.
+      */}
+      <motion.div
+
+        // Animation: Enters last (0.7s delay) to complete the cascading load effect.
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+
+        {/* Section Header */}
+        <h2 className="mb-4 text-gray-700 flex items-center gap-2">
+
+          {/* Icon matches the Purple theme of the "Ask Answer" button */}
+          <MessageSquarePlus className="w-5 h-5 text-purple-600" />
+          Questions
+        </h2>
+
+        {/* Questions Stack 
+            - space-y-4: Consistent vertical rhythm with the rest of the app.
+        */}
+        <div className="space-y-4">
+          {questions.map((question, index) => (
+
+            // Staggered Animation:
+              // - 0.8: Base start time (wait for container to load).
+              // - index * 0.1: Ripple delay per card.
+            <QuestionCard key={question.id} question={question} delay={0.8 + index * 0.1} />
+          ))}
+        </div>
+      </motion.div>
+
+
 
 
       
