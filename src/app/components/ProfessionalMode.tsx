@@ -198,6 +198,39 @@ export function ProfessionalMode() {
         <Projects />
       </motion.div>
 
+      {/* Project Ideas Feed Section 
+          - Displays the list of user-submitted pitches.
+      */}
+      <motion.div
+
+        // Animation: Container enters 0.05s after the Projects section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mb-8"
+      >
+
+        {/* Section Header */}
+        <h2 className="mb-4 text-gray-700 flex items-center gap-2">
+
+          {/* Icon matches the blue theme of the 'Post Idea' button */}
+          <Lightbulb className="w-5 h-5 text-blue-600" />
+          Project Ideas
+        </h2>
+
+        {/* Cards List Container 
+            - space-y-4: Adds vertical spacing between each card in the stack.
+        */}
+        <div className="space-y-4">
+          {projectIdeas.map((project, index) => (
+            // Staggered Animation Logic:
+            // - 0.5: Base start time (wait for container to load).
+            // - index * 0.1: Adds 100ms delay per item, creating a "ripple" effect.
+            <ProjectIdeaCard key={project.id} project={project} delay={0.5 + index * 0.1} />
+          ))}
+        </div>
+      </motion.div>
+
       
 
 
