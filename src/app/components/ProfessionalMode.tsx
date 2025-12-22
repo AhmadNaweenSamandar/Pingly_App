@@ -69,3 +69,86 @@ const questions = [
 ];
 
 
+/**
+ * ProfessionalMode Component
+ * * The main container for the professional networking side of the application.
+ * * Manages the top-level state for global actions (creating projects, asking questions and creating discussions)
+ * * and renders the main feed views.
+ */
+export function ProfessionalMode() {
+
+  // =========================================
+  // Modal Visibility State
+  // =========================================
+
+  // Controls the "Create New Project" popup form
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
+  // Controls the "Ask a Question" popup form
+  const [showQuestionDialog, setShowQuestionDialog] = useState(false);
+  // Controls the "Post an Idea / Discussion" popup form
+  const [showDiscussionDialog, setShowDiscussionDialog] = useState(false);
+
+
+  return (
+
+    /* Main Content Container 
+       - max-w-7xl mx-auto: Centers content and constrains width for large screens.
+       - pb-24: Adds significant bottom padding on mobile. 
+         This is CRITICAL to prevent content from being hidden behind the 
+         fixed bottom navigation bar typically found in mobile views.
+    */
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24 sm:pb-8">{/* Added pb-24 for mobile bottom nav */}
+      {/* Action Buttons Wrapper 
+          - Uses Framer Motion for entrance animation.
+          - flex-wrap: Ensures buttons stack vertically on small screens if they run out of space.
+      */}
+      <motion.div 
+        className="flex flex-wrap gap-4 mb-8"
+
+        // Animation: Slide Up + Fade In
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+
+        {/* ACTION 1: Post Project Idea 
+            - Triggers the 'Project' modal.
+            - Visual Theme: Blue Gradient.
+        */}
+        <Button
+          onClick={() => setShowProjectDialog(true)}
+          className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
+        >
+          <Lightbulb className="w-4 h-4 mr-2" />
+          Post Project Idea
+        </Button>
+        
+
+        {/* ACTION 2: Ask Question 
+            - Triggers the 'Question' modal.
+            - Visual Theme: Purple Gradient.
+        */}
+        <Button
+          onClick={() => setShowQuestionDialog(true)}
+          className="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-lg hover:shadow-xl transition-all"
+        >
+          <MessageSquarePlus className="w-4 h-4 mr-2" />
+          Ask Answer
+        </Button>
+        
+
+        {/* ACTION 3: Create Discussion 
+            - Triggers the 'Discussion' modal.
+            - Visual Theme: Indigo Gradient.
+        */}
+        <Button
+          onClick={() => setShowDiscussionDialog(true)}
+          className="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
+        >
+          <MessageCircle className="w-4 h-4 mr-2" />
+          Create Discussion
+        </Button>
+      </motion.div>
+
+
+      
