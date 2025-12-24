@@ -54,4 +54,46 @@ export function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
     return email.endsWith(ALLOWED_DOMAIN);
   };
 
+
+
+  /**
+   * Main Form Submission Handler
+   * Orchestrates validation and authentication callbacks.
+   */
+  const handleSubmit = (e: React.FormEvent) => {
+
+    // Prevent default HTML form submission (page reload)
+    e.preventDefault();
+
+    // Clear any previous error messages
+    setError("");
+
+
+    // 1. Domain Validation
+    // Enforce the uOttawa email restriction
+    if (!validateEmail(email)) {
+      setError(`Please use your school email (${ALLOWED_DOMAIN})`);
+      return; // Stop execution
+    }
+
+    // 2. Password Strength Validation
+    // Basic length check for security
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return; // Stop execution
+    }
+
+    if (isLogin) {
+      // Mock login - in real app, validate credentials
+      // Scenario: User is logging in
+      // In a real app, I would await an API call here
+      onLogin();
+    } else {
+      // Navigate to registration form
+      // Scenario: User is creating an account
+      // Redirect to the multi-step registration flow
+      onSignup();
+    }
+  };
+
   }
