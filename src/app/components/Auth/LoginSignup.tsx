@@ -43,4 +43,15 @@ export function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
   // This ensures the app remains exclusive to University of Ottawa community.
   const ALLOWED_DOMAIN = "@uottawa.ca";
 
+
+  /**
+   * Validates if the email belongs to the allowed uOttawa domain.
+   * @param {string} email - The input email address.
+   * @returns {boolean} - True if email ends with @university.edu
+   */
+  const validateEmail = (email: string) => {
+    // strict check for the domain suffix
+    return email.endsWith(ALLOWED_DOMAIN);
+  };
+
   }
