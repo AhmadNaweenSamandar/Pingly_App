@@ -37,3 +37,64 @@ const lookingFor = [
   "Study Partner", "Project Collaborator", "Mentor", "Friend",
   "Coffee Buddy", "Gym Partner", "Dating", "Networking"
 ];
+
+
+
+/**
+ * ProfileModal Component
+ * * Allows users to view and edit their personal profile information.
+ * * Handles both text inputs and multi-select tag arrays.
+ */
+export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+
+
+  // =========================================
+  // State: Form Data
+  // =========================================
+  const [profileData, setProfileData] = useState({
+    name: "Alex Chen",
+    bio: "Computer Science student passionate about AI and web development",
+    university: "MIT",
+    discipline: "Computer Science",
+    yearOfStudy: "3",
+    skills: ["JavaScript", "React", "Python"],
+    hobbies: ["Coding", "Gaming", "Music"],
+    personalityType: "INTJ",
+    lookingFor: ["Study Partner", "Project Collaborator"],
+    linkedin: "linkedin.com/in/alexchen",
+    github: "github.com/alexchen"
+  });
+
+
+  // =========================================
+  // Helper: Multi-Select Logic
+  // =========================================
+  /**
+   * Toggles an item inside an array state.
+   * used for Skills, Hobbies, and 'Looking For' tags.
+   */
+  const toggleArrayItem = (array: string[], item: string) => {
+    if (array.includes(item)) {
+
+      // Remove item if it exists
+      return array.filter(i => i !== item);
+    } else {
+
+      // Add item if it doesn't exist
+      return [...array, item];
+    }
+  };
+
+
+  // =========================================
+  // Handlers
+  // =========================================
+  const handleSave = () => {
+    // TODO: Add API call to save profile updates here
+    onClose();
+  };
+
+  // Logic: Do not render anything if modal is closed
+  if (!isOpen) return null;
+
+}
