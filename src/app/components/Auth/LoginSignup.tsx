@@ -11,3 +11,13 @@ interface LoginSignupProps {
   onSignup: () => void;
 }
 
+
+export function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const ALLOWED_DOMAIN = "@university.edu"; // School email domain
+
+  }
