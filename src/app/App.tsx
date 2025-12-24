@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { ProfessionalMode } from "./components/ProfessionalMode";
 import { Header } from "./components/Header";
 import { SocialMode } from "./components/SocialMode";
+import { ProfileModal } from "./components/Modals/ProfileModal";
+import { SettingsModal } from "./components/Modals/SettingsModal";
+import { FeedbackModal } from "./components/Modals/FeedbackModal";
 
 
 type AppState = "login" | "registration" | "dashboard";
@@ -82,7 +85,10 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      
+      {/* Modals */}
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
+      <SettingsModal isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)} />
+      <FeedbackModal isOpen={showFeedbackModal} onClose={() => setShowFeedbackModal(false)} />
 
     </div>
   );
