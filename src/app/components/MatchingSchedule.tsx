@@ -275,37 +275,45 @@ export function MatchingSchedule() {
           ========================================= */}
       <AnimatePresence>
         {showScheduleForm && (
-          <>
+
+          /* 1. OUTER CONTAINER: Fills screen & uses Flexbox to center everything */
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
 
-            {/* 1. Backdrop Overlay 
+            {/* 2. Backdrop Overlay 
                 - bg-black/50: Darkens the rest of the screen.
                 - backdrop-blur-sm: Blurs the content behind the modal.
                 - onClick: Closes modal if user clicks outside.
             */}
+            {/* 2. BACKDROP: Absolute position to fill the container behind the modal */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setShowScheduleForm(false)}
             />
 
 
-            {/* 2. Modal Content Card 
+            {/* 3. Modal Content Card 
                 - Centered using fixed positioning + translations.
                 - z-50: Ensures it sits on top of everything.
             */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl"
+              exit={{ opacity: 0, scale: 0.9, y: 20}}
+              className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden"
+
+              //className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl"
+
+              //from matches:
+              //className="relative bg-white rounded-3xl shadow-2xl p-6 w-full max-w-lg mx-4 z-10 overflow-hidden"
 
               // CRITICAL: Stop click propagation so clicking the form doesn't close it
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
+              <div className="p-8">
 
                 {/* Close Button (Top Right X) */}
                 <button
@@ -407,7 +415,7 @@ export function MatchingSchedule() {
                 </div>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </>
