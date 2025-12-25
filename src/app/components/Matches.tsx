@@ -267,8 +267,8 @@ export function Matches() {
 
                 {/* Title & Meta */}
                 <div>
-                  <h3 className="text-gray-800 font-bold">Your Matches</h3>
-                  <p className="text-xs text-gray-500 font-medium">{matches.length} connections</p>
+                  <h3 className="text-gray-800">Your Matches</h3>
+                  <p className="text-xs text-gray-500">{matches.length} connections</p>
                 </div>
               </motion.div>
             )}
