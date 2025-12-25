@@ -78,4 +78,34 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     lookingFor: [] as string[]                 // e.g., ["Study Buddy", "Friendship"]
   });
 
+
+
+
+  /**
+   * Handles file input changes for both Profile and Social pictures.
+   * - Profile: Single image replacement.
+   * - Social: Appends images up to a max of 3.
+   */
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: "profilePicture" | "socialPictures") => {
+    const files = e.target.files;
+    if (!files) return;
+
+    if (field === "profilePicture") {
+
+      // === SCENARIO 1: Professional Headshot ===
+      // Just take the first file selected. Replaces previous selection.
+      setFormData({ ...formData, profilePicture: files[0] });
+    } else {
+
+      // === SCENARIO 2: Social Gallery (Max 3) ===
+
+      // 1. Convert FileList to Array and limit valid new inputs to 3
+      const newFiles = Array.from(files).slice(0, 3);
+
+      // 2. Combine with existing photos
+      // 3. Enforce strict limit of 3 photos total
+      setFormData({ ...formData, socialPictures: [...formData.socialPictures, ...newFiles].slice(0, 3) });
+    }
+  };
+
 }
