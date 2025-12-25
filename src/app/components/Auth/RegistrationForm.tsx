@@ -108,4 +108,27 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     }
   };
 
+
+
+  /**
+   * Toggles the presence of a string item within an array.
+   * Used for multi-select fields like Skills, Hobbies, and 'Looking For'.
+   * * @param {string[]} array - The current list of selected items.
+   * @param {string} item - The specific item to add or remove.
+   * @returns {string[]} - A new array with the item added or removed.
+   */
+  const toggleArrayItem = (array: string[], item: string) => {
+
+    // Check if the item is already selected
+    if (array.includes(item)) {
+
+      // REMOVE: Filter out the specific item, keeping all others
+      return array.filter(i => i !== item);
+    } else {
+
+      // ADD: Return a new array with existing items + the new item
+      return [...array, item];
+    }
+  };
+
 }
