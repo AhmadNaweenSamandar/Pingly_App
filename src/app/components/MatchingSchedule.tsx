@@ -1,43 +1,55 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Calendar, Clock, X, MapPin, Users } from "lucide-react";
+import { Calendar, Clock, X, MapPin, User, Plus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
+interface User {
+  id: string;
+  name: string;
+  avatar: string; // URL or Initials
+}
 
 //variables for schedule created
 interface ScheduleEntry {
   id: number;
-  user: { name: string; avatar: string };
+  user: User;
   activity: string;
   duration: string;
   description: string;
   location: string;
   time: Date;
+  expiresAt: Date; // Auto-delete time
 }
+
+// Mock Database of users you have matched with
+// In real app, this comes from backend relations
+const myMatchedUserIds = ["u0", "u1", "u2"];
 
 
 //Mock data created for schedule representation
 const initialSchedules: ScheduleEntry[] = [
   {
     id: 1,
-    user: { name: "Sarah Kim", avatar: "SK" },
+    user: {id: "u1", name: "Emma Wilson", avatar: "EW" },
     activity: "Study Session",
     duration: "2 hours",
     description: "Preparing for final exams - Mathematics",
     location: "Library, 2nd floor",
-    time: new Date(Date.now() - 1000 * 60 * 30) // 30 min ago
+    time: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 2) // Expires in 2h
   },
   {
     id: 2,
-    user: { name: "Mike Ross", avatar: "MR" },
+    user: {id: "u2", name: "Mike Ross", avatar: "MR" },
     activity: "Coffee Break",
     duration: "1 hour",
     description: "Quick coffee and chat about project ideas",
     location: "Campus Café",
-    time: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
+    time: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60)
   }
 ];
 
@@ -55,7 +67,7 @@ export function MatchingSchedule() {
   // =========================================
 
   // List of active schedules/posts. 
-  // 'initialSchedules' is likely imported mock data for the prototype.
+  // 'initialSchedules' is imported mock data for the prototype.
   const [schedules, setSchedules] = useState<ScheduleEntry[]>(initialSchedules);
 
   // Toggles the visibility of the "Create Post" form/modal
@@ -69,6 +81,45 @@ export function MatchingSchedule() {
     location: ""        // e.g., "CRX Building"
   });
 
+
+  // =========================================
+  // 1. AUTO-EXPIRATION LOGIC
+  // =========================================
+
+  /**
+   * Helper: Converts duration string to Milliseconds
+   */
+  const getDurationMs = (durationStr: string): number => {
+    const hour = 60 * 60 * 1000;
+    
+    switch (durationStr) {
+      case "30 min": return 30 * 60 * 1000;
+      case "1 hour": return 1 * hour;
+      case "2 hours": return 2 * hour;
+      case "3 hours": return 3 * hour;
+      case "Half day": return 12 * hour; // 12 hours
+      case "Full day": return 24 * hour; // 24 hours
+      case "Weekend": return 24 * hour;  // per your specific request
+      default: return 1 * hour;
+    }
+  };
+
+
+  // =========================================
+  // 2. MATCHED-ONLY VISIBILITY LOGIC
+  // =========================================
+
+  /**
+   * Filter the list to only show:
+   * 1. My own posts ("You")
+   * 2. Posts from users in 'myMatchedUserIds'
+   */
+  const visibleSchedules = schedules.filter(post => {
+    const isMe = post.user.name === "You";
+    const isMatched = myMatchedUserIds.includes(post.user.id);
+    return isMe || isMatched;
+  });
+  
 
   // =========================================
   // Handlers
@@ -87,12 +138,13 @@ export function MatchingSchedule() {
     if (formData.activity && formData.duration) {
       const newSchedule: ScheduleEntry = {
         id: Date.now(),  // Generate unique ID
-        user: { name: "You", avatar: "YO" },  // Mock user data
+        user: { id: "u0", name: "You", avatar: "YO" },  // Mock user data
         activity: formData.activity,
         duration: formData.duration,
         description: formData.description,
         location: formData.location,
-        time: new Date()  // Capture creation time for "Just now" display
+        time: new Date(),  // Capture creation time for "Just now" display
+        expiresAt: new Date(),
       };
 
       // Update State: Prepend new item to the TOP of the list
