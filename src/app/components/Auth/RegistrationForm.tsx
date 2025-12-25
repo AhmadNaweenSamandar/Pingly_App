@@ -131,4 +131,54 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     }
   };
 
+
+  /**
+   * Advances the wizard to the next step.
+   * * Includes validation logic for Step 1.
+   *  Do not strictly require the 2nd and 3rd step to be filled
+   */
+  const handleNext = () => {
+    // === VALIDATION GATE: STEP 1 ===
+    if (step === 1) {
+
+      // Ensure all Core Identity fields are present before proceeding
+      if (!formData.name || !formData.dob || !formData.university || !formData.discipline || !formData.yearOfStudy) {
+        alert("Please fill all required fields"); // Simple user feedback if miss any field in first step
+        return;  // Stop execution (prevent step increment)
+      }
+    }
+
+    // Move to next page
+    setStep(step + 1);
+  };
+
+
+
+  /**
+   * Returns to the previous step.
+   * Does not clear data, so users can edit previous entries.
+   */
+  const handleBack = () => {
+    setStep(step - 1);
+  };
+
+
+  /**
+   * Allows bypassing optional steps (Social Profile).
+   */
+  const handleSkip = () => {
+    setStep(step + 1);
+  };
+
+
+  /**
+   * Finalizes the registration process.
+   * Triggers the transition to the Main Dashboard.
+   */
+  const handleSubmit = () => {
+    onComplete();
+  };
+
 }
+
+
