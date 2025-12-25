@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { ProfessionalMode } from "./components/ProfessionalMode";
 import { Header } from "./components/Header";
 import { SocialMode } from "./components/SocialMode";
+import { LoginSignup } from "./components/Auth/LoginSignUp";
+import { RegistrationForm } from "./components/Auth/RegistrationForm";
 import { ProfileModal } from "./components/Modals/ProfileModal";
 import { SettingsModal } from "./components/Modals/SettingsModal";
 import { FeedbackModal } from "./components/Modals/FeedbackModal";
@@ -33,6 +35,15 @@ export default function App() {
     setAppState("login");
     setMode("professional");
   };
+
+
+   if (appState === "login") {
+    return <LoginSignup onLogin={handleLogin} onSignup={handleSignup} />;
+  }
+
+  if (appState === "registration") {
+    return <RegistrationForm onComplete={handleRegistrationComplete} />;
+  }
 
 
   return (
