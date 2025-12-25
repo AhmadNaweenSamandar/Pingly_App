@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, MessageCircle, MoreVertical, X, Calendar } from "lucide-react";
+import { Heart, MessageCircle, MoreVertical, X, Calendar, UserPlus, Search, Eye, Clock, ArrowRight} from "lucide-react";
 import { ChatPopup } from "./ChatPopup";
 
 
@@ -64,6 +64,8 @@ const matchesData: Match[] = [
     unreadCount: 0,
     lastMessage: "See you at the library tomorrow!"
   }
+
+  
 ];
 
 
@@ -79,6 +81,10 @@ export function Matches() {
   // State Definitions
   // =========================================
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showRequests, setShowRequests] = useState(false);
+
   // Tracks which user is currently selected for a Chat session.
   // null = showing the list; Object = showing the Chat interface.
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -93,6 +99,12 @@ export function Matches() {
   // Tracks which user profile is currently being viewed in detail (Modal).
   const [detailsMatch, setDetailsMatch] = useState<Match | null>(null);
 
+
+  // Mock Request Data (For Visual Layout)
+  const pendingRequests = [
+    { id: 1, name: "Sarah J.", time: "5 min ago", avatar: "https://i.pravatar.cc/150?u=sarah" },
+    { id: 2, name: "Mike R.", time: "2 hrs ago", avatar: "https://i.pravatar.cc/150?u=mike" }
+  ];
 
   // =========================================
   // Helpers
@@ -185,6 +197,8 @@ export function Matches() {
       "James Chen": 23
     };
     return ages[name] || 21;
+
+
   };
 
 
@@ -200,30 +214,102 @@ export function Matches() {
           - p-6: Consistent padding with other dashboard widgets.
       */}
       <motion.div
-        className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 h-fit"
+        className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 h-fit relative group/widget"
         // Interaction: Lift the card visually on hover
         whileHover={{ boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
       >
 
-        {/* Widget Header */}
-        <div className="flex items-center gap-3 mb-6">
-          {/* Icon Container 
-              - Theme: Pink/Rose (Romantic/Social context)
-          */}
-          <div className="bg-gradient-to-br from-pink-400 to-rose-500 p-3 rounded-xl">
+        {/* =========================================
+            WIDGET HEADER & CONTROLS
+            - flex justify-between: Pushes Logo to left, Icons to right.
+            - items-center: Vertically centers everything.
+            ========================================= */}
+        <div className="flex items-center justify-between mb-6 h-12">
+          {/* --- LEFT SIDE: LOGO OR SEARCH BAR --- */}
+          <div className="flex items-center gap-3 flex-1">
 
-            {/* fill-current: Makes the heart icon solid white */}
-            <Heart className="w-6 h-6 text-white fill-current" />
+            {isSearchOpen ? (
+              // SEARCH MODE: Input Field
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex-1 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-pink-100 focus-within:border-pink-300 transition-colors mr-2"
+              >
+                <Search className="w-4 h-4 text-gray-400" />
+                <input 
+                  type="text"
+                  placeholder="Search connections..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  className="bg-transparent border-none focus:ring-0 text-sm text-gray-700 w-full outline-none placeholder:text-gray-400"
+                />
+                <button 
+                  onClick={() => { setIsSearchOpen(false); setSearchQuery(""); }}
+                  className="p-1 hover:bg-gray-200 rounded-full text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </motion.div>
+
+              ) : (
+              // DEFAULT MODE: Logo & Title
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-3"
+              >
+
+                {/* Pink Theme Icon */}
+                <div className="bg-gradient-to-br from-pink-400 to-rose-500 p-3 rounded-xl shadow-sm">
+                  <Heart className="w-6 h-6 text-white fill-current" />
+                </div>
+
+                {/* Title & Meta */}
+                <div>
+                  <h3 className="text-gray-800 font-bold">Your Matches</h3>
+                  <p className="text-xs text-gray-500 font-medium">{matches.length} connections</p>
+                </div>
+              </motion.div>
+            )}
           </div>
 
-          {/* Title & Meta */}
-          <div>
-            <h3 className="text-gray-800">Your Matches</h3>
+          {/* --- RIGHT SIDE: ACTION ICONS --- 
+              - Aligns with the right edge of the scroll area.
+          */}
+          <div className="flex items-center gap-1 pl-2">
 
-            {/* Dynamic Counter */}
-            <p className="text-gray-500">{matches.length} connections</p>
+            {/* 1. Search Toggle (Hidden if search is open) */}
+            {!isSearchOpen && (
+              <motion.button
+                whileHover={{ scale: 1.05, backgroundColor: "#f3f4f6" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsSearchOpen(true)}
+                className="p-2.5 rounded-xl text-gray-500 hover:text-pink-600 transition-colors"
+                title="Search Matches"
+              >
+                <Search className="w-5 h-5" />
+              </motion.button>
+            )}
+
+            {/* 2. Match Requests Toggle */}
+            <motion.button
+              whileHover={{ scale: 1.05, backgroundColor: "#f3f4f6" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowRequests(true)}
+              className="relative p-2.5 rounded-xl text-gray-500 hover:text-pink-600 transition-colors"
+              title="Match Requests"
+            >
+              <UserPlus className="w-5 h-5" />
+              
+              {/* Notification Badge (Mock Logic) */}
+              {pendingRequests.length > 0 && (
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
+              )}
+            </motion.button>
           </div>
         </div>
+
 
 
 
@@ -235,14 +321,19 @@ export function Matches() {
         <div className="space-y-3 max-h-[400px] overflow-y-auto">
 
           {/* --- EMPTY STATE CHECK --- */}
-          {matches.length === 0 ? (
+          {matches
+            // Simple Search Filter Logic
+            .filter(m => m.user.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            .length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <Heart className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>No matches yet. Start swiping!</p>
             </div>
           ) : (
             // --- MATCH ROW RENDERING ---
-            matches.map((match, index) => (
+            matches
+            .filter(m => m.user.name.toLowerCase().includes(searchQuery.toLowerCase()))
+            .map((match, index) => (
               <motion.div
                 key={match.id}
 
@@ -369,6 +460,106 @@ export function Matches() {
           )}
         </div>
       </motion.div>
+
+
+      {/* =========================================
+          MODAL: MATCH REQUESTS
+          - Triggered by the UserPlus icon in header.
+          ========================================= */}
+      <AnimatePresence>
+        {showRequests && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              onClick={() => setShowRequests(false)}
+            />
+
+            {/* Modal Content */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="bg-white rounded-3xl shadow-2xl p-6 overflow-hidden">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-pink-100 p-2 rounded-lg">
+                       <UserPlus className="w-6 h-6 text-pink-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">Match Requests</h3>
+                      <p className="text-sm text-gray-500">People who want to connect</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setShowRequests(false)}
+                    className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Requests List */}
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                  {pendingRequests.map((req, i) => (
+                    <motion.div
+                      key={req.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-center justify-between p-4 rounded-2xl border border-gray-100 hover:border-pink-200 hover:shadow-lg transition-all bg-white group"
+                    >
+                      {/* Left: User Info */}
+                      <div className="flex items-center gap-4">
+                        <img 
+                          src={req.avatar} 
+                          alt={req.name} 
+                          className="w-12 h-12 rounded-full object-cover border-2 border-pink-100" 
+                        />
+                        <div>
+                          <h4 className="font-bold text-gray-800">{req.name}</h4>
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                            <span className="text-pink-600 font-medium">Requested a match</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> {req.time}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Gaze Button */}
+                      <button
+                        // TODO: Connect this to MatchingFlipCards logic later
+                        onClick={() => console.log("Gaze Clicked - Open Flip Card Preview")}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full text-sm font-semibold shadow-md hover:shadow-xl transform hover:scale-105 transition-all"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Gaze
+                      </button>
+                    </motion.div>
+                  ))}
+
+                  {pendingRequests.length === 0 && (
+                    <div className="text-center py-12 text-gray-400">
+                      <p>No pending requests.</p>
+                    </div>
+                  )}
+                </div>
+                
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Chat Popup */}
       {/* =========================================
