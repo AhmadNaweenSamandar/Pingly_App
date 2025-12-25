@@ -36,3 +36,46 @@ const lookingFor = [
   "Coffee Buddy", "Gym Partner", "Dating", "Networking"
 ];
 
+
+/**
+ * RegistrationForm Component
+ * * A multi-step wizard to complete the user's profile.
+ * * Collects General, Professional, and Social data in sequence.
+ */
+export function RegistrationForm({ onComplete }: RegistrationFormProps) {
+
+  // =========================================
+  // State: Navigation
+  // =========================================
+  // Tracks which part of the wizard is currently active (1, 2, or 3)
+  const [step, setStep] = useState(1);
+
+  // =========================================
+  // State: Data Collection
+  // =========================================
+  // A single object to aggregate data across all wizard steps.
+  const [formData, setFormData] = useState({
+    // --- STEP 1: The Basics (General Identity) ---
+    name: "",
+    dob: "",                   // Date of Birth
+    university: "",            // e.g., "uOttawa"
+    discipline: "",            // e.g., "Software Engineering"
+    yearOfStudy: "",           // e.g., "2nd Year"
+
+
+    // --- STEP 2: Professional Profile (Work Mode) ---
+    profilePicture: null as File | null,       // Main avatar (Type: File object)
+    skills: [] as string[],                    // Array of tech tags (e.g. ["React", "Java"])
+    linkedin: "",
+    github: "",
+
+
+    // --- STEP 3: Social Profile (Social Mode) ---
+    socialPictures: [] as File[],              // Carousel photos for the dating/social sid
+    bio: "",                                   // Short biography
+    hobbies: [] as string[],                   // Array of interest tags
+    personalityType: "",                       // e.g., "INTJ"
+    lookingFor: [] as string[]                 // e.g., ["Study Buddy", "Friendship"]
+  });
+
+}
