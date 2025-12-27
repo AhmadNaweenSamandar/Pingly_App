@@ -99,16 +99,19 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   return (
     <AnimatePresence>
-      <>
+      {/* 1. OUTER CONTAINER: Fills screen & centers children using Flexbox */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
         {/* =========================================
             LAYER 1: Backdrop Overlay
             ========================================= */}
+        {/* 2. BACKDROP: Sits behind the modal, filling the container */
+         /* Note: Changed to 'absolute inset-0' */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         />
 
@@ -126,12 +129,12 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           // - max-w-4xl: A wider container to accommodate a 2-column grid layout.
           // - max-h-[90vh]: Limits height to 90% of the viewport.
           // - overflow-y-auto: Enables internal scrolling if the form gets too long.
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+          className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl"
 
           // Stop click propagation so clicking the form doesn't close the modal
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
+          <div className="p-8">
 
             {/* Close Button (Top Right) */}
             <button
@@ -363,7 +366,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
           </div>
         </motion.div>
-      </>
+    </div>
     </AnimatePresence>
   );
 }
