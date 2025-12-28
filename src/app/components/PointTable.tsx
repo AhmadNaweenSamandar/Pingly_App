@@ -139,7 +139,18 @@ export function PointTable() {
       <AnimatePresence>
         {selectedUser && (
           <>
-        {/* --- 1. THE BACKDROP (Dark Overlay) --- */}
+
+          {/* =========================================
+            OUTER WRAPPER (THE FIX)
+            - fixed inset-0: Fills the whole screen.
+            - flex items-center justify-center: Forces the modal to the dead center.
+            - z-50: Sits on top of everything.
+            - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
+           ========================================= */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* --- 1. THE BACKDROP (Dark Overlay) --- 
+            Bug fix: absolute added and z-50 removed
+        */}
             <motion.div
             // Animation: Fade in from 0 to 1 opacity. Fade out to 0 on exit.
               initial={{ opacity: 0 }}
@@ -149,12 +160,17 @@ export function PointTable() {
               // Styling: Fixed position covers entire screen (inset-0).
             // 'bg-black/50' creates the dark tint.
             // 'backdrop-blur-sm' blurs the content BEHIND the popup (frosted glass effect).
-              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               // INTERACTION: Clicking the dark background closes the popup.
               onClick={() => setSelectedUser(null)}
             />
 
-            {/* --- 2. THE POPUP CARD --- */}
+            {/* --- 2. THE POPUP CARD ---
+              - Removed: fixed top-1/2 left-1/2 -translate... (The cause of the bug)
+              - Added: relative (to sit above backdrop)
+              - Added: bg-white (Fixes the "void" background issue)
+              - Added: w-full max-w-2xl (Size constraints)
+            */}
             <motion.div
             // Animation: Starts slightly small (scale 0.9) and lower down (y: 20).
             // Snaps to full size (scale 1) and center position (y: 0).
@@ -162,9 +178,9 @@ export function PointTable() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               // Styling: Perfectly centered on screen using top-50% / left-50% technique.
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8"
             >
-              <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
+              
                 {/* CLOSE BUTTON (X Icon) */}
                 <button
                   onClick={() => setSelectedUser(null)}
@@ -203,8 +219,9 @@ export function PointTable() {
                     {selectedUser.badge}
                   </Badge>
                 </div>
-              </div>
+              
             </motion.div>
+          </div>
           </>
         )}
       </AnimatePresence>

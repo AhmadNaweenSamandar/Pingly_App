@@ -187,9 +187,20 @@ export function Discussion() {
           */}
         {selectedDiscussion && (
           <>
+
+          {/* =========================================
+            OUTER WRAPPER (THE FIX)
+            - fixed inset-0: Fills the whole screen.
+            - flex items-center justify-center: Forces the modal to the dead center.
+            - z-50: Sits on top of everything.
+            - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
+           ========================================= */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* ------------------------------------------------------------------
             * LAYER 1: THE BACKDROP (Overlay)
             * This is the dark background behind the popup.
+            *   Changed to 'absolute' to fill the wrapper.
+            *   Handled click to close.
             * ------------------------------------------------------------------ */}
             <motion.div
             // ANIMATION: Simple fade in/out
@@ -200,7 +211,7 @@ export function Discussion() {
             // 'fixed inset-0': Pins the div to all 4 corners of the screen.
             // 'z-50': Ensures this sits on top of everything else on the page.
             // 'backdrop-blur-sm': Applies a frosted glass effect to the content BEHIND the overlay.
-              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             // INTERACTION:
             // Clicking strictly on the background sets the state to null, closing the modal.
               onClick={() => setSelectedDiscussion(null)}
@@ -209,6 +220,10 @@ export function Discussion() {
             {/* ------------------------------------------------------------------
               * LAYER 2: THE MODAL CONTAINER
               * This is the actual floating window.
+              *   Removed: fixed top-1/2 left-1/2 -translate... (The cause of the bug)
+              *   Added: relative (to sit above backdrop)
+              *   Added: bg-white (Fixes the "void" background issue)
+              *   Added: w-full max-w-2xl (Size constraints)
               * ------------------------------------------------------------------ */}
             <motion.div
             // ANIMATION: "Pop" effect.
@@ -221,7 +236,7 @@ export function Discussion() {
             // 'fixed top-1/2 left-1/2': Puts the top-left corner of the div in the exact center of screen.
             // '-translate-x-1/2 -translate-y-1/2': Shifts the div back by 50% of its own width/height 
             // to achieve perfect centering.
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-3xl max-h-[80vh] flex flex-col"
+              className="relative w-full max-w-3xl max-h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl max-h-full"
 
             // CRITICAL INTERACTION: Event Bubbling Prevention
             // Without this, clicking INSIDE the white box would "bubble up" to the backdrop 
@@ -236,7 +251,7 @@ export function Discussion() {
                     - 'border-b': Adds a subtle line to separate the header from the scrollable chat area.
                 */}
 
-              <div className="bg-white rounded-2xl shadow-2xl mx-4 flex flex-col max-h-full">
+              
                 {/* Header */}
                 <div className="p-6 border-b border-gray-200 flex-shrink-0">
 
@@ -414,8 +429,9 @@ export function Discussion() {
                     </Button>
                   </div>
                 </div>
-              </div>
+              
             </motion.div>
+          </div>
           </>
         )}
       </AnimatePresence>
