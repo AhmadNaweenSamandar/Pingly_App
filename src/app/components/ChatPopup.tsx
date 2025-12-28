@@ -186,6 +186,15 @@ export function ChatPopup({ match, onClose }: ChatPopupProps) {
     // AnimatePresence: Required to animate the modal *out* when 'selectedMatch' becomes null.
     <AnimatePresence>
       <>
+
+        {/* =========================================
+            OUTER WRAPPER (THE FIX)
+            - fixed inset-0: Fills the whole screen.
+            - flex items-center justify-center: Forces the modal to the dead center.
+            - z-50: Sits on top of everything.
+            - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
+           ========================================= */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         {/* =========================================
             LAYER 1: Backdrop Overlay
             ========================================= */}
@@ -201,7 +210,7 @@ export function ChatPopup({ match, onClose }: ChatPopupProps) {
           // - bg-black/50: Dimmed background.
           // - backdrop-blur-sm: Blurs the underlying dashboard.
           // - z-50: High z-index to sit on top of everything.
-          className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
 
           // Interaction: Clicking the dark area closes the modal
           onClick={onClose}
@@ -224,20 +233,12 @@ export function ChatPopup({ match, onClose }: ChatPopupProps) {
           // - w-full max-w-2xl: Responsive width.
           // - max-h-[80vh]: Ensures it fits on smaller laptop screens without scrolling the body.
           // - flex flex-col: Sets up the vertical layout for Header -> Messages -> Input.
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] flex flex-col"
+          className="relative w-full max-w-2xl max-h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden"
 
           // Critical: Stop click propagation. 
           // Without this, clicking inside the chat box would trigger the backdrop's 'onClose'.
           onClick={(e) => e.stopPropagation()}
         >
-
-          {/* Internal Card Container 
-              - bg-white: The actual background of the chat box.
-              - flex-col: Stacks Header -> Messages -> Input vertically.
-              - max-h-full: Ensures it respects the 80vh limit set by the parent.
-              - overflow-hidden: Clips the rounded corners so children don't bleed out.
-          */}
-          <div className="bg-white rounded-2xl shadow-2xl mx-4 flex flex-col max-h-full overflow-hidden">
             {/* Header */}
             {/* === CHAT HEADER === 
                 - flex-shrink-0: CRITICAL. Prevents the header from squishing 
@@ -390,8 +391,9 @@ export function ChatPopup({ match, onClose }: ChatPopupProps) {
               {/* Helper Hint */}
               <p className="text-xs text-gray-400 mt-2">Press Enter to send, Shift + Enter for new line</p>
             </div>
-          </div>
+          
         </motion.div>
+        </div>
       </>
     </AnimatePresence>
   );
