@@ -275,7 +275,7 @@ export function ProfessionalMode() {
             - max-w-2xl: Makes the form wider than a standard alert, 
               giving space for the description.
         */}
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white">
 
           {/* Header */}
           <DialogHeader>
@@ -342,7 +342,7 @@ export function ProfessionalMode() {
       <Dialog open={showQuestionDialog} onOpenChange={setShowQuestionDialog}>
 
         {/* Modal Container */}
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white">
 
           {/* Header */}
           <DialogHeader>
@@ -390,7 +390,7 @@ export function ProfessionalMode() {
       <Dialog open={showDiscussionDialog} onOpenChange={setShowDiscussionDialog}>
 
         {/* Modal Container */}
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white">
 
           {/* Header */}
           <DialogHeader>
