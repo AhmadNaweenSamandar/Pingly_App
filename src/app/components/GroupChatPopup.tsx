@@ -153,24 +153,30 @@ export function GroupChatPopup({ project, onClose }: GroupChatPopupProps) {
     /* Enables exit animations when the component unmounts */
     <AnimatePresence>
       <>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
       {/* Backdrop Overlay
             - fixed inset-0: Covers the entire viewport.
             - bg-black/50: Semi-transparent dark layer.
             - backdrop-blur-sm: Applies a blur filter to content behind the modal.
             - onClick: Triggers the close function when clicking outside the modal.
+            - Changed to 'absolute' to fill the wrapper.
+            - Handled click to close.
         */}
 
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         />
 
         {/* Chat Modal Window
-            - fixed top-1/2 left-1/2...: Centers the modal perfectly in the viewport.
+            - Removed: fixed top-1/2 left-1/2 -translate... (The cause of the bug)
+            - Added: relative (to sit above backdrop)
+            - Added: bg-white (Fixes the "void" background issue)
+            - Added: w-full max-w-2xl (Size constraints)
             - flex flex-col: Establishes a vertical layout context. 
               (Header -> Message List -> Input Area)
         */}
@@ -182,7 +188,7 @@ export function GroupChatPopup({ project, onClose }: GroupChatPopupProps) {
           // Container Styling:
           // - max-w-2xl: Wider width for chat readability.
           // - max-h-[80vh]: Prevents the modal from being taller than the screen.
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[80vh] flex flex-col"
+          className="relative w-full max-w-2xl max-h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden"
 
           // Stop Propagation: Prevents clicks inside the chat window from bubbling 
           // to the backdrop and accidentally closing the modal.
@@ -194,12 +200,7 @@ export function GroupChatPopup({ project, onClose }: GroupChatPopupProps) {
               - flex flex-col: Stacks Header, Messages, and Input vertically.
               - max-h-full: Respects the parent's height constraint.
             */}
-            <div className="bg-white rounded-2xl shadow-2xl mx-4 flex flex-col max-h-full overflow-hidden">
-            {/* Header Section 
-                - flex-shrink-0: CRITICAL. Prevents the header from collapsing 
-                  when the message list grows large.
-                - border-b: Visual separation from the message list.
-            */}
+            
             <div className="p-4 border-b border-gray-200 flex items-center gap-3 bg-gradient-to-r from-green-50 to-emerald-50 flex-shrink-0">
                 {/* Context Icon (Group/Users) */}
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white">
@@ -355,8 +356,9 @@ export function GroupChatPopup({ project, onClose }: GroupChatPopupProps) {
               {/* UX Hint: Explains the Enter vs Shift+Enter behavior */}
               <p className="text-xs text-gray-400 mt-2">Press Enter to send, Shift + Enter for new line</p>
             </div>
-          </div>
+          
         </motion.div>
+      </div>
       </>
     </AnimatePresence>
   );
