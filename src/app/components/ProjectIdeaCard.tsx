@@ -186,37 +186,51 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
       <AnimatePresence>
         {showJoinForm && (
           <>
+        {/* =========================================
+            OUTER WRAPPER (THE FIX)
+            - fixed inset-0: Fills the whole screen.
+            - flex items-center justify-center: Forces the modal to the dead center.
+            - z-50: Sits on top of everything.
+            - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
+           ========================================= */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
           {/* Backdrop Overlay 
                 - fixed inset-0: Stretches to fill the entire viewport.
                 - backdrop-blur-sm: Blurs the content behind the modal for focus.
                 - z-50: High z-index to sit on top of all other content.
                 - onClick: Closes the modal if the user clicks the dark background.
+                - Changed to 'absolute' to fill the wrapper.
+                - Handled click to close.
             */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setShowJoinForm(false)}
             />
 
             {/* Modal Window Container 
                 - fixed top-1/2 left-1/2...: Centers the element perfectly.
                 - max-w-2xl: Sets a comfortable maximum width for the form.
+                - Removed: fixed top-1/2 left-1/2 -translate... (The cause of the bug)
+                - Added: relative (to sit above backdrop)
+                - Added: bg-white (Fixes the "void" background issue)
+                - Added: w-full max-w-2xl (Size constraints)
             */}
             <motion.div
             // Entrance Animation: Slide Up + Scale Up + Fade In
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl"
+              className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8 mx-4"
               // CRITICAL: Stop Propagation
               // Prevents clicks inside the white form box from bubbling up 
               // to the backdrop and closing the modal.
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
+              
 
                 {/* Close Button (Top Right) 
                     - absolute: Positioned relative to the white container.
@@ -292,8 +306,9 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
                     </Button>
                   </div>
                 </div>
-              </div>
+              
             </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>

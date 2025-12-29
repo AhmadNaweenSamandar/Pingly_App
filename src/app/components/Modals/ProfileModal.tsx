@@ -176,7 +176,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   />
                 </div>
 
-                {/* Field: Discipline (Major) */}
+                {/* Field: Discipline (Major) 
+                  * user select a major and it will be used in matching algorithm
+                */}
                 <div>
                   <label className="block mb-2 text-gray-700">Discipline</label>
                   <Input

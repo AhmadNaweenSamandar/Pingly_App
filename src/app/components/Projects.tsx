@@ -443,18 +443,28 @@ return (
         {detailsProject && (
           <>
 
+          {/* =========================================
+            OUTER WRAPPER (THE FIX)
+            - fixed inset-0: Fills the whole screen.
+            - flex items-center justify-center: Forces the modal to the dead center.
+            - z-50: Sits on top of everything.
+            - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
+           ========================================= */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+
           {/* Backdrop Overlay 
                 - fixed inset-0: Covers the entire viewport.
                 - bg-black/50: Semi-transparent dark layer.
                 - backdrop-blur-sm: Blurs the content behind the modal for focus.
                 - z-50: High z-index to sit on top of everything.
                 - onClick: Clicking anywhere on the background closes the modal.
+                - absolute added and z-50 removed to fix the bug
             */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setDetailsProject(null)}
             />
 
@@ -467,14 +477,14 @@ return (
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl p-8"
 
               // CRITICAL: Stop Propagation
               // Prevents clicks inside the white modal box from triggering the 
               // backdrop's onClick handler (which would close the modal).
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
+              
 
                 {/* Close Button (X) - Top Right */}
                 <button
@@ -524,8 +534,9 @@ return (
                     </div>
                   </div>
                 </div>
-              </div>
+              
             </motion.div>
+          </div>
           </>
         )}
       </AnimatePresence>

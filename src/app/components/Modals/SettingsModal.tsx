@@ -57,27 +57,41 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       <>
 
         {/* =========================================
+            OUTER WRAPPER (THE FIX)
+            - fixed inset-0: Fills the whole screen.
+            - flex items-center justify-center: Forces the modal to the dead center.
+            - z-50: Sits on top of everything.
+            - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
+           ========================================= */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+
+        {/* =========================================
             LAYER 1: Backdrop Overlay
+            - Changed to 'absolute' to fill the wrapper.
+            - Handled click to close.
             ========================================= */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           onClick={onClose}
         />
 
         {/* =========================================
             LAYER 2: Modal Content
+            - Removed: fixed top-1/2 left-1/2 -translate... (The cause of the bug)
+              - Added: relative (to sit above backdrop)
+              - Added: bg-white (Fixes the "void" background issue)
+              - Added: w-full max-w-2xl (Size constraints)
             ========================================= */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+          className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-8"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
 
             {/* Close Button */}
             <button
@@ -223,8 +237,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </Button>
               </div>
             </div>
-          </div>
+          
         </motion.div>
+        </div>
       </>
     </AnimatePresence>
   );
