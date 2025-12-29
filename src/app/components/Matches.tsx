@@ -717,35 +717,38 @@ export function Matches() {
           ========================================= */}
       <AnimatePresence>
         {detailsMatch && (
-          <>
+
+            /* 0. OUTER WRAPPER: Fills screen & Centers children via Flexbox */
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
             {/* 1. Backdrop Overlay 
                 - bg-black/50: Darkens the background.
                 - backdrop-blur-sm: Adds a glass-like blur effect.
                 - onClick: Closes the modal.
             */}
+            {/* 1. BACKDROP: Absolute to fill the wrapper */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setDetailsMatch(null)}
             />
 
-            {/* 2. Modal Content Card 
-                - Centered via fixed positioning + translate.
-                - z-50: Ensures it floats above everything else.
+           {/* 3. MODAL CONTENT CARD 
+                - Removed: fixed top-1/2 left-1/2 -translate...
+                - Added: relative (to sit above backdrop)
             */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
 
               // Prevent closing when clicking inside the card
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4">
+              <div className="p-8">
 
                 {/* Close Button (Top Right X) */}
                 <button
@@ -798,7 +801,7 @@ export function Matches() {
                 </div>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </>
