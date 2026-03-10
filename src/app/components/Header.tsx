@@ -215,23 +215,11 @@ export function Header({
     mode === "professional" ? professionalSection : socialSection;
 
   return (
-    /* --- MAIN CONTAINER ---
-     *  <header>: The semantic HTML tag for the top section.
-     *  'sticky top-0': Pins the header to the very top of the viewport.
-     *  'z-50': Sets the Z-Index high (50) to ensure the header floats ON TOP of other content.
-     *  'backdrop-blur-lg bg-white/80': Creates the semi-transparent "frosted glass" effect.*/
     <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-gray-200 shadow-sm">
-      {/* --- LAYOUT WRAPPER ---
-       *  Limits the width of the content to '7xl' (standard wide screen width).
-       *  'mx-auto': Centers the container in the middle of the screen.*/}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          {/* --- ANIMATED LOGO --- */}
-          {/* motion.h1 comes from the 'framer-motion' library */}
           {/* Logo */}
           <motion.h1
-            /*  'bg-clip-text text-transparent': Makes the text color transparent so the background gradient shows through.
-             *  'from-blue-600 to-purple-600': The specific colors for your Pingly brand gradient.*/
             className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -239,57 +227,62 @@ export function Header({
             Pingly
           </motion.h1>
 
-          {/* Mode Toggle - Centered on desktop, hidden on mobile */}
-          <div className="hidden sm:block absolute left-1/2 -translate-x-1/2">
+          {/* Section Navigation - Centered */}
+          {/* It contains icon for of differect sections of both modes */}
+          <div className="hidden md:block absolute left-1/2 -translate-x-1/2">
             <motion.div
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-purple-100 p-1.5 rounded-full shadow-inner"
+              className={`flex items-center gap-1 p-1.5 rounded-full shadow-inner ${
+                mode === "professional"
+                  ? "bg-gradient-to-r from-blue-100 to-purple-100"
+                  : "bg-gradient-to-r from-pink-100 to-rose-100"
+              }`}
               layout
             >
-              {/*motion used form motion library with professional toggle button*/}
-              <motion.button
-                onClick={() => onModeChange("professional")}
-                className={`relative px-4 sm:px-6 py-2 sm:py-2.5 rounded-full flex items-center gap-2 transition-all text-sm sm:text-base ${
-                  mode === "professional" ? "text-white" : "text-gray-600"
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {mode === "professional" && (
-                  <motion.div
-                    layoutId="mode-indicator"
-                    className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-full shadow-lg"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <Briefcase className="w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
-                <span className="relative z-10 hidden sm:inline">
-                  Professional
-                </span>
-              </motion.button>
-
-              {/*motion for social button toggle*/}
-              <motion.button
-                onClick={() => onModeChange("social")}
-                className={`relative px-4 sm:px-6 py-2 sm:py-2.5 rounded-full flex items-center gap-2 transition-all text-sm sm:text-base ${
-                  mode === "social" ? "text-white" : "text-gray-600"
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {mode === "social" && (
-                  <motion.div
-                    layoutId="mode-indicator"
-                    className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 rounded-full shadow-lg"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 relative z-10" />
-                <span className="relative z-10 hidden sm:inline">Social</span>
-              </motion.button>
+              {currentSections.map((section) => {
+                const Icon = section.icon;
+                const isActive = currentSection === section.id;
+                return (
+                  <motion.button
+                    key={section.id}
+                    onClick={() => {
+                      if (mode === "professional") {
+                        onProfessionalSectionChange(
+                          section.id as ProfessionalSection,
+                        );
+                      } else {
+                        onSocialSectionChange(section.id as SocialSection);
+                      }
+                    }}
+                    className={`relative p-2.5 rounded-full transition-all ${
+                      isActive ? "text-white" : "text-gray-600"
+                    }`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title={section.label}
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId={`section-indicator-${mode}`}
+                        className={`absolute inset-0 rounded-full shadow-lg ${
+                          mode === "professional"
+                            ? "bg-gradient-to-r from-blue-600 to-blue-500"
+                            : "bg-gradient-to-r from-pink-600 to-rose-500"
+                        }`}
+                        transition={{
+                          type: "spring",
+                          bounce: 0.2,
+                          duration: 0.6,
+                        }}
+                      />
+                    )}
+                    <Icon className="w-5 h-5 relative z-10" />
+                  </motion.button>
+                );
+              })}
             </motion.div>
           </div>
 
-          {/* Right Side - Notifications & Menu */}
+          {/* Right Side - Mode Toggle, Notifications & Menu */}
           <div className="flex items-center gap-3">
             {/* Notification Icon */}
             <div className="relative">
@@ -355,6 +348,34 @@ export function Header({
               </AnimatePresence>
             </div>
 
+            {/* Mode Toggle Button */}
+            <motion.button
+              onClick={() =>
+                onModeChange(
+                  mode === "professional" ? "social" : "professional",
+                )
+              }
+              className={`relative px-4 py-2 rounded-full flex items-center gap-2 transition-all shadow-md ${
+                mode === "professional"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white"
+                  : "bg-gradient-to-r from-pink-600 to-rose-500 text-white"
+              }`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {mode === "professional" ? (
+                <>
+                  <Briefcase className="w-5 h-5" />
+                  <span className="hidden sm:inline">Professional</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  <span className="hidden sm:inline">Social</span>
+                </>
+              )}
+            </motion.button>
+
             {/* Three Dots Menu */}
             <div className="relative">
               <motion.button
@@ -415,32 +436,43 @@ export function Header({
           </div>
         </div>
 
-        {/* Mobile Mode Toggle - Fixed at bottom */}
-        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
-          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-100 to-purple-100 p-1.5 rounded-full shadow-inner">
-            <button
-              onClick={() => onModeChange("professional")}
-              className={`flex-1 py-2.5 rounded-full flex items-center justify-center gap-2 transition-all ${
-                mode === "professional"
-                  ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg"
-                  : "text-gray-600"
-              }`}
-            >
-              <Briefcase className="w-5 h-5" />
-              <span>Professional</span>
-            </button>
-
-            <button
-              onClick={() => onModeChange("social")}
-              className={`flex-1 py-2.5 rounded-full flex items-center justify-center gap-2 transition-all ${
-                mode === "social"
-                  ? "bg-gradient-to-r from-purple-600 to-pink-500 text-white shadow-lg"
-                  : "text-gray-600"
-              }`}
-            >
-              <Sparkles className="w-5 h-5" />
-              <span>Social</span>
-            </button>
+        {/* Mobile Section Navigation - Fixed at bottom */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
+          <div
+            className={`flex items-center justify-around p-1.5 rounded-full shadow-inner ${
+              mode === "professional"
+                ? "bg-gradient-to-r from-blue-100 to-purple-100"
+                : "bg-gradient-to-r from-pink-100 to-rose-100"
+            }`}
+          >
+            {currentSections.map((section) => {
+              const Icon = section.icon;
+              const isActive = currentSection === section.id;
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => {
+                    if (mode === "professional") {
+                      onProfessionalSectionChange(
+                        section.id as ProfessionalSection,
+                      );
+                    } else {
+                      onSocialSectionChange(section.id as SocialSection);
+                    }
+                  }}
+                  className={`relative flex-1 py-2.5 rounded-full flex flex-col items-center justify-center gap-1 transition-all ${
+                    isActive
+                      ? mode === "professional"
+                        ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg"
+                        : "bg-gradient-to-r from-pink-600 to-rose-500 text-white shadow-lg"
+                      : "text-gray-600"
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-xs">{section.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
