@@ -5,37 +5,29 @@ import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Input } from "../ui/input";
 
-
-
 //variable for feedback modal created
 interface FeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-
-
 /**
  * FeedbackModal Component
  * * A general-purpose modal for collecting user sentiment and bug reports.
  */
 export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
-
   // =========================================
   // State Definitions
   // =========================================
-  const [rating, setRating] = useState(0);                 // Star rating (0-5)
-  const [category, setCategory] = useState("");            // Feedback Type
-  const [feedback, setFeedback] = useState("");            // Text content
-  const [submitted, setSubmitted] = useState(false);       // UI Switch (Form vs Success)
-
+  const [rating, setRating] = useState(0); // Star rating (0-5)
+  const [category, setCategory] = useState(""); // Feedback Type
+  const [feedback, setFeedback] = useState(""); // Text content
+  const [submitted, setSubmitted] = useState(false); // UI Switch (Form vs Success)
 
   // =========================================
   // Handlers
   // =========================================
   const handleSubmit = (e: React.FormEvent) => {
-
-
     e.preventDefault();
     // 1. Trigger Success View
     setSubmitted(true);
@@ -43,14 +35,13 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     // 2. Auto-Close Sequence
     // Show the "Thank You" message for 2 seconds, then clean up.
     setTimeout(() => {
-      onClose();                // Close Modal
-      setSubmitted(false);      // Reset UI mode
-      setRating(0);             // Reset Rating
-      setCategory("");          // Reset Category
-      setFeedback("");          // Reset Text
+      onClose(); // Close Modal
+      setSubmitted(false); // Reset UI mode
+      setRating(0); // Reset Rating
+      setCategory(""); // Reset Category
+      setFeedback(""); // Reset Text
     }, 2000);
   };
-  
 
   // Conditional Rendering: Don't render anything if modal is closed
   if (!isOpen) return null;
@@ -58,8 +49,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   return (
     <AnimatePresence>
       <>
-
-       {/* =========================================
+        {/* =========================================
             OUTER WRAPPER (THE FIX)
             - fixed inset-0: Fills the whole screen.
             - flex items-center justify-center: Forces the modal to the dead center.
@@ -67,38 +57,35 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
            ========================================= */}
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-
-        {/* =========================================
+          {/* =========================================
             LAYER 1: Backdrop Overlay
             ========================================= 
             - Changed to 'absolute' to fill the wrapper.
             - Handled click to close.
               */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-          onClick={onClose}
-        />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={onClose}
+          />
 
-        {/* =========================================
+          {/* =========================================
             LAYER 2: Modal Card
             =========================================
             - Removed: fixed top-1/2 left-1/2 -translate... (The cause of the bug)
               - Added: relative (to sit above backdrop)
               - Added: bg-white (Fixes the "void" background issue)
               - Added: w-full max-w-2xl (Size constraints) */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl p-8"
-
-          // Prevent clicks inside the modal from closing it
-          onClick={(e) => e.stopPropagation()}
-        >
-
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl p-8"
+            // Prevent clicks inside the modal from closing it
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Close Button (Top Right X) */}
             <button
               onClick={onClose}
@@ -107,49 +94,52 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               <X className="w-5 h-5 text-gray-500" />
             </button>
 
-
             {/* =========================================
                 CONTENT SWITCHER: Success vs Form
                 ========================================= */}
             {submitted ? (
-
               // --- VIEW 1: SUCCESS STATE ---
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-8"
               >
-
                 {/* Success Icon */}
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Send className="w-8 h-8 text-green-600" />
                 </div>
-                <h3 className="text-gray-800 mb-2">Thank you for your feedback!</h3>
-                <p className="text-gray-600">We appreciate your input and will use it to improve Pingly.</p>
+                <h3 className="text-gray-800 mb-2">
+                  Thank you for your feedback!
+                </h3>
+                <p className="text-gray-600">
+                  We appreciate your input and will use it to improve Pingly.
+                </p>
               </motion.div>
             ) : (
               <>
-
-                // --- VIEW 2: FEEDBACK FORM ---
+                {/* --- VIEW 2: FEEDBACK FORM --- */}
                 <h2 className="text-gray-800 mb-2">Send Feedback</h2>
-                <p className="text-gray-600 mb-6">Help us improve your experience</p>
+                <p className="text-gray-600 mb-6">
+                  Help us improve your experience
+                </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {/* === INPUT: Star Rating === */}
                   <div>
-                    <label className="block mb-2 text-gray-700">How would you rate your experience?</label>
+                    <label className="block mb-2 text-gray-700">
+                      How would you rate your experience?
+                    </label>
                     <div className="flex gap-2">
                       {/* Generate 5 Stars */}
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
-                          type="button"  // Prevent form submission
+                          type="button" // Prevent form submission
                           onClick={() => setRating(star)}
                           className="transition-transform hover:scale-110"
                         >
                           <Star
                             className={`w-8 h-8 ${
-
                               // Logic: Fill stars up to the selected rating
                               star <= rating
                                 ? "fill-yellow-400 text-yellow-400"
@@ -160,7 +150,6 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                       ))}
                     </div>
                   </div>
-
 
                   {/* Category */}
 
@@ -178,12 +167,13 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                       <option value="">Select a category</option>
                       <option value="bug">Bug Report</option>
                       <option value="feature">Feature Request</option>
-                      <option value="improvement">Improvement Suggestion</option>
+                      <option value="improvement">
+                        Improvement Suggestion
+                      </option>
                       <option value="ui">UI/UX Feedback</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
-
 
                   {/* Feedback */}
 
@@ -191,7 +181,9 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                       - Large area for open-ended text.
                   */}
                   <div>
-                    <label className="block mb-2 text-gray-700">Your Feedback</label>
+                    <label className="block mb-2 text-gray-700">
+                      Your Feedback
+                    </label>
                     <Textarea
                       placeholder="Tell us what you think..."
                       rows={6}
@@ -207,14 +199,15 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                       - Flex container aligns buttons to the right.
                   */}
                   <div className="flex gap-3 justify-end pt-4">
-
                     {/* Cancel Button: Closes modal without action */}
                     <Button type="button" variant="outline" onClick={onClose}>
                       Cancel
-
-                    {/* Submit Button: Triggers the form submission */}
+                      {/* Submit Button: Triggers the form submission */}
                     </Button>
-                    <Button type="submit" className="bg-gradient-to-r from-blue-600 to-purple-600">
+                    <Button
+                      type="submit"
+                      className="bg-gradient-to-r from-blue-600 to-purple-600"
+                    >
                       <Send className="w-4 h-4 mr-2" />
                       Send Feedback
                     </Button>
@@ -222,8 +215,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 </form>
               </>
             )}
-          
-        </motion.div>
+          </motion.div>
         </div>
       </>
     </AnimatePresence>
