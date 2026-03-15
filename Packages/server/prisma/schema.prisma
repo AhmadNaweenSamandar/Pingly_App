@@ -103,3 +103,73 @@ model Comment {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }
+
+
+
+// --- SOCIAL MODE ---
+
+// matching model stores essential matching entities
+// unique ids are created for user1 and user2 to prevent miss match or rematch for match feature
+
+
+model Match {
+  id            Int       @id @default(autoincrement())
+  user1Id       String
+  user1         User      @relation("User1Matches", fields: [user1Id], references: [id])
+  user2Id       String
+  user2         User      @relation("User2Matches", fields: [user2Id], references: [id])
+  matchedAt     DateTime  @default(now())
+  
+  // Chat context
+  messages      Message[] @relation("DirectMatchChat")
+  
+  @@unique([user1Id, user2Id]) // Prevents duplicate match entries
+}
+
+// we run a CORN logic at ScheduleEntry to remove the ScheduleEntry component at expiresAt 
+// we use this logic because the ScheduleEntry has a deadline and it expires after certain time when it is posted by user
+
+model ScheduleEntry {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  activity    String
+  duration    String
+  description String
+  location    String
+  time        DateTime
+  expiresAt   DateTime // For auto-delete logic
+  createdAt   DateTime @default(now())
+}
+
+
+// --- COMMUNICATION & UTILITY ---
+
+// the message model is polymorphic it is used for both the GroupChat in project and the chat among matches
+model Message {
+  id          Int      @id @default(autoincrement())
+  text        String
+  senderId    String
+  sender      User     @relation(fields: [senderId], references: [id])
+  
+  // Message can belong to either a Project Group or a Direct Match
+  projectId   Int?
+  project     Project? @relation("ProjectGroupChat", fields: [projectId], references: [id])
+  matchId     Int?
+  match       Match?   @relation("DirectMatchChat", fields: [matchId], references: [id])
+  
+  read        Boolean  @default(false)
+  timestamp   DateTime @default(now())
+}
+
+// notificaiton model for whole application 
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // e.g., "success", "friend_request"
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
