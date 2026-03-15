@@ -42,3 +42,64 @@ model User {
   
   createdAt     DateTime  @default(now())
 }
+
+
+
+// --- PROFESSIONAL MODE ---
+
+// Project model that stores posted project details
+
+model Project {
+  id             Int       @id @default(autoincrement())
+  name           String
+  description    String
+  ownerId        String
+  owner          User      @relation("ProjectOwner", fields: [ownerId], references: [id])
+  members        User[]    @relation("ProjectMembers")
+  datePosted     DateTime  @default(now())
+  
+  // For the "unreadMessages" and "group chat" features
+  messages       Message[] @relation("ProjectGroupChat")
+}
+
+// project idea posting feature model
+
+model ProjectIdea {
+  id        Int      @id @default(autoincrement())
+  idea      String
+  skills    String[]
+  wishes    Int      @default(0)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// questions and discussion are using the same model
+model Post {
+  id        Int       @id @default(autoincrement())
+  type      PostType  // To distinguish "questions" from "discussions"
+  content   String    @map("question_content") // Maps to 'question' in your interface
+  useful    Int       @default(0)
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id])
+  replies   Comment[]
+  createdAt DateTime  @default(now())
+}
+
+// post model type identifiable
+enum PostType {
+  QUESTION
+  DISCUSSION
+}
+
+
+// model comment to store discussion, question answers
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
