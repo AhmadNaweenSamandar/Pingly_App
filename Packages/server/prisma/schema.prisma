@@ -1,3 +1,7 @@
+// -----------------------------------------------------------------------------
+// PRISMA CONFIGURATION
+// -----------------------------------------------------------------------------
+
 
 generator client {
   provider = "prisma-client-js"
@@ -8,7 +12,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- CORE MODEL & AUTH ---
+
+
+// -----------------------------------------------------------------------------
+// CORE USER & IDENTITY
+// Handles Auth, Profile (Social & Pro), and Leaderboard Stats
+// -----------------------------------------------------------------------------
 // This is user model that stores all entities related to user 
 // these entities are shared among different features of the application
 
@@ -16,27 +25,36 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   password      String
+
+  // Profile Data (Mapped from Interfaces 8, 9, 10)
   name          String
-  avatar        String?   // URL for avatar
-  image         String?   // Background/Profile image for Social mode
+  avatar        String?   // URL for small thumbnails
+  image         String?   // Large profile image for Matching Cards
   age           Int?
   major         String?
   bio           String?
-  interests     String[]
+  interests     String[]. // Array of strings (Postgres specific feature)
+
+  // Gamification (Mapped from Interface 6 - Leaderboard)
+  // these are not static array, rather it will be dynamically calculated in the backend and added to database
   xp            Int       @default(0)
   badge         String    @default("Rising")
   
-  // Relations
+  // Relationships: Professional
   ownedProjects    Project[]         @relation("ProjectOwner")
   memberProjects   Project[]         @relation("ProjectMembers")
   projectIdeas     ProjectIdea[]
-  posts            Post[]
-  comments         Comment[]
+  posts            Post[]            // Questions & Discussions
+  comments         Comment[]         // Replies
   sentMessages     Message[]
+
+
+  // Relationships: Social
   scheduleEntries  ScheduleEntry[]
   notifications    Notification[]
   
   // Matching relationships
+  // Matches are complex; a user can be the "initiator" or the "receiver"
   matchesAsUser1   Match[]           @relation("User1Matches")
   matchesAsUser2   Match[]           @relation("User2Matches")
   
@@ -45,7 +63,10 @@ model User {
 
 
 
-// --- PROFESSIONAL MODE ---
+// -----------------------------------------------------------------------------
+// PROFESSIONAL MODE MODELS
+// -----------------------------------------------------------------------------
+
 
 // Project model that stores posted project details
 
@@ -53,12 +74,15 @@ model Project {
   id             Int       @id @default(autoincrement())
   name           String
   description    String
+
+  // Ownership & Membership (Interface 2 & 11)
   ownerId        String
   owner          User      @relation("ProjectOwner", fields: [ownerId], references: [id])
   members        User[]    @relation("ProjectMembers")
   datePosted     DateTime  @default(now())
   
   // For the "unreadMessages" and "group chat" features
+  // Chat Integration (Interface 11)
   messages       Message[] @relation("ProjectGroupChat")
 }
 
@@ -68,7 +92,7 @@ model ProjectIdea {
   id        Int      @id @default(autoincrement())
   idea      String
   skills    String[]
-  wishes    Int      @default(0)
+  wishes    Int      @default(0). // "Wishes" counter from Interface 3
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
@@ -77,9 +101,9 @@ model ProjectIdea {
 // questions and discussion are using the same model
 model Post {
   id        Int       @id @default(autoincrement())
-  type      PostType  // To distinguish "questions" from "discussions"
-  content   String    @map("question_content") // Maps to 'question' in your interface
-  useful    Int       @default(0)
+  type      PostType  // To distinguish "questions" from "discussions", It is enum to separate Questions from Discussions
+  content   String    @map("question_content") // The main text/question
+  useful    Int       @default(0) // "Useful" counter from Interface 4/5
   authorId  String
   author    User      @relation(fields: [authorId], references: [id])
   replies   Comment[]
@@ -106,7 +130,9 @@ model Comment {
 
 
 
-// --- SOCIAL MODE ---
+// -----------------------------------------------------------------------------
+// SOCIAL MODE MODELS
+// -----------------------------------------------------------------------------
 
 // matching model stores essential matching entities
 // unique ids are created for user1 and user2 to prevent miss match or rematch for match feature
@@ -120,10 +146,10 @@ model Match {
   user2         User      @relation("User2Matches", fields: [user2Id], references: [id])
   matchedAt     DateTime  @default(now())
   
-  // Chat context
+  // Chat & Unread logic (Interface 8 & 13)
   messages      Message[] @relation("DirectMatchChat")
   
-  @@unique([user1Id, user2Id]) // Prevents duplicate match entries
+  @@unique([user1Id, user2Id]) // Prevents duplicate match entries, prevents two match rows for same pair
 }
 
 // we run a CORN logic at ScheduleEntry to remove the ScheduleEntry component at expiresAt 
@@ -138,12 +164,15 @@ model ScheduleEntry {
   description String
   location    String
   time        DateTime
-  expiresAt   DateTime // For auto-delete logic
+  expiresAt   DateTime // Auto-delete reference for Interface 10
   createdAt   DateTime @default(now())
 }
 
 
-// --- COMMUNICATION & UTILITY ---
+// -----------------------------------------------------------------------------
+// MESSAGING & NOTIFICATIONS
+// Supports both Project Groups and 1-on-1 Social Matches
+// -----------------------------------------------------------------------------
 
 // the message model is polymorphic it is used for both the GroupChat in project and the chat among matches
 model Message {
@@ -153,6 +182,7 @@ model Message {
   sender      User     @relation(fields: [senderId], references: [id])
   
   // Message can belong to either a Project Group or a Direct Match
+  // Polymorphic-like links: A message belongs to either a Project or a Match
   projectId   Int?
   project     Project? @relation("ProjectGroupChat", fields: [projectId], references: [id])
   matchId     Int?
@@ -168,7 +198,7 @@ model Notification {
   id        Int      @id @default(autoincrement())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  type      String   // e.g., "success", "friend_request"
+  type      String   // "success", "error", etc. (Interface 14)
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
