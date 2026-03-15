@@ -7,3 +7,38 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// --- CORE MODEL & AUTH ---
+// This is user model that stores all entities related to user 
+// these entities are shared among different features of the application
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  avatar        String?   // URL for avatar
+  image         String?   // Background/Profile image for Social mode
+  age           Int?
+  major         String?
+  bio           String?
+  interests     String[]
+  xp            Int       @default(0)
+  badge         String    @default("Rising")
+  
+  // Relations
+  ownedProjects    Project[]         @relation("ProjectOwner")
+  memberProjects   Project[]         @relation("ProjectMembers")
+  projectIdeas     ProjectIdea[]
+  posts            Post[]
+  comments         Comment[]
+  sentMessages     Message[]
+  scheduleEntries  ScheduleEntry[]
+  notifications    Notification[]
+  
+  // Matching relationships
+  matchesAsUser1   Match[]           @relation("User1Matches")
+  matchesAsUser2   Match[]           @relation("User2Matches")
+  
+  createdAt     DateTime  @default(now())
+}
