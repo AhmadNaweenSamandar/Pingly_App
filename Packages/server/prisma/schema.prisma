@@ -9,7 +9,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 
@@ -33,7 +32,7 @@ model User {
   age           Int?
   major         String?
   bio           String?
-  interests     String[]. // Array of strings (Postgres specific feature)
+  interests     String[] // Array of strings (Postgres specific feature)
 
   // Gamification (Mapped from Interface 6 - Leaderboard)
   // these are not static array, rather it will be dynamically calculated in the backend and added to database
@@ -92,7 +91,7 @@ model ProjectIdea {
   id        Int      @id @default(autoincrement())
   idea      String
   skills    String[]
-  wishes    Int      @default(0). // "Wishes" counter from Interface 3
+  wishes    Int      @default(0) // "Wishes" counter from Interface 3
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
