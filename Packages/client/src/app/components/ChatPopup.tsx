@@ -10,7 +10,7 @@ interface Message {
   id: number;
   sender: "me" | "them";
   text: string;
-  timestamp: Date;
+ timestamp: Date;
 }
 
 //objects created for ChatPopup
@@ -24,7 +24,7 @@ interface ChatPopupProps {
     };
   };
   onClose: () => void;
-}
+} 
 
 //mock data created for messages
 const initialMessages: Message[] = [
