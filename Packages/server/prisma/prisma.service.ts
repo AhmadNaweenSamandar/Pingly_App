@@ -1,7 +1,8 @@
 // packages/server/prisma/prisma.service.ts
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
-
+// import { PrismaClient } from '@prisma/client';
+// ADD THIS: imported the generated prisma from prisma file it self instead of node_module
+import { PrismaClient } from 'prisma/generated/client';
 
 /* This service extends the generated PrismaClient and hooks into NestJS's lifecycle events. 
 This ensures the database connects when the server boots up (avoiding a cold-start delay on your first API request) 

@@ -2,9 +2,8 @@
 // PRISMA CONFIGURATION
 // -----------------------------------------------------------------------------
 
-
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
   // Tell Prisma to put the client right here in the prisma folder!
   output     = "./generated/client"
@@ -14,8 +13,6 @@ datasource db {
   provider = "postgresql"
 }
 
-
-
 // -----------------------------------------------------------------------------
 // CORE USER & IDENTITY
 // Handles Auth, Profile (Social & Pro), and Leaderboard Stats
@@ -24,68 +21,64 @@ datasource db {
 // these entities are shared among different features of the application
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String?
+  id       String  @id @default(cuid())
+  email    String  @unique
+  password String?
 
   // Profile Data (Mapped from Interfaces 8, 9, 10)
-  name          String
-  avatar        String?   // URL for small thumbnails
-  image         String?   // Large profile image for Matching Cards
-  age           Int?
-  major         String?
-  bio           String?
-  interests     String[] // Array of strings (Postgres specific feature)
+  name      String
+  avatar    String? // URL for small thumbnails
+  image     String? // Large profile image for Matching Cards
+  age       Int?
+  major     String?
+  bio       String?
+  interests String[] // Array of strings (Postgres specific feature)
 
   // Gamification (Mapped from Interface 6 - Leaderboard)
   // these are not static array, rather it will be dynamically calculated in the backend and added to database
-  xp            Int       @default(0)
-  badge         String    @default("Rising")
-  
-  // Relationships: Professional
-  ownedProjects    Project[]         @relation("ProjectOwner")
-  memberProjects   Project[]         @relation("ProjectMembers")
-  projectIdeas     ProjectIdea[]
-  posts            Post[]            // Questions & Discussions
-  comments         Comment[]         // Replies
-  sentMessages     Message[]
+  xp    Int    @default(0)
+  badge String @default("Rising")
 
+  // Relationships: Professional
+  ownedProjects  Project[]     @relation("ProjectOwner")
+  memberProjects Project[]     @relation("ProjectMembers")
+  projectIdeas   ProjectIdea[]
+  posts          Post[] // Questions & Discussions
+  comments       Comment[] // Replies
+  sentMessages   Message[]
 
   // Relationships: Social
-  scheduleEntries  ScheduleEntry[]
-  notifications    Notification[]
-  
+  scheduleEntries ScheduleEntry[]
+  notifications   Notification[]
+
   // Matching relationships
   // Matches are complex; a user can be the "initiator" or the "receiver"
-  matchesAsUser1   Match[]           @relation("User1Matches")
-  matchesAsUser2   Match[]           @relation("User2Matches")
-  
-  createdAt     DateTime  @default(now())
+  matchesAsUser1 Match[] @relation("User1Matches")
+  matchesAsUser2 Match[] @relation("User2Matches")
+
+  createdAt DateTime @default(now())
 }
-
-
 
 // -----------------------------------------------------------------------------
 // PROFESSIONAL MODE MODELS
 // -----------------------------------------------------------------------------
 
-
 // Project model that stores posted project details
 
 model Project {
-  id             Int       @id @default(autoincrement())
-  name           String
-  description    String
+  id          Int    @id @default(autoincrement())
+  name        String
+  description String
 
   // Ownership & Membership (Interface 2 & 11)
-  ownerId        String
-  owner          User      @relation("ProjectOwner", fields: [ownerId], references: [id])
-  members        User[]    @relation("ProjectMembers")
-  datePosted     DateTime  @default(now())
-  
+  ownerId    String
+  owner      User     @relation("ProjectOwner", fields: [ownerId], references: [id])
+  members    User[]   @relation("ProjectMembers")
+  datePosted DateTime @default(now())
+
   // For the "unreadMessages" and "group chat" features
   // Chat Integration (Interface 11)
-  messages       Message[] @relation("ProjectGroupChat")
+  messages Message[] @relation("ProjectGroupChat")
 }
 
 // project idea posting feature model
@@ -103,7 +96,7 @@ model ProjectIdea {
 // questions and discussion are using the same model
 model Post {
   id        Int       @id @default(autoincrement())
-  type      PostType  // To distinguish "questions" from "discussions", It is enum to separate Questions from Discussions
+  type      PostType // To distinguish "questions" from "discussions", It is enum to separate Questions from Discussions
   content   String    @map("question_content") // The main text/question
   useful    Int       @default(0) // "Useful" counter from Interface 4/5
   authorId  String
@@ -118,7 +111,6 @@ enum PostType {
   DISCUSSION
 }
 
-
 // model comment to store discussion, question answers
 model Comment {
   id        Int      @id @default(autoincrement())
@@ -130,8 +122,6 @@ model Comment {
   createdAt DateTime @default(now())
 }
 
-
-
 // -----------------------------------------------------------------------------
 // SOCIAL MODE MODELS
 // -----------------------------------------------------------------------------
@@ -139,18 +129,17 @@ model Comment {
 // matching model stores essential matching entities
 // unique ids are created for user1 and user2 to prevent miss match or rematch for match feature
 
-
 model Match {
-  id            Int       @id @default(autoincrement())
-  user1Id       String
-  user1         User      @relation("User1Matches", fields: [user1Id], references: [id])
-  user2Id       String
-  user2         User      @relation("User2Matches", fields: [user2Id], references: [id])
-  matchedAt     DateTime  @default(now())
-  
+  id        Int      @id @default(autoincrement())
+  user1Id   String
+  user1     User     @relation("User1Matches", fields: [user1Id], references: [id])
+  user2Id   String
+  user2     User     @relation("User2Matches", fields: [user2Id], references: [id])
+  matchedAt DateTime @default(now())
+
   // Chat & Unread logic (Interface 8 & 13)
-  messages      Message[] @relation("DirectMatchChat")
-  
+  messages Message[] @relation("DirectMatchChat")
+
   @@unique([user1Id, user2Id]) // Prevents duplicate match entries, prevents two match rows for same pair
 }
 
@@ -170,7 +159,6 @@ model ScheduleEntry {
   createdAt   DateTime @default(now())
 }
 
-
 // -----------------------------------------------------------------------------
 // MESSAGING & NOTIFICATIONS
 // Supports both Project Groups and 1-on-1 Social Matches
@@ -178,20 +166,20 @@ model ScheduleEntry {
 
 // the message model is polymorphic it is used for both the GroupChat in project and the chat among matches
 model Message {
-  id          Int      @id @default(autoincrement())
-  text        String
-  senderId    String
-  sender      User     @relation(fields: [senderId], references: [id])
-  
+  id       Int    @id @default(autoincrement())
+  text     String
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id])
+
   // Message can belong to either a Project Group or a Direct Match
   // Polymorphic-like links: A message belongs to either a Project or a Match
-  projectId   Int?
-  project     Project? @relation("ProjectGroupChat", fields: [projectId], references: [id])
-  matchId     Int?
-  match       Match?   @relation("DirectMatchChat", fields: [matchId], references: [id])
-  
-  read        Boolean  @default(false)
-  timestamp   DateTime @default(now())
+  projectId Int?
+  project   Project? @relation("ProjectGroupChat", fields: [projectId], references: [id])
+  matchId   Int?
+  match     Match?   @relation("DirectMatchChat", fields: [matchId], references: [id])
+
+  read      Boolean  @default(false)
+  timestamp DateTime @default(now())
 }
 
 // notificaiton model for whole application 
@@ -200,7 +188,7 @@ model Notification {
   id        Int      @id @default(autoincrement())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  type      String   // "success", "error", etc. (Interface 14)
+  type      String // "success", "error", etc. (Interface 14)
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
