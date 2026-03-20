@@ -7,7 +7,7 @@ generator client {
   provider = "prisma-client-js"
   engineType = "library"
   // Tell Prisma to put the client right here in the prisma folder!
-  output     = "./generated/client"
+  output     = "../node_modules/@generated/prisma-client"
 }
 
 datasource db {
