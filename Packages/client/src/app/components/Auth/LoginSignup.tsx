@@ -17,7 +17,7 @@ interface LoginSignupProps {
     * * The entry barrier for the application.
     * * Handles authentication state and enforces university email domain restrictions.
     */
-export async function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
+export function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
   
   // =========================================
   // State Definitions
@@ -54,8 +54,41 @@ export async function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
     return email.endsWith(ALLOWED_DOMAIN);
   };
 
+  /**
+   * Main Form Submission Handler
+   * Orchestrates validation and authentication callbacks.
+   */
 
-  // The API Call to our NestJS backend
+  // 2. MADE handleSubmit an 'async' function so we can use 'await' inside it
+  const handleSubmit = async (e: React.FormEvent) => {
+
+    // Prevent default HTML form submission (page reload)
+    e.preventDefault();
+
+    // Clear any previous error messages
+    setError("");
+
+
+    // 1. Domain Validation
+    // Enforce the uOttawa email restriction
+    if (!validateEmail(email)) {
+      setError(`Please use your school email (${ALLOWED_DOMAIN})`);
+      return; // Stop execution
+    }
+
+    // 2. Password Strength Validation
+    // Basic length check for security
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return; // Stop execution
+    }
+
+    if (isLogin) {
+
+      // Mock login - in real app, validate credentials
+      // Scenario: User is logging in
+      // In a real app, I would await an API call here
+      // The API Call to our NestJS backend
   try {
     // localhost for nestjs backend we can confirm this after running nestjs
     const response = await fetch('http://localhost:3000/auth/dev-login', {
@@ -80,7 +113,9 @@ export async function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
     localStorage.setItem('access_token', data.access_token);
     
     // Optional: Save user data if we want later to display their name in the navbar
-    localStorage.setItem('user', JSON.stringify(data.user));
+    if(data.user){
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
 
     console.log("Success! Token saved:", data.access_token);
     
@@ -88,47 +123,20 @@ export async function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
     // (e.g., using React Router's useNavigate hook)
     // navigate('/professional');
 
+    // Trigger the parent component's login handler
+    onLogin();
+
   } catch (err) {
     console.error(err);
     setError('Something went wrong connecting to the server.');
   }
 
-  /**
-   * Main Form Submission Handler
-   * Orchestrates validation and authentication callbacks.
-   */
-  const handleSubmit = (e: React.FormEvent) => {
-
-    // Prevent default HTML form submission (page reload)
-    e.preventDefault();
-
-    // Clear any previous error messages
-    setError("");
-
-
-    // 1. Domain Validation
-    // Enforce the uOttawa email restriction
-    if (!validateEmail(email)) {
-      setError(`Please use your school email (${ALLOWED_DOMAIN})`);
-      return; // Stop execution
-    }
-
-    // 2. Password Strength Validation
-    // Basic length check for security
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return; // Stop execution
-    }
-
-    if (isLogin) {
-      // Mock login - in real app, validate credentials
-      // Scenario: User is logging in
-      // In a real app, I would await an API call here
-      onLogin();
+      
     } else {
       // Navigate to registration form
       // Scenario: User is creating an account
       // Redirect to the multi-step registration flow
+
       onSignup();
     }
   };
