@@ -17,7 +17,7 @@ interface LoginSignupProps {
     * * The entry barrier for the application.
     * * Handles authentication state and enforces university email domain restrictions.
     */
-export function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
+export async function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
   
   // =========================================
   // State Definitions
@@ -55,6 +55,43 @@ export function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
   };
 
 
+  // The API Call to our NestJS backend
+  try {
+    // localhost for nestjs backend we can confirm this after running nestjs
+    const response = await fetch('http://localhost:3000/auth/dev-login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        email: email,
+        name: name 
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Login failed on the server');
+    }
+
+    const data = await response.json();
+    
+    // 3. Save the JWT to Local Storage!
+    // This is how the browser "remembers" we are logged in
+    localStorage.setItem('access_token', data.access_token);
+    
+    // Optional: Save user data if we want later to display their name in the navbar
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    console.log("Success! Token saved:", data.access_token);
+    
+    // 4. Redirect the user to the dashboard or professional mode
+    // (e.g., using React Router's useNavigate hook)
+    // navigate('/professional');
+
+  } catch (err) {
+    console.error(err);
+    setError('Something went wrong connecting to the server.');
+  }
 
   /**
    * Main Form Submission Handler
