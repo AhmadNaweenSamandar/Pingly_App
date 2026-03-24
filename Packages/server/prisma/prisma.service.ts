@@ -5,6 +5,7 @@ import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/commo
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { ConfigService } from '@nestjs/config';
 
 /* This service extends the generated PrismaClient and hooks into NestJS's lifecycle events. 
 This ensures the database connects when the server boots up (avoiding a cold-start delay on your first API request) 
@@ -21,22 +22,27 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     this._user = value;
   }
 
-  constructor() {
+  constructor(private configService: ConfigService) {
 
-    // 1. Log the variable to see if NestJS can actually read it
-    console.log("THE DATABASE URL IS: ", process.env.DATABASE_URL); 
+    // 1. SAFELY FETCH VARIABLES using ConfigService, NOT process.env
+    const databaseUrl = configService.get<string>('DATABASE_URL');
+    const nodeEnv = configService.get<string>('NODE_ENV');
+
+    // 2. Sanity check: This should now print our actual URL!
+    console.log("THE DATABASE URL IS: ", databaseUrl); 
 
 
-    // 1. Initialize the standard pg connection pool
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    // 3. Initialize the pool using the safe URL
+    const pool = new Pool({ connectionString: databaseUrl });
     
-    // 2. Wrap the pool in Prisma's driver adapter
+    // 4. Wrap the pool in Prisma's driver adapter
     const adapter = new PrismaPg(pool as any);
 
+    // 5. Call super() to initialize PrismaClient
     // we can pass PrismaClientOptions here for logging queries in development
     super({
       adapter,
-      log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+      log: nodeEnv === 'development' ? ['warn', 'error'] : ['error'],
     });
   }
 
