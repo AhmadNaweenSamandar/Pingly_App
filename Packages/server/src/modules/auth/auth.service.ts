@@ -1,7 +1,8 @@
 // src/auth/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service'; 
+import * as bcrypt from 'bcrypt'; // bcrypt for password hashing
 
 /**
  * @Injectable() means this class can be "injected" into other files (like our controller).
@@ -15,54 +16,80 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  async devLogin(email: string, name: string) {
-
-    // ---------------------------------------------------------
-    // RULE 1: THE DOMAIN CHECK
-    // ---------------------------------------------------------
-    // We immediately reject anyone who doesn't belong to uottawa.ca.
-    // This protects our app from outsiders.
-    // later we will implement Microsoft SSO entra ID auth in accordance with uottawa IT team requirements 
+  // =========================================
+  // 1. SIGN UP ROUTE
+  // =========================================
+  async signup(email: string, password: string) {
+    // RULE 1: Domain check
     if (!email.endsWith('@uottawa.ca')) {
-      throw new UnauthorizedException('Only uottawa.ca emails are allowed.');
+      throw new UnauthorizedException('Only @uottawa.ca emails are allowed.');
     }
 
-    // ---------------------------------------------------------
-    // RULE 2: FIND OR CREATE THE USER
-    // ---------------------------------------------------------
-    // We ask Prisma: "Does a user with this email already exist?"
-    let user = await this.prisma.user.findUnique({
+    // RULE 2: Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
 
-
-    // If they do not exist, this is their first time logging in. We must create them.
-    if (!user) {
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          name, 
-          // since we have password as required in our schema, we will add ? to it and make it optional for dev login
-        },
-      });
-      console.log(`Created new dev user: ${email} with name: ${name}`);
+    if (existingUser) {
+      // ConflictException (409) is standard for "Resource already exists"
+      throw new ConflictException('A user with this email already exists.');
     }
 
-    // ---------------------------------------------------------
-    // RULE 3: MINT THE JSON WEB TOKEN (JWT)
-    // ---------------------------------------------------------
-    // The payload is the public information hidden inside the token.
-    // 'sub' (Subject) is the industry-standard term for the User ID.
-    const payload = { sub: user.id, email: user.email };
+    // RULE 3: Hash the password BEFORE saving to the database
+    const saltOrRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltOrRounds);
 
-    // We sign the token using our secret key. React will save this token.
+    // RULE 4: Create the user with the HASHED password
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+      },
+    });
+
+    console.log(`Created new user: ${email}`);
+
+    // Automatically log them in after signup by returning a token
+    return this.generateToken(user.id, user.email);
+  }
+
+  // =========================================
+  // 2. LOGIN ROUTE
+  // =========================================
+  async login(email: string, password: string) {
+    // RULE 1: Find the user
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    // RULE 2: Compare the provided password with the hashed password in DB
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
+
+    // RULE 3: If everything matches, generate and return the token
+    return this.generateToken(user.id, user.email);
+  }
+
+  // =========================================
+  // HELPER FUNCTION
+  // =========================================
+  // Since both signup and login need to return a JWT, we put it in a helper function
+  private generateToken(userId: number, email: string) {
+    const payload = { sub: userId, email: email };
+    
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name
+        id: userId,
+        email: email,
       },
+    };
   }
-}
 }
