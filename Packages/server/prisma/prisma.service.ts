@@ -2,7 +2,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 // import { PrismaClient } from '@prisma/client';
 // ADD THIS: imported the generated prisma from prisma file it self instead of node_module
-import { PrismaClient } from '@generated/prisma-client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
@@ -13,7 +13,13 @@ and disconnects gracefully when the server shuts down. */
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
-  user: any;
+  private _user: any;
+  public get user(): any {
+    return this._user;
+  }
+  public set user(value: any) {
+    this._user = value;
+  }
 
   constructor() {
     // 1. Initialize the standard pg connection pool
