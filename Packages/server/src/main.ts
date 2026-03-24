@@ -2,6 +2,11 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
+
+  // Log the variable to see if NestJS can actually read it
+  console.log("THE DATABASE URL IS: ", process.env.DATABASE_URL); 
+
+
   const app = await NestFactory.create(AppModule);
 
   // 1. THE CORS FIX: Tell the backend to ONLY trust our React frontend

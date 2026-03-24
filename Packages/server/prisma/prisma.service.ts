@@ -22,6 +22,11 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   }
 
   constructor() {
+
+    // 1. Log the variable to see if NestJS can actually read it
+    console.log("THE DATABASE URL IS: ", process.env.DATABASE_URL); 
+
+
     // 1. Initialize the standard pg connection pool
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     
