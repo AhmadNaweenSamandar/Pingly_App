@@ -16,14 +16,32 @@ interface RegistrationFormProps {
 //these forms will be used in matching algorithm
 //user will be recommended based on these constants
 const technicalSkills = [
+  // Tech
   "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
   "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
-  "Machine Learning", "Data Science", "UI/UX Design", "Mobile Development"
+  "Machine Learning", "Data Science", "Mobile Development",
+  // Design & Creative
+  "UI/UX Design", "Graphic Design", "Video Editing", "Copywriting", "3D Modeling",
+  // Business & Management
+  "Project Management", "Financial Modeling", "Marketing", "Sales", "Public Speaking", "Data Analysis"
+];
+
+// Split the "Looking For" array into two distinct intents
+const professionalGoals = [
+  "Study Partner", "Project Collaborator", "Startup Co-founder", 
+  "Mentor", "Mentee", "Career Networking", "Hackathon Teammate"
+];
+
+const socialGoals = [
+  "Friendship", "Dating", "Gym Partner", "Coffee Buddy", 
+  "Event/Concert Buddy", "Gaming Squad", "Roommate Search"
 ];
 
 const hobbies = [
-  "Reading", "Gaming", "Sports", "Music", "Art", "Cooking",
-  "Photography", "Traveling", "Hiking", "Dancing", "Writing", "Coding"
+  "Reading", "PC Gaming", "Console Gaming", "Intramural Sports", "Weightlifting", 
+  "Music Production", "Live Gigs", "Cooking", "Baking", "Photography", 
+  "Traveling", "Hiking", "Dancing", "Writing", "Thrifting", "Board Games", 
+  "Volunteering", "Film/Cinema", "Anime"
 ];
 
 const personalityTypes = [
