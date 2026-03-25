@@ -60,14 +60,21 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     dob: "",                   // Date of Birth
     university: "",            // e.g., "uOttawa"
     discipline: "",            // e.g., "Software Engineering"
-    yearOfStudy: "",           // e.g., "2nd Year"
+    expectedGraduationYear: "",           // e.g., "2nd Year"
+
+    // MATCHING PREFERENCES (The Missing Link)
+    matchWithDisciplines: [] as string[], // e.g., ["Computer Science", "Business", "Any"]
+    matchWithYears: [] as string[],       // e.g., ["Same Year", "Upperclassmen", "Any"]
 
 
     // --- STEP 2: Professional Profile (Work Mode) ---
     profilePicture: null as File | null,       // Main avatar (Type: File object)
     skills: [] as string[],                    // Array of tech tags (e.g. ["React", "Java"])
+    industriesOfInterest: [] as string[],      // e.g., ["Fintech", "EdTech", "Game Dev"]
+    professionalGoals: [] as string[],         // e.g., ["Co-founder", "Study Partner"]
     linkedin: "",
     github: "",
+    portfolioWebsite: "",                      // Crucial for design/art/business students
 
 
     // --- STEP 3: Social Profile (Social Mode) ---
@@ -75,7 +82,9 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     bio: "",                                   // Short biography
     hobbies: [] as string[],                   // Array of interest tags
     personalityType: "",                       // e.g., "INTJ"
-    lookingFor: [] as string[]                 // e.g., ["Study Buddy", "Friendship"]
+    lookingFor: [] as string[],                 // e.g., ["Study Buddy", "Friendship"]
+    socialGoals: [] as string[],                // e.g., ["Friendship", "Dating", "Gym Partner"
+    campusInvolvement: [] as string[]         // e.g., ["Intramural Sports", "Student Govt"]
   });
 
 
@@ -142,7 +151,7 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     if (step === 1) {
 
       // Ensure all Core Identity fields are present before proceeding
-      if (!formData.name || !formData.dob || !formData.university || !formData.discipline || !formData.yearOfStudy) {
+      if (!formData.name || !formData.dob || !formData.university || !formData.discipline || !formData.expectedGraduationYear) {
         alert("Please fill all required fields"); // Simple user feedback if miss any field in first step
         return;  // Stop execution (prevent step increment)
       }
@@ -314,8 +323,8 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                 <div>
                   <label className="block mb-2 text-gray-700">Year of Study *</label>
                   <Select
-                    value={formData.yearOfStudy}
-                    onValueChange={(value) => setFormData({ ...formData, yearOfStudy: value })}
+                    value={formData.expectedGraduationYear}
+                    onValueChange={(value) => setFormData({ ...formData, expectedGraduationYear: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select year" />
