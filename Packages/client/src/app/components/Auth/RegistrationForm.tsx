@@ -348,14 +348,128 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1st Year</SelectItem>
-                      <SelectItem value="2">2nd Year</SelectItem>
-                      <SelectItem value="3">3rd Year</SelectItem>
-                      <SelectItem value="4">4th Year</SelectItem>
-                      <SelectItem value="5+">5+ Year</SelectItem>
+                      <SelectItem value="1">2027</SelectItem>
+                      <SelectItem value="2">2028</SelectItem>
+                      <SelectItem value="3">2029</SelectItem>
+                      <SelectItem value="4">2030</SelectItem>
+                      <SelectItem value="5+">2031</SelectItem>
                       <SelectItem value="graduate">Graduate</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* === MATCHING PREFERENCES SECTION === */}
+                <div className="pt-4 mt-6 border-t border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                    Matching Preferences
+                  </h3>
+
+                  {/* Field: Match with Disciplines (Tag Input UI) */}
+                  <div className="mb-6">
+                    <label className="block mb-2 text-gray-700">Preferred Disciplines/Majors *</label>
+                    <p className="text-xs text-gray-500 mb-2">Type a major and press Enter, or type 'Any'</p>
+                    
+                    {/* Render Selected Pills */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {formData.matchWithDisciplines.map((disc, index) => (
+                        <span 
+                          key={index} 
+                          className="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full text-sm flex items-center shadow-sm"
+                        >
+                          {disc}
+                          <button
+                            type="button"
+                            onClick={() => setFormData({
+                              ...formData,
+                              matchWithDisciplines: formData.matchWithDisciplines.filter((_, i) => i !== index)
+                            })}
+                            className="ml-2 text-blue-400 hover:text-blue-700 font-bold"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Input to add new disciplines */}
+                    <div className="flex gap-2">
+                      <Input
+                        id="disciplineInput"
+                        placeholder="e.g., Business, Computer Science, Any"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const val = e.currentTarget.value.trim();
+                            if (val && !formData.matchWithDisciplines.includes(val)) {
+                              setFormData({ 
+                                ...formData, 
+                                matchWithDisciplines: [...formData.matchWithDisciplines, val] 
+                              });
+                              e.currentTarget.value = '';
+                            }
+                          }
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const input = document.getElementById('disciplineInput') as HTMLInputElement;
+                          const val = input.value.trim();
+                          if (val && !formData.matchWithDisciplines.includes(val)) {
+                            setFormData({ 
+                              ...formData, 
+                              matchWithDisciplines: [...formData.matchWithDisciplines, val] 
+                            });
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Field: Match with Years (Selectable Pill Toggles) */}
+                  <div>
+                    <label className="block mb-3 text-gray-700">Preferred Class Years *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Same Year", "Underclassmen", "Upperclassmen", "Graduate", "Any"].map((yearOption) => {
+                        const isSelected = formData.matchWithYears.includes(yearOption);
+                        return (
+                          <button
+                            key={yearOption}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                // Remove if already selected
+                                setFormData({
+                                  ...formData,
+                                  matchWithYears: formData.matchWithYears.filter(y => y !== yearOption)
+                                });
+                              } else {
+                                // If "Any" is clicked, clear everything else.
+                                // If something else is clicked, remove "Any" from the array.
+                                if (yearOption === "Any") {
+                                  setFormData({ ...formData, matchWithYears: ["Any"] });
+                                } else {
+                                  const filteredYears = formData.matchWithYears.filter(y => y !== "Any");
+                                  setFormData({ ...formData, matchWithYears: [...filteredYears, yearOption] });
+                                }
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm border transition-all duration-200 ${
+                              isSelected
+                                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-md"
+                                : "bg-white text-gray-600 border-gray-300 hover:border-purple-400 hover:text-purple-600"
+                            }`}
+                          >
+                            {yearOption}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Navigation: NEXT Button */}
