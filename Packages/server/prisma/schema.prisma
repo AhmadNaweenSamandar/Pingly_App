@@ -29,7 +29,7 @@ model User {
   password      String
 
   // Profile Data (Mapped from Interfaces 8, 9, 10)
-  name          String
+  name          String?
   avatar        String?   // URL for small thumbnails
   image         String?   // Large profile image for Matching Cards
   age           Int?
