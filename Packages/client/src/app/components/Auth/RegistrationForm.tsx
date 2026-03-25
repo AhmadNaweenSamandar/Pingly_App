@@ -158,6 +158,59 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     }
   };
 
+  // --- MATCHING PREFERENCES LOGIC ---
+
+  const handleAddDiscipline = (value: string) => {
+    const trimmedVal = value.trim();
+    if (trimmedVal && !formData.matchWithDisciplines.includes(trimmedVal)) {
+      setFormData({
+        ...formData,
+        matchWithDisciplines: [...formData.matchWithDisciplines, trimmedVal],
+      });
+    }
+  };
+
+  const handleRemoveDiscipline = (indexToRemove: number) => {
+    setFormData({
+      ...formData,
+      matchWithDisciplines: formData.matchWithDisciplines.filter((_, i) => i !== indexToRemove),
+    });
+  };
+
+  const handleDisciplineKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddDiscipline(e.currentTarget.value);
+      e.currentTarget.value = ''; // Clear input after adding
+    }
+  };
+
+  const handleDisciplineButtonClick = () => {
+    const input = document.getElementById('disciplineInput') as HTMLInputElement;
+    handleAddDiscipline(input.value);
+    input.value = ''; // Clear input after adding
+  };
+
+  const handleToggleYear = (yearOption: string) => {
+    const isSelected = formData.matchWithYears.includes(yearOption);
+
+    if (isSelected) {
+      // Remove if already selected
+      setFormData({
+        ...formData,
+        matchWithYears: formData.matchWithYears.filter((y) => y !== yearOption),
+      });
+    } else {
+      // Mutual exclusivity logic for "Any"
+      if (yearOption === "Any") {
+        setFormData({ ...formData, matchWithYears: ["Any"] });
+      } else {
+        const filteredYears = formData.matchWithYears.filter((y) => y !== "Any");
+        setFormData({ ...formData, matchWithYears: [...filteredYears, yearOption] });
+      }
+    }
+  };
+
 
   /**
    * Advances the wizard to the next step.
@@ -358,6 +411,8 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   </Select>
                 </div>
 
+
+
                 {/* === MATCHING PREFERENCES SECTION === */}
                 <div className="pt-4 mt-6 border-t border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
@@ -379,10 +434,7 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                           {disc}
                           <button
                             type="button"
-                            onClick={() => setFormData({
-                              ...formData,
-                              matchWithDisciplines: formData.matchWithDisciplines.filter((_, i) => i !== index)
-                            })}
+                            onClick={() => handleRemoveDiscipline(index)}
                             className="ml-2 text-blue-400 hover:text-blue-700 font-bold"
                           >
                             ×
@@ -396,34 +448,12 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                       <Input
                         id="disciplineInput"
                         placeholder="e.g., Business, Computer Science, Any"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            const val = e.currentTarget.value.trim();
-                            if (val && !formData.matchWithDisciplines.includes(val)) {
-                              setFormData({ 
-                                ...formData, 
-                                matchWithDisciplines: [...formData.matchWithDisciplines, val] 
-                              });
-                              e.currentTarget.value = '';
-                            }
-                          }
-                        }}
+                        onKeyDown={handleDisciplineKeyDown}
                       />
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => {
-                          const input = document.getElementById('disciplineInput') as HTMLInputElement;
-                          const val = input.value.trim();
-                          if (val && !formData.matchWithDisciplines.includes(val)) {
-                            setFormData({ 
-                              ...formData, 
-                              matchWithDisciplines: [...formData.matchWithDisciplines, val] 
-                            });
-                            input.value = '';
-                          }
-                        }}
+                        onClick={handleDisciplineButtonClick}
                       >
                         Add
                       </Button>
@@ -440,24 +470,7 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                           <button
                             key={yearOption}
                             type="button"
-                            onClick={() => {
-                              if (isSelected) {
-                                // Remove if already selected
-                                setFormData({
-                                  ...formData,
-                                  matchWithYears: formData.matchWithYears.filter(y => y !== yearOption)
-                                });
-                              } else {
-                                // If "Any" is clicked, clear everything else.
-                                // If something else is clicked, remove "Any" from the array.
-                                if (yearOption === "Any") {
-                                  setFormData({ ...formData, matchWithYears: ["Any"] });
-                                } else {
-                                  const filteredYears = formData.matchWithYears.filter(y => y !== "Any");
-                                  setFormData({ ...formData, matchWithYears: [...filteredYears, yearOption] });
-                                }
-                              }
-                            }}
+                            onClick={() => handleToggleYear(yearOption)}
                             className={`px-4 py-2 rounded-full text-sm border transition-all duration-200 ${
                               isSelected
                                 ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-md"
@@ -471,6 +484,8 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                     </div>
                   </div>
                 </div>
+
+                
 
                 {/* Navigation: NEXT Button */}
                 <div className="flex justify-end pt-4">
