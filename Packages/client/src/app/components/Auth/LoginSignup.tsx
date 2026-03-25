@@ -17,7 +17,7 @@ interface LoginSignupProps {
     * * The entry barrier for the application.
     * * Handles authentication state and enforces university email domain restrictions.
     */
-export async function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
+export function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
   
   // =========================================
   // State Definitions
@@ -54,50 +54,13 @@ export async function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
     return email.endsWith(ALLOWED_DOMAIN);
   };
 
-
-  // The API Call to our NestJS backend
-  try {
-    // localhost for nestjs backend we can confirm this after running nestjs
-    const response = await fetch('http://localhost:3000/auth/dev-login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        email: email,
-        name: name 
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Login failed on the server');
-    }
-
-    const data = await response.json();
-    
-    // 3. Save the JWT to Local Storage!
-    // This is how the browser "remembers" we are logged in
-    localStorage.setItem('access_token', data.access_token);
-    
-    // Optional: Save user data if we want later to display their name in the navbar
-    localStorage.setItem('user', JSON.stringify(data.user));
-
-    console.log("Success! Token saved:", data.access_token);
-    
-    // 4. Redirect the user to the dashboard or professional mode
-    // (e.g., using React Router's useNavigate hook)
-    // navigate('/professional');
-
-  } catch (err) {
-    console.error(err);
-    setError('Something went wrong connecting to the server.');
-  }
-
   /**
    * Main Form Submission Handler
    * Orchestrates validation and authentication callbacks.
    */
-  const handleSubmit = (e: React.FormEvent) => {
+
+  // 2. MADE handleSubmit an 'async' function so we can use 'await' inside it
+  const handleSubmit = async (e: React.FormEvent) => {
 
     // Prevent default HTML form submission (page reload)
     e.preventDefault();
@@ -120,16 +83,60 @@ export async function LoginSignup({ onLogin, onSignup }: LoginSignupProps) {
       return; // Stop execution
     }
 
-    if (isLogin) {
+    // Determine the correct backend endpoint
+    // If isLogin is true, we hit the login route. Otherwise, we hit signup.
+    const endpoint = isLogin 
+      ? 'http://localhost:3000/auth/login' 
+      : 'http://localhost:3000/auth/signup';
+
       // Mock login - in real app, validate credentials
       // Scenario: User is logging in
       // In a real app, I would await an API call here
-      onLogin();
-    } else {
-      // Navigate to registration form
-      // Scenario: User is creating an account
-      // Redirect to the multi-step registration flow
-      onSignup();
+      // The API Call to our NestJS backend
+      try {
+        // 4. Send the request with BOTH email and password
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            email: email, 
+            password: password 
+          }),
+        });
+
+        const data = await response.json();
+
+        //  Handle Backend Errors (Wrong password, User already exists)
+        if (!response.ok) {
+          // NestJS automatically sends a 'message' property when we throw exceptions
+          throw new Error(data.message || 'Authentication failed');
+        } 
+
+        // 6. Handle Success! Save tokens and user data.
+        localStorage.setItem('access_token', data.access_token);
+
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+
+        console.log(`Success! Token saved for ${isLogin ? 'Login' : 'Signup'}:`, data.access_token);
+
+
+        // 7. Tell the parent component we succeeded
+        if (isLogin) {
+          onLogin();
+        } else {
+          // Depending on your App.tsx, we might want to call onLogin() here too, 
+          // since our backend automatically logs the user in after they sign up!
+          onSignup(); 
+        }
+
+      } catch (err: any) {
+      console.error(err);
+      // Display the specific error message from the backend to the user
+      setError(err.message || 'Something went wrong connecting to the server.');
     }
   };
 

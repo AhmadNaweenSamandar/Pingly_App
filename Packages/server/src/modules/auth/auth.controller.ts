@@ -13,18 +13,28 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   /**
-   * @Post('dev-login') listens for POST requests at "/auth/dev-login".
-   * @Body() automatically extracts the JSON sent by our React app.
+   * =========================================
+   * SIGN UP ROUTE
+   * =========================================
+   * Listens for POST requests at "http://localhost:3000/auth/signup".
+   * Expects the React frontend to send an email and a password.
    */
-  @Post('dev-login')
-  async devLogin(@Body() body: { email: string; name?: string }) {
-    
-    // The controller is just a middleman. It takes the email and name from React
-    // and passes it to the Service to do the actual hard work.
-    // We provide 'Dev User' as a fallback if React forgets to send a name.
-    return this.authService.devLogin(
-      body.email, 
-      body.name || 'Dev User'
-    );
+  @Post('signup')
+  async signup(@Body() body: { email: string; password: string }) {
+    // Passes the extracted email and password to the Service to create the user
+    return this.authService.signup(body.email, body.password);
+  }
+
+  /**
+   * =========================================
+   * LOGIN ROUTE
+   * =========================================
+   * Listens for POST requests at "http://localhost:3000/auth/login".
+   * Expects the React frontend to send an email and a password.
+   */
+  @Post('login')
+  async login(@Body() body: { email: string; password: string }) {
+    // Passes the extracted email and password to the Service to verify credentials
+    return this.authService.login(body.email, body.password);
   }
 }
