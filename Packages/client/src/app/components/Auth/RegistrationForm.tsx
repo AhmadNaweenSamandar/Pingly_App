@@ -784,7 +784,7 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                 </div>
                 
 
-                {/* === INPUT: Details & Looking For === */}
+                {/* === INPUT: Personality Type === */}
                 <div>
                   <label className="block mb-2 text-gray-700">Personality Type</label>
                   <Select
