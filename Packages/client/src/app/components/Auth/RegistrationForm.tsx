@@ -15,7 +15,7 @@ interface RegistrationFormProps {
 //constant created for selection while filling the reg form
 //these forms will be used in matching algorithm
 //user will be recommended based on these constants
-const technicalSkills = [
+const professionalSkills = [
   // Tech
   "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
   "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
@@ -562,9 +562,9 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   - Reuses the Tag Cloud pattern.
                   */}
                 <div>
-                  <label className="block mb-2 text-gray-700">Technical Skills</label>
+                  <label className="block mb-2 text-gray-700">Professional Skills</label>
                   <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
-                    {technicalSkills.map((skill) => (
+                    {professionalSkills.map((skill) => (
                       <button
                         key={skill}
                         type="button"
