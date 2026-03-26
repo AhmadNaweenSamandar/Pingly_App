@@ -648,6 +648,17 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   />
                 </div>
 
+                {/* === NEW INPUT: Portfolio Website === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Portfolio Website</label>
+                  <Input
+                    placeholder="yourportfolio.com"
+                    value={formData.portfolioWebsite}
+                    onChange={(e) => setFormData({ ...formData, portfolioWebsite: e.target.value })}
+                  />
+                </div>
+              
+
 
                 {/* === NAVIGATION ACTIONS === 
                   - Back: Go to Step 1.
