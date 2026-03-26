@@ -607,6 +607,27 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   </div>
                 </div>
 
+                {/* === NEW INPUT: Professional Goals === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Professional Goals</label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                    {professionalGoals.map((goal) => (
+                      <button
+                        key={goal}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, professionalGoals: toggleArrayItem(formData.professionalGoals, goal) })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          formData.professionalGoals.includes(goal)
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:border-blue-400"
+                        }`}
+                      >
+                        {goal}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
 
                 {/* === INPUT: Professional Links === */}
                 <div>
