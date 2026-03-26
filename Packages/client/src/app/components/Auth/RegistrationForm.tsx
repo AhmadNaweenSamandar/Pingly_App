@@ -54,6 +54,11 @@ const lookingFor = [
   "Coffee Buddy", "Gym Partner", "Dating", "Networking"
 ];
 
+const availableIndustries = [
+  "Fintech", "EdTech", "Game Dev", "HealthTech", 
+  "E-commerce", "AI/ML", "SaaS", "Cybersecurity"
+];
+
 
 /**
  * RegistrationForm Component
@@ -576,6 +581,27 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                         }`}
                       >
                         {skill}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* === INPUT: Industries of Interest === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Industries of Interest</label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                    {availableIndustries.map((industry) => (
+                      <button
+                        key={industry}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, industriesOfInterest: toggleArrayItem(formData.industriesOfInterest, industry) })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          formData.industriesOfInterest.includes(industry)
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:border-blue-400"
+                        }`}
+                      >
+                        {industry}
                       </button>
                     ))}
                   </div>
