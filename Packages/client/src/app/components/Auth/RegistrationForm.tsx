@@ -37,6 +37,11 @@ const socialGoals = [
   "Event/Concert Buddy", "Gaming Squad", "Roommate Search"
 ];
 
+const campusInvolvements = [
+  "Intramural Sports", "Student Govt", "Greek Life", 
+  "Academic Clubs", "Volunteer Work", "Theater/Arts"
+];
+
 const hobbies = [
   "Reading", "PC Gaming", "Console Gaming", "Intramural Sports", "Weightlifting", 
   "Music Production", "Live Gigs", "Cooking", "Baking", "Photography", 
@@ -778,6 +783,27 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                         }`}
                       >
                         {hobby}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* === NEW INPUT: Campus Involvement (Indigo/Purple Theme) === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Campus Involvement</label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                    {campusInvolvements.map((activity) => (
+                      <button
+                        key={activity}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, campusInvolvement: toggleArrayItem(formData.campusInvolvement, activity) })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          formData.campusInvolvement.includes(activity)
+                            ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:border-purple-400"
+                        }`}
+                      >
+                        {activity}
                       </button>
                     ))}
                   </div>
