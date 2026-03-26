@@ -850,6 +850,27 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   </div>
                 </div>
 
+                {/* === NEW INPUT: Social Goals (Rose/Orange Theme) === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Social Goals</label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                    {socialGoals.map((goal) => (
+                      <button
+                        key={goal}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, socialGoals: toggleArrayItem(formData.socialGoals, goal) })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          formData.socialGoals.includes(goal)
+                            ? "bg-gradient-to-r from-rose-500 to-orange-500 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:border-rose-400"
+                        }`}
+                      >
+                        {goal}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
 
                 {/* === FINAL ACTIONS === */}
                 <div className="flex justify-between pt-4">
