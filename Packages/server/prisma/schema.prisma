@@ -28,14 +28,35 @@ model User {
   email         String    @unique
   password      String
 
-  // Profile Data (Mapped from Interfaces 8, 9, 10)
+  // --- IDENTITY & PREFERENCES (Step 1 of registration form) ---
   name          String?
   avatar        String?   // URL for small thumbnails
-  image         String?   // Large profile image for Matching Cards
-  age           Int?
-  major         String?
-  bio           String?
-  interests     String[] // Array of strings (Postgres specific feature)
+  dob           DateTime? //age (static) changed to dateofbirth (dynamic)
+  discipline    String?   // Renamed from 'major' to match frontend
+  expectedGraduationYear String?
+
+  // Matching Preferences
+  matchWithDisciplines String[] // Postgres String Array
+  matchWithYears       String[]
+
+
+  // --- PROFESSIONAL PROFILE (Step 2 of registration form) ---
+  profilePicture  String?   // Merged avatar/image into one main professional headshot URL
+  skills          String[]
+  industriesOfInterest String[]
+  professionalGoals    String[]
+  linkedin        String?
+  github          String?
+  portfolioWebsite String?
+
+
+  // --- SOCIAL PROFILE (Step 3 of registration form) ---
+  socialPictures  String[]  // Array of URLs for the max 3 social photos
+  bio             String?
+  hobbies         String[]  // Replaces the generic 'interests'
+  campusInvolvement String[]
+  personalityType String?
+  socialGoals     String[]
 
   // Gamification (Mapped from Interface 6 - Leaderboard)
   // these are not static array, rather it will be dynamically calculated in the backend and added to database
@@ -61,6 +82,7 @@ model User {
   matchesAsUser2   Match[]           @relation("User2Matches")
   
   createdAt     DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt // Highly important to track when users update their profiles
 }
 
 
