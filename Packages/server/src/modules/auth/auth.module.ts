@@ -4,6 +4,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 // IMPORTANT: Import PrismaModule from Step 1 here so AuthService can use it!
 import { PrismaModule } from 'prisma/prisma.module';
+import { JwtStrategy } from './jwt.strategy';
+import { PassportModule } from '@nestjs/passport';
 
 /**
  * The @Module decorator bundles everything related to Authentication together.
@@ -13,17 +15,17 @@ import { PrismaModule } from 'prisma/prisma.module';
   imports: [
     // We import the JwtModule so our AuthService can mint new tokens.
     // We bring the JWT secret from env files, but we also provide a fallback for development.
-    PrismaModule, // Import PrismaModule here
+    PassportModule, // Import PassportModule here
     // In production, we'd use ConfigModule, but this is fine for dev
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'fallback-dev-secret', 
-      signOptions: { expiresIn: '7d' }, // Token automatically becomes invalid after 7 days
+      secret: process.env.JWT_SECRET || 'fallback-JWT-dev-secret', 
+      signOptions: { expiresIn: '1d' }, // Token automatically becomes invalid after 1 day
     }),
   ],
 
   // Providers are the "Brains" (Services) and the "Bouncers" (Strategies). 
   // NestJS will automatically create these and inject them where needed.
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
 
   // Controllers handle incoming HTTP requests (like POST or GET).
   controllers: [AuthController],
