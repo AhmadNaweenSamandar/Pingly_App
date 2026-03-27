@@ -15,15 +15,38 @@ interface RegistrationFormProps {
 //constant created for selection while filling the reg form
 //these forms will be used in matching algorithm
 //user will be recommended based on these constants
-const technicalSkills = [
+const professionalSkills = [
+  // Tech
   "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
   "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
-  "Machine Learning", "Data Science", "UI/UX Design", "Mobile Development"
+  "Machine Learning", "Data Science", "Mobile Development",
+  // Design & Creative
+  "UI/UX Design", "Graphic Design", "Video Editing", "Copywriting", "3D Modeling",
+  // Business & Management
+  "Project Management", "Financial Modeling", "Marketing", "Sales", "Public Speaking", "Data Analysis"
+];
+
+// Split the "Looking For" array into two distinct intents
+const professionalGoals = [
+  "Study Partner", "Project Collaborator", "Startup Co-founder", 
+  "Mentor", "Mentee", "Career Networking", "Hackathon Teammate"
+];
+
+const socialGoals = [
+  "Friendship", "Dating", "Gym Partner", "Coffee Buddy", 
+  "Event/Concert Buddy", "Gaming Squad", "Roommate Search"
+];
+
+const campusInvolvements = [
+  "Intramural Sports", "Student Govt", "Greek Life", 
+  "Academic Clubs", "Volunteer Work", "Theater/Arts"
 ];
 
 const hobbies = [
-  "Reading", "Gaming", "Sports", "Music", "Art", "Cooking",
-  "Photography", "Traveling", "Hiking", "Dancing", "Writing", "Coding"
+  "Reading", "PC Gaming", "Console Gaming", "Intramural Sports", "Weightlifting", 
+  "Music Production", "Live Gigs", "Cooking", "Baking", "Photography", 
+  "Traveling", "Hiking", "Dancing", "Writing", "Thrifting", "Board Games", 
+  "Volunteering", "Film/Cinema", "Anime"
 ];
 
 const personalityTypes = [
@@ -34,6 +57,11 @@ const personalityTypes = [
 const lookingFor = [
   "Study Partner", "Project Collaborator", "Mentor", "Friend",
   "Coffee Buddy", "Gym Partner", "Dating", "Networking"
+];
+
+const availableIndustries = [
+  "Fintech", "EdTech", "Game Dev", "HealthTech", 
+  "E-commerce", "AI/ML", "SaaS", "Cybersecurity"
 ];
 
 
@@ -60,14 +88,21 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     dob: "",                   // Date of Birth
     university: "",            // e.g., "uOttawa"
     discipline: "",            // e.g., "Software Engineering"
-    yearOfStudy: "",           // e.g., "2nd Year"
+    expectedGraduationYear: "",           // e.g., "2nd Year"
+
+    // MATCHING PREFERENCES (The Missing Link)
+    matchWithDisciplines: [] as string[], // e.g., ["Computer Science", "Business", "Any"]
+    matchWithYears: [] as string[],       // e.g., ["Same Year", "Upperclassmen", "Any"]
 
 
     // --- STEP 2: Professional Profile (Work Mode) ---
     profilePicture: null as File | null,       // Main avatar (Type: File object)
     skills: [] as string[],                    // Array of tech tags (e.g. ["React", "Java"])
+    industriesOfInterest: [] as string[],      // e.g., ["Fintech", "EdTech", "Game Dev"]
+    professionalGoals: [] as string[],         // e.g., ["Co-founder", "Study Partner"]
     linkedin: "",
     github: "",
+    portfolioWebsite: "",                      // Crucial for design/art/business students
 
 
     // --- STEP 3: Social Profile (Social Mode) ---
@@ -75,7 +110,9 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     bio: "",                                   // Short biography
     hobbies: [] as string[],                   // Array of interest tags
     personalityType: "",                       // e.g., "INTJ"
-    lookingFor: [] as string[]                 // e.g., ["Study Buddy", "Friendship"]
+    lookingFor: [] as string[],                 // e.g., ["Study Buddy", "Friendship"]
+    socialGoals: [] as string[],                // e.g., ["Friendship", "Dating", "Gym Partner"
+    campusInvolvement: [] as string[]         // e.g., ["Intramural Sports", "Student Govt"]
   });
 
 
@@ -131,6 +168,59 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     }
   };
 
+  // --- MATCHING PREFERENCES LOGIC ---
+
+  const handleAddDiscipline = (value: string) => {
+    const trimmedVal = value.trim();
+    if (trimmedVal && !formData.matchWithDisciplines.includes(trimmedVal)) {
+      setFormData({
+        ...formData,
+        matchWithDisciplines: [...formData.matchWithDisciplines, trimmedVal],
+      });
+    }
+  };
+
+  const handleRemoveDiscipline = (indexToRemove: number) => {
+    setFormData({
+      ...formData,
+      matchWithDisciplines: formData.matchWithDisciplines.filter((_, i) => i !== indexToRemove),
+    });
+  };
+
+  const handleDisciplineKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddDiscipline(e.currentTarget.value);
+      e.currentTarget.value = ''; // Clear input after adding
+    }
+  };
+
+  const handleDisciplineButtonClick = () => {
+    const input = document.getElementById('disciplineInput') as HTMLInputElement;
+    handleAddDiscipline(input.value);
+    input.value = ''; // Clear input after adding
+  };
+
+  const handleToggleYear = (yearOption: string) => {
+    const isSelected = formData.matchWithYears.includes(yearOption);
+
+    if (isSelected) {
+      // Remove if already selected
+      setFormData({
+        ...formData,
+        matchWithYears: formData.matchWithYears.filter((y) => y !== yearOption),
+      });
+    } else {
+      // Mutual exclusivity logic for "Any"
+      if (yearOption === "Any") {
+        setFormData({ ...formData, matchWithYears: ["Any"] });
+      } else {
+        const filteredYears = formData.matchWithYears.filter((y) => y !== "Any");
+        setFormData({ ...formData, matchWithYears: [...filteredYears, yearOption] });
+      }
+    }
+  };
+
 
   /**
    * Advances the wizard to the next step.
@@ -142,7 +232,7 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     if (step === 1) {
 
       // Ensure all Core Identity fields are present before proceeding
-      if (!formData.name || !formData.dob || !formData.university || !formData.discipline || !formData.yearOfStudy) {
+      if (!formData.name || !formData.dob || !formData.university || !formData.discipline || !formData.expectedGraduationYear) {
         alert("Please fill all required fields"); // Simple user feedback if miss any field in first step
         return;  // Stop execution (prevent step increment)
       }
@@ -314,22 +404,98 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                 <div>
                   <label className="block mb-2 text-gray-700">Year of Study *</label>
                   <Select
-                    value={formData.yearOfStudy}
-                    onValueChange={(value) => setFormData({ ...formData, yearOfStudy: value })}
+                    value={formData.expectedGraduationYear}
+                    onValueChange={(value) => setFormData({ ...formData, expectedGraduationYear: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1st Year</SelectItem>
-                      <SelectItem value="2">2nd Year</SelectItem>
-                      <SelectItem value="3">3rd Year</SelectItem>
-                      <SelectItem value="4">4th Year</SelectItem>
-                      <SelectItem value="5+">5+ Year</SelectItem>
+                      <SelectItem value="1">2027</SelectItem>
+                      <SelectItem value="2">2028</SelectItem>
+                      <SelectItem value="3">2029</SelectItem>
+                      <SelectItem value="4">2030</SelectItem>
+                      <SelectItem value="5+">2031</SelectItem>
                       <SelectItem value="graduate">Graduate</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+
+
+                {/* === MATCHING PREFERENCES SECTION === */}
+                <div className="pt-4 mt-6 border-t border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+                    Matching Preferences
+                  </h3>
+
+                  {/* Field: Match with Disciplines (Tag Input UI) */}
+                  <div className="mb-6">
+                    <label className="block mb-2 text-gray-700">Preferred Disciplines/Majors *</label>
+                    <p className="text-xs text-gray-500 mb-2">Type a major and press Enter, or type 'Any'</p>
+                    
+                    {/* Render Selected Pills */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {formData.matchWithDisciplines.map((disc, index) => (
+                        <span 
+                          key={index} 
+                          className="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full text-sm flex items-center shadow-sm"
+                        >
+                          {disc}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDiscipline(index)}
+                            className="ml-2 text-blue-400 hover:text-blue-700 font-bold"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Input to add new disciplines */}
+                    <div className="flex gap-2">
+                      <Input
+                        id="disciplineInput"
+                        placeholder="e.g., Business, Computer Science, Any"
+                        onKeyDown={handleDisciplineKeyDown}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleDisciplineButtonClick}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Field: Match with Years (Selectable Pill Toggles) */}
+                  <div>
+                    <label className="block mb-3 text-gray-700">Preferred Class Years *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Same Year", "Underclassmen", "Upperclassmen", "Graduate", "Any"].map((yearOption) => {
+                        const isSelected = formData.matchWithYears.includes(yearOption);
+                        return (
+                          <button
+                            key={yearOption}
+                            type="button"
+                            onClick={() => handleToggleYear(yearOption)}
+                            className={`px-4 py-2 rounded-full text-sm border transition-all duration-200 ${
+                              isSelected
+                                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-md"
+                                : "bg-white text-gray-600 border-gray-300 hover:border-purple-400 hover:text-purple-600"
+                            }`}
+                          >
+                            {yearOption}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                
 
                 {/* Navigation: NEXT Button */}
                 <div className="flex justify-end pt-4">
@@ -406,9 +572,9 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   - Reuses the Tag Cloud pattern.
                   */}
                 <div>
-                  <label className="block mb-2 text-gray-700">Technical Skills</label>
+                  <label className="block mb-2 text-gray-700">Professional Skills</label>
                   <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
-                    {technicalSkills.map((skill) => (
+                    {professionalSkills.map((skill) => (
                       <button
                         key={skill}
                         type="button"
@@ -420,6 +586,48 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                         }`}
                       >
                         {skill}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* === INPUT: Industries of Interest === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Industries of Interest</label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                    {availableIndustries.map((industry) => (
+                      <button
+                        key={industry}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, industriesOfInterest: toggleArrayItem(formData.industriesOfInterest, industry) })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          formData.industriesOfInterest.includes(industry)
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:border-blue-400"
+                        }`}
+                      >
+                        {industry}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* === NEW INPUT: Professional Goals === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Professional Goals</label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                    {professionalGoals.map((goal) => (
+                      <button
+                        key={goal}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, professionalGoals: toggleArrayItem(formData.professionalGoals, goal) })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          formData.professionalGoals.includes(goal)
+                            ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:border-blue-400"
+                        }`}
+                      >
+                        {goal}
                       </button>
                     ))}
                   </div>
@@ -444,6 +652,17 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                     onChange={(e) => setFormData({ ...formData, github: e.target.value })}
                   />
                 </div>
+
+                {/* === NEW INPUT: Portfolio Website === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Portfolio Website</label>
+                  <Input
+                    placeholder="yourportfolio.com"
+                    value={formData.portfolioWebsite}
+                    onChange={(e) => setFormData({ ...formData, portfolioWebsite: e.target.value })}
+                  />
+                </div>
+              
 
 
                 {/* === NAVIGATION ACTIONS === 
@@ -568,9 +787,30 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                     ))}
                   </div>
                 </div>
+
+                {/* === NEW INPUT: Campus Involvement (Indigo/Purple Theme) === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Campus Involvement</label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                    {campusInvolvements.map((activity) => (
+                      <button
+                        key={activity}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, campusInvolvement: toggleArrayItem(formData.campusInvolvement, activity) })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          formData.campusInvolvement.includes(activity)
+                            ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:border-purple-400"
+                        }`}
+                      >
+                        {activity}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 
 
-                {/* === INPUT: Details & Looking For === */}
+                {/* === INPUT: Personality Type === */}
                 <div>
                   <label className="block mb-2 text-gray-700">Personality Type</label>
                   <Select
@@ -605,6 +845,27 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                         }`}
                       >
                         {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* === NEW INPUT: Social Goals (Rose/Orange Theme) === */}
+                <div>
+                  <label className="block mb-2 text-gray-700">Social Goals</label>
+                  <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
+                    {socialGoals.map((goal) => (
+                      <button
+                        key={goal}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, socialGoals: toggleArrayItem(formData.socialGoals, goal) })}
+                        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                          formData.socialGoals.includes(goal)
+                            ? "bg-gradient-to-r from-rose-500 to-orange-500 text-white"
+                            : "bg-white border border-gray-300 text-gray-700 hover:border-rose-400"
+                        }`}
+                      >
+                        {goal}
                       </button>
                     ))}
                   </div>
