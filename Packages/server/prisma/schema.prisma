@@ -32,6 +32,7 @@ model User {
   name          String?
   avatar        String?   // URL for small thumbnails
   dob           DateTime? //age (static) changed to dateofbirth (dynamic)
+  university    String?
   discipline    String?   // Renamed from 'major' to match frontend
   expectedGraduationYear String?
 
@@ -57,6 +58,7 @@ model User {
   campusInvolvement String[]
   personalityType String?
   socialGoals     String[]
+  lookingFor      String[]
 
   // Gamification (Mapped from Interface 6 - Leaderboard)
   // these are not static array, rather it will be dynamically calculated in the backend and added to database
