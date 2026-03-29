@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Upload, Save } from "lucide-react";
 import { Button } from "../ui/button";
@@ -6,26 +6,47 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-
-//variable added to find whether profile is clicked
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-/* Specific constant keywords added for matching criteria
-   this will be used to define matching criteria for user
-   they will help users match based on common constants
-   */
-const technicalSkills = [
+// =========================================
+// ALIGNED CONSTANTS (Exact match to Registration)
+// =========================================
+const professionalSkills = [
   "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
   "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
-  "Machine Learning", "Data Science", "UI/UX Design", "Mobile Development"
+  "Machine Learning", "Data Science", "Mobile Development",
+  "UI/UX Design", "Graphic Design", "Video Editing", "Copywriting", "3D Modeling",
+  "Project Management", "Financial Modeling", "Marketing", "Sales", "Public Speaking", "Data Analysis"
+];
+
+const availableIndustries = [
+  "Fintech", "EdTech", "Game Dev", "HealthTech", 
+  "E-commerce", "AI/ML", "SaaS", "Cybersecurity"
+];
+
+const professionalGoals = [
+  "Study Partner", "Project Collaborator", "Startup Co-founder", 
+  "Mentor", "Mentee", "Career Networking", "Hackathon Teammate"
+];
+
+const socialGoals = [
+  "Friendship", "Dating", "Gym Partner", "Coffee Buddy", 
+  "Event/Concert Buddy", "Gaming Squad", "Roommate Search"
+];
+
+const campusInvolvements = [
+  "Intramural Sports", "Student Govt", "Greek Life", 
+  "Academic Clubs", "Volunteer Work", "Theater/Arts"
 ];
 
 const hobbies = [
-  "Reading", "Gaming", "Sports", "Music", "Art", "Cooking",
-  "Photography", "Traveling", "Hiking", "Dancing", "Writing", "Coding"
+  "Reading", "PC Gaming", "Console Gaming", "Intramural Sports", "Weightlifting", 
+  "Music Production", "Live Gigs", "Cooking", "Baking", "Photography", 
+  "Traveling", "Hiking", "Dancing", "Writing", "Thrifting", "Board Games", 
+  "Volunteering", "Film/Cinema", "Anime"
 ];
 
 const personalityTypes = [
@@ -39,31 +60,44 @@ const lookingFor = [
 ];
 
 
-
-/**
- * ProfileModal Component
- * * Allows users to view and edit their personal profile information.
- * * Handles both text inputs and multi-select tag arrays.
- */
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
-
   // =========================================
-  // State: Form Data
+  // State: Form Data (1:1 Match with Registration)
   // =========================================
   const [profileData, setProfileData] = useState({
-    name: "Alex Chen",
-    bio: "Computer Science student passionate about AI and web development",
-    university: "MIT",
-    discipline: "Computer Science",
-    yearOfStudy: "3",
-    skills: ["JavaScript", "React", "Python"],
-    hobbies: ["Coding", "Gaming", "Music"],
-    personalityType: "INTJ",
-    lookingFor: ["Study Partner", "Project Collaborator"],
-    linkedin: "linkedin.com/in/alexchen",
-    github: "github.com/alexchen"
+    // --- General Identity ---
+    name: "",
+    dob: "",
+    university: "",
+    discipline: "",
+    expectedGraduationYear: "",
+    
+    // --- Matching Preferences ---
+    matchWithDisciplines: [] as string[],
+    matchWithYears: [] as string[],
+
+    // --- Professional Profile ---
+    // Note: We will handle fetching actual image URLs later. 
+    profilePicture: null as File | null | string, 
+    skills: [] as string[],
+    industriesOfInterest: [] as string[],
+    professionalGoals: [] as string[],
+    linkedin: "",
+    github: "",
+    portfolioWebsite: "",
+
+    // --- Social Profile ---
+    socialPictures: [] as (File | string)[], 
+    bio: "",
+    hobbies: [] as string[],
+    personalityType: "",
+    lookingFor: [] as string[],
+    socialGoals: [] as string[],
+    campusInvolvement: [] as string[]
   });
+
+  const [isLoading, setIsLoading] = useState(false);
 
 
   // =========================================
@@ -194,8 +228,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <div>
                   <label className="block mb-2 text-gray-700">Year of Study</label>
                   <Select
-                    value={profileData.yearOfStudy}
-                    onValueChange={(value) => setProfileData({ ...profileData, yearOfStudy: value })}
+                    value={profileData.expectedGraduationYear}
+                    onValueChange={(value) => setProfileData({ ...profileData, expectedGraduationYear: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -242,7 +276,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   {/* Note: 'technicalSkills' must be defined as a constant array somewhere in your file.
                    Example: const technicalSkills = ["React", "Node.js", "Python", "Java", "C++", "UI/UX", "AWS", "SQL"];
                 */}
-                  {technicalSkills.map((skill) => (
+                  {professionalSkills.map((skill) => (
                     <button
                       key={skill}
                       type="button"  // Prevent form submit
