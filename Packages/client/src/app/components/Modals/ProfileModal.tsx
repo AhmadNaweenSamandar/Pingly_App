@@ -177,7 +177,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     fetchProfileData();
   }, [isOpen]); // Re-run this effect whenever the modal opens
 
-  
+
   // =========================================
   // Helper: Multi-Select Logic
   // =========================================
@@ -249,6 +249,8 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   return (
     <AnimatePresence>
+      {/* Wrap the whole modal in the isOpen check, solve the edit profile not closing bug */}
+      {isOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         
         {/* === LAYER 1: Backdrop Overlay === */}
@@ -557,6 +559,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </div>
         </motion.div>
       </div>
+      )}
     </AnimatePresence>
   );
 }
