@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
-import { UsersModule } from './modules/users/users.module';
+import { UserModule } from './modules/users/users.module';
 
 //prisma module import 
 import { PrismaModule } from 'prisma/prisma.module';
@@ -19,7 +19,7 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true, // Makes the variables available everywhere in your app
       envFilePath: '.env', // Explicitly tells NestJS to look for this file
     }),
-    AuthModule, UsersModule, PrismaModule], // Importing the PrismaModule here makes the PrismaService available throughout the app
+    AuthModule, UserModule, PrismaModule], // Importing the PrismaModule here makes the PrismaService available throughout the app
   /* Because we used the @Global() decorator, we will never need to import PrismaModule into your ProjectsModule or UsersModule.
   When we start writing our business logic, we simply inject it into the constructor of any service, like this:
   constructor(private readonly prisma: PrismaService) {}
