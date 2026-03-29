@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { PrismaModule } from 'prisma/prisma.module';
 import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 /**
  * The @Module decorator bundles everything related to Authentication together.
@@ -17,9 +18,14 @@ import { PassportModule } from '@nestjs/passport';
     // We bring the JWT secret from env files, but we also provide a fallback for development.
     PassportModule, // Import PassportModule here
     // In production, we'd use ConfigModule, but this is fine for dev
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'fallback-JWT-dev-secret', 
-      signOptions: { expiresIn: '1d' }, // Token automatically becomes invalid after 1 day
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        // Now both the Module and the Strategy pull from the exact same source at the exact same time
+        secret: configService.get<string>('JWT_SECRET') || 'fallback-JWT-dev-secret',
+        signOptions: { expiresIn: '1d' },
+      }),
     }),
   ],
 
