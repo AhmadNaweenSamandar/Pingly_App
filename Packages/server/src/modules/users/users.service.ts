@@ -7,6 +7,25 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  // === NEW METHOD ===
+  async getUserProfile(userId: string) {
+    // 1. Ask Prisma for the user
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    // 2. Safety check
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // 3. Strip out the password for security
+    const { password, ...safeUserData } = user;
+    
+    // 4. Send the rest of the data back to React
+    return safeUserData;
+  }
+
   async updateProfile(userId: string, data: UpdateProfileDto) {
     try {
       const updatedUser = await this.prisma.user.update({
