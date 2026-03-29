@@ -261,13 +261,59 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
   };
 
 
+
+  // =========================================
+  // API Integration
+  // =========================================
   /**
-   * Finalizes the registration process.
-   * Triggers the transition to the Main Dashboard.
+   * Finalizes the registration process by sending data to NestJS.
+   * Triggers the transition to the Main Dashboard on success.
    */
-  const handleSubmit = () => {
-    onComplete();
+  const handleSubmit = async () => {
+    // 1. Retrieve the JWT from localStorage
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+      console.error("Authentication error: No token found.");
+      alert("Session expired or token missing. Please log in again.");
+      return;
+    }
+
+    // 2. Separate File objects from standard JSON data
+    // This solves the pending "Gotcha" by explicitly excluding the files from the JSON payload.
+    const { profilePicture, socialPictures, ...jsonPayload } = formData;
+
+    try {
+      // 3. Construct and await the fetch request
+      const response = await fetch('http://localhost:3000/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Attach the JWT
+        },
+        body: JSON.stringify(jsonPayload) 
+      });
+
+      // 4. Handle Backend Errors
+      if (!response.ok) {
+        // Attempt to parse NestJS HttpException response
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+      }
+
+      // 5. Success Flow
+      const updatedUser = await response.json();
+      console.log("Success! Profile updated in PostgreSQL:", updatedUser);
+      
+      // Only proceed to the dashboard if the backend update was successful
+      onComplete();
+
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      alert("Failed to save your profile. Check the console for details.");
+    }
   };
+
 
   return (
 
