@@ -101,35 +101,81 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
 
   // =========================================
-  // Helper: Multi-Select Logic
+  // Effect: Fetch Data on Mount/Open
   // =========================================
-  /**
-   * Toggles an item inside an array state.
-   * used for Skills, Hobbies, and 'Looking For' tags.
-   */
-  const toggleArrayItem = (array: string[], item: string) => {
-    if (array.includes(item)) {
+  useEffect(() => {
+    // If the modal is closed, don't bother fetching
+    if (!isOpen) return;
 
-      // Remove item if it exists
-      return array.filter(i => i !== item);
-    } else {
+    const fetchProfileData = async () => {
+      setIsLoading(true);
+      
+      // 1. Grab the VIP pass
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        console.error("No token found");
+        setIsLoading(false);
+        return;
+      }
 
-      // Add item if it doesn't exist
-      return [...array, item];
-    }
-  };
+      try {
+        // 2. Call the NestJS GET route
+        const response = await fetch('http://localhost:3000/user/profile', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile data');
+        }
 
-  // =========================================
-  // Handlers
-  // =========================================
-  const handleSave = () => {
-    // TODO: Add API call to save profile updates here
-    onClose();
-  };
+        // 3. Parse the database response
+        const dbUser = await response.json();
+        
+        // 4. Update the local state with the database info
+        // We use the spread operator (...) to fall back to our default empty arrays 
+        // just in case the database returns null for fields the user skipped.
+        setProfileData(prevData => ({
+          ...prevData,
+          name: dbUser.name || "",
+          dob: dbUser.dob || "",
+          university: dbUser.university || "",
+          discipline: dbUser.discipline || "",
+          expectedGraduationYear: dbUser.expectedGraduationYear || "",
+          
+          matchWithDisciplines: dbUser.matchWithDisciplines || [],
+          matchWithYears: dbUser.matchWithYears || [],
+          
+          skills: dbUser.skills || [],
+          industriesOfInterest: dbUser.industriesOfInterest || [],
+          professionalGoals: dbUser.professionalGoals || [],
+          linkedin: dbUser.linkedin || "",
+          github: dbUser.github || "",
+          portfolioWebsite: dbUser.portfolioWebsite || "",
+          
+          bio: dbUser.bio || "",
+          hobbies: dbUser.hobbies || [],
+          personalityType: dbUser.personalityType || "",
+          lookingFor: dbUser.lookingFor || [],
+          socialGoals: dbUser.socialGoals || [],
+          campusInvolvement: dbUser.campusInvolvement || []
+          
+          // Note: profilePicture and socialPictures are omitted here for now 
+          // because handling image URLs vs File objects requires a bit of special logic we'll do later.
+        }));
 
-  // Logic: Do not render anything if modal is closed
-  if (!isOpen) return null;
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [isOpen]); // Re-run this effect whenever the modal opens
 
   return (
     <AnimatePresence>
