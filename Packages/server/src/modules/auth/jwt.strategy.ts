@@ -17,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
       // 3. The secret key used to sign the token (MUST match what JwtModule uses)
       // Pull the JWT_SECRET securely from our .env file
-      secretOrKey: configService.get<string>('JWT_SECRET') || '', 
+      secretOrKey: configService.get<string>('JWT_SECRET') || 'fallback-JWT-dev-secret', 
     });
   }
 
