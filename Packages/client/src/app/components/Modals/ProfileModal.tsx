@@ -177,6 +177,75 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     fetchProfileData();
   }, [isOpen]); // Re-run this effect whenever the modal opens
 
+  
+  // =========================================
+  // Helper: Multi-Select Logic
+  // =========================================
+  /**
+   * Toggles an item inside an array state.
+   * Used for Skills, Hobbies, 'Looking For' tags, etc.
+   */
+  const toggleArrayItem = (array: string[], item: string) => {
+    if (array.includes(item)) {
+      // Remove item if it exists
+      return array.filter((i) => i !== item);
+    } else {
+      // Add item if it doesn't exist
+      return [...array, item];
+    }
+  };
+
+  // =========================================
+  // API Integration: Save Changes
+  // =========================================
+  /**
+   * Finalizes the profile edits by sending data to NestJS.
+   * Closes the modal on success.
+   */
+  const handleSave = async () => {
+    // 1. Retrieve the JWT from localStorage
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+      console.error("Authentication error: No token found.");
+      alert("Session expired. Please log in again.");
+      return;
+    }
+
+    // 2. Separate File objects from standard JSON data
+    // Just like the registration form, we exclude file objects until Multer is set up.
+    const { profilePicture, socialPictures, ...jsonPayload } = profileData;
+
+    try {
+      // 3. Construct and await the fetch request (PATCH to update)
+      const response = await fetch('http://localhost:3000/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(jsonPayload) 
+      });
+
+      // 4. Handle Backend Errors
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+      }
+
+      // 5. Success Flow
+      const updatedUser = await response.json();
+      console.log("Success! Profile updated from Modal:", updatedUser);
+      
+      // Close the modal once the backend confirms the save
+      onClose();
+
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      alert("Failed to save your profile. Check the console for details.");
+    }
+  };
+
 
   return (
     <AnimatePresence>
