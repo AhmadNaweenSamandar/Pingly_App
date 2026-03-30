@@ -26,7 +26,7 @@ export class UserService {
     return safeUserData;
   }
 
-  async updateProfile(userId: string, data: UpdateProfileDto) {
+  async updateProfile(userId: string, data: UpdateProfileDto, filePaths: any) {
     try {
       const updatedUser = await this.prisma.user.update({
         where: { id: userId },
