@@ -38,7 +38,7 @@ export class UserController {
   }))
   async updateProfile(
     @Request() req, 
-    @Body() updateData: any, // We will handle validation in the service since we have both text and files coming in,
+    @Body() updateData: UpdateProfileDto,
     @UploadedFiles() files: { profilePicture?: Express.Multer.File[], socialPictures?: Express.Multer.File[] }
   ) {
     const userId = req.user.id;
@@ -61,3 +61,4 @@ export class UserController {
     return this.userService.updateProfile(userId, updateData, filePaths); 
   }
 }
+
