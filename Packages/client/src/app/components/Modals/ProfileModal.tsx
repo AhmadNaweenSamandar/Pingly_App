@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Upload, Save } from "lucide-react";
 import { Button } from "../ui/button";
@@ -6,26 +6,47 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-
-//variable added to find whether profile is clicked
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-/* Specific constant keywords added for matching criteria
-   this will be used to define matching criteria for user
-   they will help users match based on common constants
-   */
-const technicalSkills = [
+// =========================================
+// ALIGNED CONSTANTS (Exact match to Registration)
+// =========================================
+const professionalSkills = [
   "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
   "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
-  "Machine Learning", "Data Science", "UI/UX Design", "Mobile Development"
+  "Machine Learning", "Data Science", "Mobile Development",
+  "UI/UX Design", "Graphic Design", "Video Editing", "Copywriting", "3D Modeling",
+  "Project Management", "Financial Modeling", "Marketing", "Sales", "Public Speaking", "Data Analysis"
+];
+
+const availableIndustries = [
+  "Fintech", "EdTech", "Game Dev", "HealthTech", 
+  "E-commerce", "AI/ML", "SaaS", "Cybersecurity"
+];
+
+const professionalGoals = [
+  "Study Partner", "Project Collaborator", "Startup Co-founder", 
+  "Mentor", "Mentee", "Career Networking", "Hackathon Teammate"
+];
+
+const socialGoals = [
+  "Friendship", "Dating", "Gym Partner", "Coffee Buddy", 
+  "Event/Concert Buddy", "Gaming Squad", "Roommate Search"
+];
+
+const campusInvolvements = [
+  "Intramural Sports", "Student Govt", "Greek Life", 
+  "Academic Clubs", "Volunteer Work", "Theater/Arts"
 ];
 
 const hobbies = [
-  "Reading", "Gaming", "Sports", "Music", "Art", "Cooking",
-  "Photography", "Traveling", "Hiking", "Dancing", "Writing", "Coding"
+  "Reading", "PC Gaming", "Console Gaming", "Intramural Sports", "Weightlifting", 
+  "Music Production", "Live Gigs", "Cooking", "Baking", "Photography", 
+  "Traveling", "Hiking", "Dancing", "Writing", "Thrifting", "Board Games", 
+  "Volunteering", "Film/Cinema", "Anime"
 ];
 
 const personalityTypes = [
@@ -39,31 +60,122 @@ const lookingFor = [
 ];
 
 
-
-/**
- * ProfileModal Component
- * * Allows users to view and edit their personal profile information.
- * * Handles both text inputs and multi-select tag arrays.
- */
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
-
   // =========================================
-  // State: Form Data
+  // State: Form Data (1:1 Match with Registration)
   // =========================================
   const [profileData, setProfileData] = useState({
-    name: "Alex Chen",
-    bio: "Computer Science student passionate about AI and web development",
-    university: "MIT",
-    discipline: "Computer Science",
-    yearOfStudy: "3",
-    skills: ["JavaScript", "React", "Python"],
-    hobbies: ["Coding", "Gaming", "Music"],
-    personalityType: "INTJ",
-    lookingFor: ["Study Partner", "Project Collaborator"],
-    linkedin: "linkedin.com/in/alexchen",
-    github: "github.com/alexchen"
+    // --- General Identity ---
+    name: "",
+    dob: "",
+    university: "",
+    discipline: "",
+    expectedGraduationYear: "",
+    
+    // --- Matching Preferences ---
+    matchWithDisciplines: [] as string[],
+    matchWithYears: [] as string[],
+
+    // --- Professional Profile ---
+    // Note: We will handle fetching actual image URLs later. 
+    profilePicture: null as File | null | string, 
+    skills: [] as string[],
+    industriesOfInterest: [] as string[],
+    professionalGoals: [] as string[],
+    linkedin: "",
+    github: "",
+    portfolioWebsite: "",
+
+    // --- Social Profile ---
+    socialPictures: [] as (File | string)[], 
+    bio: "",
+    hobbies: [] as string[],
+    personalityType: "",
+    lookingFor: [] as string[],
+    socialGoals: [] as string[],
+    campusInvolvement: [] as string[]
   });
+
+  const [isLoading, setIsLoading] = useState(false);
+
+
+  // =========================================
+  // Effect: Fetch Data on Mount/Open
+  // =========================================
+  useEffect(() => {
+    // If the modal is closed, don't bother fetching
+    if (!isOpen) return;
+
+    const fetchProfileData = async () => {
+      setIsLoading(true);
+      
+      // 1. Grab the VIP pass
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        console.error("No token found");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // 2. Call the NestJS GET route
+        const response = await fetch('http://localhost:3000/user/profile', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch profile data');
+        }
+
+        // 3. Parse the database response
+        const dbUser = await response.json();
+        
+        // 4. Update the local state with the database info
+        // We use the spread operator (...) to fall back to our default empty arrays 
+        // just in case the database returns null for fields the user skipped.
+        setProfileData(prevData => ({
+          ...prevData,
+          name: dbUser.name || "",
+          dob: dbUser.dob || "",
+          university: dbUser.university || "",
+          discipline: dbUser.discipline || "",
+          expectedGraduationYear: dbUser.expectedGraduationYear || "",
+          
+          matchWithDisciplines: dbUser.matchWithDisciplines || [],
+          matchWithYears: dbUser.matchWithYears || [],
+          
+          skills: dbUser.skills || [],
+          industriesOfInterest: dbUser.industriesOfInterest || [],
+          professionalGoals: dbUser.professionalGoals || [],
+          linkedin: dbUser.linkedin || "",
+          github: dbUser.github || "",
+          portfolioWebsite: dbUser.portfolioWebsite || "",
+          
+          bio: dbUser.bio || "",
+          hobbies: dbUser.hobbies || [],
+          personalityType: dbUser.personalityType || "",
+          lookingFor: dbUser.lookingFor || [],
+          socialGoals: dbUser.socialGoals || [],
+          campusInvolvement: dbUser.campusInvolvement || []
+          
+          // Note: profilePicture and socialPictures are omitted here for now 
+          // because handling image URLs vs File objects requires a bit of special logic we'll do later.
+        }));
+
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [isOpen]); // Re-run this effect whenever the modal opens
 
 
   // =========================================
@@ -71,42 +183,77 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   // =========================================
   /**
    * Toggles an item inside an array state.
-   * used for Skills, Hobbies, and 'Looking For' tags.
+   * Used for Skills, Hobbies, 'Looking For' tags, etc.
    */
   const toggleArrayItem = (array: string[], item: string) => {
     if (array.includes(item)) {
-
       // Remove item if it exists
-      return array.filter(i => i !== item);
+      return array.filter((i) => i !== item);
     } else {
-
       // Add item if it doesn't exist
       return [...array, item];
     }
   };
 
+  // =========================================
+  // API Integration: Save Changes
+  // =========================================
+  /**
+   * Finalizes the profile edits by sending data to NestJS.
+   * Closes the modal on success.
+   */
+  const handleSave = async () => {
+    // 1. Retrieve the JWT from localStorage
+    const token = localStorage.getItem('access_token');
 
-  // =========================================
-  // Handlers
-  // =========================================
-  const handleSave = () => {
-    // TODO: Add API call to save profile updates here
-    onClose();
+    if (!token) {
+      console.error("Authentication error: No token found.");
+      alert("Session expired. Please log in again.");
+      return;
+    }
+
+    // 2. Separate File objects from standard JSON data
+    // Just like the registration form, we exclude file objects until Multer is set up.
+    const { profilePicture, socialPictures, ...jsonPayload } = profileData;
+
+    try {
+      // 3. Construct and await the fetch request (PATCH to update)
+      const response = await fetch('http://localhost:3000/user/profile', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(jsonPayload) 
+      });
+
+      // 4. Handle Backend Errors
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+      }
+
+      // 5. Success Flow
+      const updatedUser = await response.json();
+      console.log("Success! Profile updated from Modal:", updatedUser);
+      
+      // Close the modal once the backend confirms the save
+      onClose();
+
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      alert("Failed to save your profile. Check the console for details.");
+    }
   };
 
-  // Logic: Do not render anything if modal is closed
-  if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      {/* 1. OUTER CONTAINER: Fills screen & centers children using Flexbox */}
+      {/* Wrap the whole modal in the isOpen check, solve the edit profile not closing bug */}
+      {isOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-
-        {/* =========================================
-            LAYER 1: Backdrop Overlay
-            ========================================= */}
-        {/* 2. BACKDROP: Sits behind the modal, filling the container */
-         /* Note: Changed to 'absolute inset-0' */}
+        
+        {/* === LAYER 1: Backdrop Overlay === */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -115,28 +262,23 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           onClick={onClose}
         />
 
-
-        {/* =========================================
-            LAYER 2: Modal Content Container
-            ========================================= */}
+        {/* === LAYER 2: Modal Content Container === */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-
-          // Layout Styling:
-          // - fixed top-1/2 left-1/2: Standard centering technique.
-          // - max-w-4xl: A wider container to accommodate a 2-column grid layout.
-          // - max-h-[90vh]: Limits height to 90% of the viewport.
-          // - overflow-y-auto: Enables internal scrolling if the form gets too long.
           className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl"
-
-          // Stop click propagation so clicking the form doesn't close the modal
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-8">
+          {/* Loading Overlay */}
+          {isLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 rounded-2xl">
+              <div className="text-lg font-semibold text-blue-600 animate-pulse">Loading Profile...</div>
+            </div>
+          )}
 
-            {/* Close Button (Top Right) */}
+          <div className="p-8">
+            {/* Close Button */}
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -144,231 +286,280 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               <X className="w-5 h-5 text-gray-500" />
             </button>
 
-            <h2 className="text-gray-800 mb-6">Edit Profile</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-8 border-b pb-4">Edit Profile</h2>
 
-
-            {/* === FORM CONTAINER === 
-              - space-y-6: Adds consistent vertical spacing between major sections (Info vs Bio).
-          */}
-            <div className="space-y-6">
-              {/* Basic Info */}
-              {/* === SECTION 1: Academic & Basic Info === 
-                - grid-cols-1: Stacked on mobile.
-                - md:grid-cols-2: Two columns on larger screens.
-               */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                {/* Field: Name */}
-                <div>
-                  <label className="block mb-2 text-gray-700">Name</label>
-                  <Input
-                    value={profileData.name}
-                    onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                  />
-                </div>
-
-                {/* Field: University */}
-                <div>
-                  <label className="block mb-2 text-gray-700">University</label>
-                  <Input
-                    value={profileData.university}
-                    onChange={(e) => setProfileData({ ...profileData, university: e.target.value })}
-                  />
-                </div>
-
-                {/* Field: Discipline (Major) 
-                  * user select a major and it will be used in matching algorithm
-                */}
-                <div>
-                  <label className="block mb-2 text-gray-700">Discipline</label>
-                  <Input
-                    value={profileData.discipline}
-                    onChange={(e) => setProfileData({ ...profileData, discipline: e.target.value })}
-                  />
-                </div>
-
-
-                {/* Field: Year of Study (Dropdown) 
-                  - Ensures standardized data input.
-              */}
-                <div>
-                  <label className="block mb-2 text-gray-700">Year of Study</label>
-                  <Select
-                    value={profileData.yearOfStudy}
-                    onValueChange={(value) => setProfileData({ ...profileData, yearOfStudy: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">1st Year</SelectItem>
-                      <SelectItem value="2">2nd Year</SelectItem>
-                      <SelectItem value="3">3rd Year</SelectItem>
-                      <SelectItem value="4">4th Year</SelectItem>
-                      <SelectItem value="5+">5+ Year</SelectItem>
-                      <SelectItem value="graduate">Graduate</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Bio */}
-              {/* === SECTION 2: Biography === 
-                - Full width text area for longer descriptions.
-                */}
-              <div>
-                <label className="block mb-2 text-gray-700">Bio</label>
-                <Textarea
-                  rows={4}
-                  value={profileData.bio}
-                  onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                />
-              </div>
-
-
-              {/* Skills */}
-              {/* === SECTION 3: Technical Skills === 
-                - Uses a predefined list of options for consistency.
-            */}
-              <div>
-                <label className="block mb-2 text-gray-700">Technical Skills</label>
-
-                {/* Tag Container 
-                  - bg-gray-50: Visually separates the area from the white modal.
-                  - max-h-48: Prevents the list from taking up too much vertical space.
-                  */}
-                <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
-
-                  {/* Note: 'technicalSkills' must be defined as a constant array somewhere in your file.
-                   Example: const technicalSkills = ["React", "Node.js", "Python", "Java", "C++", "UI/UX", "AWS", "SQL"];
-                */}
-                  {technicalSkills.map((skill) => (
-                    <button
-                      key={skill}
-                      type="button"  // Prevent form submit
-
-                      // Toggle Logic: Add if missing, Remove if present
-                      onClick={() => setProfileData({ ...profileData, skills: toggleArrayItem(profileData.skills, skill) })}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                        // Conditional Styling
-                        profileData.skills.includes(skill)
-                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                          : "bg-white border border-gray-300 text-gray-700 hover:border-blue-400"
-                      }`}
+            <div className="space-y-12">
+              
+              {/* ==========================================
+                  SECTION 1: Basic Information
+                  ========================================== */}
+              <section>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <span className="bg-blue-100 text-blue-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">1</span>
+                  Basic Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Full Name</label>
+                    <Input
+                      value={profileData.name}
+                      onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Date of Birth</label>
+                    <Input
+                      type="date"
+                      value={profileData.dob}
+                      onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">University</label>
+                    <Input
+                      value={profileData.university}
+                      onChange={(e) => setProfileData({ ...profileData, university: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Discipline/Major</label>
+                    <Input
+                      value={profileData.discipline}
+                      onChange={(e) => setProfileData({ ...profileData, discipline: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Year of Study</label>
+                    <Select
+                      value={profileData.expectedGraduationYear}
+                      onValueChange={(value) => setProfileData({ ...profileData, expectedGraduationYear: value })}
                     >
-                      {skill}
-                    </button>
-                  ))}
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">2027</SelectItem>
+                        <SelectItem value="2">2028</SelectItem>
+                        <SelectItem value="3">2029</SelectItem>
+                        <SelectItem value="4">2030</SelectItem>
+                        <SelectItem value="5+">2031</SelectItem>
+                        <SelectItem value="graduate">Graduate</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
+              </section>
 
+              {/* ==========================================
+                  SECTION 2: Professional Profile
+                  ========================================== */}
+              <section>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <span className="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+                  Professional Profile
+                </h3>
+                <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                  
+                  {/* Links Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700">LinkedIn</label>
+                      <Input value={profileData.linkedin} onChange={(e) => setProfileData({ ...profileData, linkedin: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700">GitHub</label>
+                      <Input value={profileData.github} onChange={(e) => setProfileData({ ...profileData, github: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700">Portfolio</label>
+                      <Input value={profileData.portfolioWebsite} onChange={(e) => setProfileData({ ...profileData, portfolioWebsite: e.target.value })} />
+                    </div>
+                  </div>
 
-              {/* Hobbies */}
-
-              {/* === SECTION 4: Hobbies & Interests === 
-                - Uses the same interactive tag cloud pattern as Skills.
-            */}
-              <div>
-                <label className="block mb-2 text-gray-700">Hobbies</label>
-                <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-h-48 overflow-y-auto">
-                  {hobbies.map((hobby) => (
-                    <button
-                      key={hobby}
-                      type="button"
-                      onClick={() => setProfileData({ ...profileData, hobbies: toggleArrayItem(profileData.hobbies, hobby) })}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-
-                        // Theme: Purple/Pink for Personal Interests
-                        profileData.hobbies.includes(hobby)
-                          ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                          : "bg-white border border-gray-300 text-gray-700 hover:border-pink-400"
-                      }`}
-                    >
-                      {hobby}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Personality & Looking For */}
-              {/* === SECTION 5: Details & Socials === 
-                - 2-Column Grid for compact layout.
-                */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-
-                  {/* Field: Personality Type (Select) */}
-                  <label className="block mb-2 text-gray-700">Personality Type</label>
-                  <Select
-                    value={profileData.personalityType}
-                    onValueChange={(value) => setProfileData({ ...profileData, personalityType: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {/* Maps over MBTI types (e.g., INTJ, ENFP) */}
-                      {personalityTypes.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                  {/* Skills Array */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Technical Skills</label>
+                    <div className="flex flex-wrap gap-2 p-4 bg-white rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                      {professionalSkills.map((skill) => (
+                        <button
+                          key={skill} type="button"
+                          onClick={() => setProfileData({ ...profileData, skills: toggleArrayItem(profileData.skills, skill) })}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            profileData.skills.includes(skill) ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:border-blue-400 border border-transparent"
+                          }`}
+                        >
+                          {skill}
+                        </button>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Field: LinkedIn URL (Text Input) */}
-                <div>
-                  <label className="block mb-2 text-gray-700">LinkedIn</label>
-                  <Input
-                    value={profileData.linkedin}
-                    onChange={(e) => setProfileData({ ...profileData, linkedin: e.target.value })}
-                  />
-                </div>
-              </div>
+                    </div>
+                  </div>
 
+                  {/* Industries Array */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Industries of Interest</label>
+                    <div className="flex flex-wrap gap-2 p-4 bg-white rounded-lg border border-gray-200 max-h-40 overflow-y-auto">
+                      {availableIndustries.map((industry) => (
+                        <button
+                          key={industry} type="button"
+                          onClick={() => setProfileData({ ...profileData, industriesOfInterest: toggleArrayItem(profileData.industriesOfInterest, industry) })}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            profileData.industriesOfInterest.includes(industry) ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:border-blue-400 border border-transparent"
+                          }`}
+                        >
+                          {industry}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Looking For */}
-              {/* === SECTION 6: Intent / 'Looking For' === 
-                - Defines what the user wants from the platform (Study Partner, Dating, etc.)
-                - Uses the Pink/Rose theme to align with Social Mode.
-            */}
-              <div>
-                <label className="block mb-2 text-gray-700">Looking For</label>
-                <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg">
-                  {lookingFor.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => setProfileData({ ...profileData, lookingFor: toggleArrayItem(profileData.lookingFor, item) })}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                        // Theme: Rose Gradient for Social Intent
-                        profileData.lookingFor.includes(item)
-                          ? "bg-gradient-to-r from-pink-600 to-rose-600 text-white"
-                          : "bg-white border border-gray-300 text-gray-700 hover:border-pink-400"
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  {/* Professional Goals Array */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Professional Goals</label>
+                    <div className="flex flex-wrap gap-2 p-4 bg-white rounded-lg border border-gray-200 max-h-40 overflow-y-auto">
+                      {professionalGoals.map((goal) => (
+                        <button
+                          key={goal} type="button"
+                          onClick={() => setProfileData({ ...profileData, professionalGoals: toggleArrayItem(profileData.professionalGoals, goal) })}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            profileData.professionalGoals.includes(goal) ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:border-blue-400 border border-transparent"
+                          }`}
+                        >
+                          {goal}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </section>
 
-              {/* Save Button */}
-              {/* === FORM ACTIONS === 
-                - Sticky bottom or end of form actions.
-                */}
-              <div className="flex justify-end gap-3 pt-4">
-                <Button variant="outline" onClick={onClose}>
+              {/* ==========================================
+                  SECTION 3: Social Profile
+                  ========================================== */}
+              <section>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <span className="bg-pink-100 text-pink-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                  Social Profile
+                </h3>
+                <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                  
+                  {/* Bio & Personality */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block mb-2 text-sm font-medium text-gray-700">Bio</label>
+                      <Textarea
+                        rows={4}
+                        value={profileData.bio}
+                        onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                        className="bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700">Personality Type</label>
+                      <Select
+                        value={profileData.personalityType}
+                        onValueChange={(value) => setProfileData({ ...profileData, personalityType: value })}
+                      >
+                        <SelectTrigger className="bg-white"><SelectValue placeholder="Select MBTI" /></SelectTrigger>
+                        <SelectContent>
+                          {personalityTypes.map((type) => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Hobbies Array */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Hobbies</label>
+                    <div className="flex flex-wrap gap-2 p-4 bg-white rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                      {hobbies.map((hobby) => (
+                        <button
+                          key={hobby} type="button"
+                          onClick={() => setProfileData({ ...profileData, hobbies: toggleArrayItem(profileData.hobbies, hobby) })}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            profileData.hobbies.includes(hobby) ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white" : "bg-gray-100 text-gray-700 hover:border-pink-400 border border-transparent"
+                          }`}
+                        >
+                          {hobby}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Campus Involvement Array */}
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Campus Involvement</label>
+                    <div className="flex flex-wrap gap-2 p-4 bg-white rounded-lg border border-gray-200 max-h-40 overflow-y-auto">
+                      {campusInvolvements.map((activity) => (
+                        <button
+                          key={activity} type="button"
+                          onClick={() => setProfileData({ ...profileData, campusInvolvement: toggleArrayItem(profileData.campusInvolvement, activity) })}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                            profileData.campusInvolvement.includes(activity) ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white" : "bg-gray-100 text-gray-700 hover:border-purple-400 border border-transparent"
+                          }`}
+                        >
+                          {activity}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Looking For & Social Goals Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700">Looking For</label>
+                      <div className="flex flex-wrap gap-2 p-4 bg-white rounded-lg border border-gray-200">
+                        {lookingFor.map((item) => (
+                          <button
+                            key={item} type="button"
+                            onClick={() => setProfileData({ ...profileData, lookingFor: toggleArrayItem(profileData.lookingFor, item) })}
+                            className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                              profileData.lookingFor.includes(item) ? "bg-gradient-to-r from-pink-600 to-rose-600 text-white" : "bg-gray-100 text-gray-700 hover:border-pink-400 border border-transparent"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block mb-2 text-sm font-medium text-gray-700">Social Goals</label>
+                      <div className="flex flex-wrap gap-2 p-4 bg-white rounded-lg border border-gray-200">
+                        {socialGoals.map((goal) => (
+                          <button
+                            key={goal} type="button"
+                            onClick={() => setProfileData({ ...profileData, socialGoals: toggleArrayItem(profileData.socialGoals, goal) })}
+                            className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                              profileData.socialGoals.includes(goal) ? "bg-gradient-to-r from-rose-500 to-orange-500 text-white" : "bg-gray-100 text-gray-700 hover:border-rose-400 border border-transparent"
+                            }`}
+                          >
+                            {goal}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+
+              {/* ==========================================
+                  FORM ACTIONS
+                  ========================================== */}
+              <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 sticky bottom-0 bg-white pb-2">
+                <Button variant="outline" onClick={onClose} className="px-6">
                   Cancel
                 </Button>
-                <Button onClick={handleSave} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                <Button onClick={handleSave} className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 shadow-lg shadow-blue-200">
                   <Save className="w-4 h-4 mr-2" />
                   Save Changes
                 </Button>
               </div>
+
             </div>
           </div>
         </motion.div>
-    </div>
+      </div>
+      )}
     </AnimatePresence>
   );
 }

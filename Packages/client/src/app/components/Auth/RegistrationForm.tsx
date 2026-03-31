@@ -279,33 +279,69 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
       return;
     }
 
-    // 2. Separate File objects from standard JSON data
-    // This solves the pending "Gotcha" by explicitly excluding the files from the JSON payload.
-    const { profilePicture, socialPictures, ...jsonPayload } = formData;
+    // 1. Create a new FormData "shipping box"
+    const payload = new FormData();
+
+
+    // 2. Append all standard string fields
+    // We check if they exist first so we don't send "undefined" to the backend
+    if (formData.name) payload.append('name', formData.name);
+    if (formData.dob) payload.append('dob', formData.dob);
+    if (formData.university) payload.append('university', formData.university);
+    if (formData.discipline) payload.append('discipline', formData.discipline);
+    if (formData.expectedGraduationYear) payload.append('expectedGraduationYear', formData.expectedGraduationYear);
+    if (formData.linkedin) payload.append('linkedin', formData.linkedin);
+    if (formData.github) payload.append('github', formData.github);
+    if (formData.portfolioWebsite) payload.append('portfolioWebsite', formData.portfolioWebsite);
+    if (formData.bio) payload.append('bio', formData.bio);
+    if (formData.personalityType) payload.append('personalityType', formData.personalityType);
+
+
+    // 3. Append all Array fields (The DTO Trick)
+    // By appending the exact same key multiple times, NestJS safely reads it as an array!
+    formData.matchWithDisciplines.forEach(item => payload.append('matchWithDisciplines', item));
+    formData.matchWithYears.forEach(item => payload.append('matchWithYears', item));
+    formData.skills.forEach(item => payload.append('skills', item));
+    formData.industriesOfInterest.forEach(item => payload.append('industriesOfInterest', item));
+    formData.professionalGoals.forEach(item => payload.append('professionalGoals', item));
+    formData.hobbies.forEach(item => payload.append('hobbies', item));
+    formData.campusInvolvement.forEach(item => payload.append('campusInvolvement', item));
+    formData.lookingFor.forEach(item => payload.append('lookingFor', item));
+    formData.socialGoals.forEach(item => payload.append('socialGoals', item));
+
+
+    // 4. Append the physical File objects
+    if (formData.profilePicture) {
+      payload.append('profilePicture', formData.profilePicture);
+    }
+    
+    // Iterate through the social pictures array and append each file
+    formData.socialPictures.forEach(file => {
+      payload.append('socialPictures', file);
+    });
+
+
 
     try {
-      // 3. Construct and await the fetch request
+      // 5. Send the request
       const response = await fetch('http://localhost:3000/user/profile', {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Attach the JWT
+          // CRITICAL: we do not set 'Content-Type': 'multipart/form-data' manually here!
+          // The browser must set it automatically to inject the correct "boundary" codes.
+          'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify(jsonPayload) 
+        body: payload // Pass the FormData object directly
       });
 
-      // 4. Handle Backend Errors
       if (!response.ok) {
-        // Attempt to parse NestJS HttpException response
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
       }
 
-      // 5. Success Flow
       const updatedUser = await response.json();
-      console.log("Success! Profile updated in PostgreSQL:", updatedUser);
+      console.log("Success! Profile & Images saved:", updatedUser);
       
-      // Only proceed to the dashboard if the backend update was successful
       onComplete();
 
     } catch (error) {
