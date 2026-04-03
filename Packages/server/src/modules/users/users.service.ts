@@ -1,5 +1,5 @@
 // server/src/modules/user/user.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
@@ -36,6 +36,12 @@ export class UserService {
 
   async updateProfile(userId: string, updateData: UpdateProfileDto, filePaths: any) {
 
+    // --- DEBUGGING: Print exactly what NestJS received from the frontend ---
+    console.log("Raw incoming updateData:", updateData);
+    console.log("Raw incoming filePaths:", filePaths);
+
+
+
 
     // 1. Merge the text data and the new image paths into one object
     const baseData = {
@@ -59,12 +65,35 @@ export class UserService {
       lookingFor: ensureArray(baseData.lookingFor),
     };
 
+    // 2. The Date Formatting & Age Verification
+    if (dataToSave.dob !== undefined) {
+      if (dataToSave.dob === '' || dataToSave.dob === 'null') {
+        dataToSave.dob = null; 
+      } else {
+        const parsedDate = new Date(dataToSave.dob);
+        
+        if (!isNaN(parsedDate.getTime())) {
+          
+          // --- NEW: 18+ Age Restriction Logic ---
+          const today = new Date();
+          let age = today.getFullYear() - parsedDate.getFullYear();
+          const monthDifference = today.getMonth() - parsedDate.getMonth();
+          
+          // If the current month is before their birth month, or it's the birth month but the day hasn't happened yet, subtract 1 from age
+          if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < parsedDate.getDate())) {
+            age--;
+          }
 
-    // 2. The Pending "Gotcha": Handle Date formatting
-    // If the frontend sent a Date of Birth, convert the string (e.g., "2002-05-14") 
-    // into a proper JavaScript Date object so Prisma doesn't crash.
-    if (dataToSave.dob) {
-      dataToSave.dob = new Date(dataToSave.dob);
+          if (age < 18) {
+            throw new BadRequestException('You must be at least 18 years old to use Pingly.');
+          }
+          // --------------------------------------
+
+          dataToSave.dob = parsedDate; 
+        } else {
+          delete dataToSave.dob; 
+        }
+      }
     }
 
     // 3. Update the database
