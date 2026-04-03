@@ -3,6 +3,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
+// Helper function to force single strings into an array
+const ensureArray = (value: any): string[] | undefined => {
+  if (value === undefined || value === null) return undefined;
+  if (Array.isArray(value)) return value;
+  return [value];
+};
+
+
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
@@ -28,9 +36,24 @@ export class UserService {
 
   async updateProfile(userId: string, updateData: UpdateProfileDto, filePaths: any) {
 
+    // 1. Normalize all array fields from the incoming text data
+    // This catches single selections that FormData sends as strings and wraps them in arrays
+    const normalizedUpdateData = {
+      ...updateData,
+      matchWithDisciplines: ensureArray(updateData.matchWithDisciplines),
+      matchWithYears: ensureArray(updateData.matchWithYears),
+      skills: ensureArray(updateData.skills),
+      industriesOfInterest: ensureArray(updateData.industriesOfInterest),
+      professionalGoals: ensureArray(updateData.professionalGoals),
+      hobbies: ensureArray(updateData.hobbies),
+      campusInvolvement: ensureArray(updateData.campusInvolvement),
+      socialGoals: ensureArray(updateData.socialGoals),
+      lookingFor: ensureArray(updateData.lookingFor),
+    };
+
     // 1. Merge the text data and the new image paths into one object
     const dataToSave = {
-      ...updateData,
+      ...normalizedUpdateData,
       ...filePaths, 
     };
 
