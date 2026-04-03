@@ -141,7 +141,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         setProfileData(prevData => ({
           ...prevData,
           name: dbUser.name || "",
-          dob: dbUser.dob || "",
+          dob: dbUser.dob ? dbUser.dob.split('T')[0] : "", // Convert ISO to "YYYY-MM-DD" for input
           university: dbUser.university || "",
           discipline: dbUser.discipline || "",
           expectedGraduationYear: dbUser.expectedGraduationYear || "",
