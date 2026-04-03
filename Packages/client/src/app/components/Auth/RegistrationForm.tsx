@@ -78,6 +78,9 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
   // Tracks which part of the wizard is currently active (1, 2, or 3)
   const [step, setStep] = useState(1);
 
+  // New error state for date validation
+  const [dobError, setDobError] = useState("");
+
   // =========================================
   // State: Data Collection
   // =========================================
@@ -336,9 +339,18 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
+
+        // --- NEW: Intercept the specific Age Restriction error ---
+        // We check if errorData exists, has a message, and contains our age string
+        if (errorData && errorData.message && errorData.message.includes('18 years old')) {
+           setDobError(errorData.message); 
+           return; // Stop execution right here so the modal stays open and shows the error
+        }
+
         throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
       }
 
+      // --- On success, we can optionally read the updated user data from the response ---
       const updatedUser = await response.json();
       console.log("Success! Profile & Images saved:", updatedUser);
       
