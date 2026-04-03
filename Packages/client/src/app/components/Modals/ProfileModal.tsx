@@ -206,6 +206,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         return;
       }
 
+      // to this backend url the uploads will be added at the end to get the image from the backend server
+      const BACKEND_URL = 'http://localhost:3000';
+
       try {
         // 2. Call the NestJS GET route
         const response = await fetch('http://localhost:3000/user/profile', {
@@ -221,6 +224,15 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
         // 3. Parse the database response
         const dbUser = await response.json();
+
+        // Set the preview states using the exact paths from the database
+        setProfilePicPreview(dbUser.profilePicture ? `${BACKEND_URL}/${dbUser.profilePicture}` : null);
+        
+        setSocialPicPreviews([
+          dbUser.socialPictures?.[0] ? `${BACKEND_URL}/${dbUser.socialPictures[0]}` : null,
+          dbUser.socialPictures?.[1] ? `${BACKEND_URL}/${dbUser.socialPictures[1]}` : null,
+          dbUser.socialPictures?.[2] ? `${BACKEND_URL}/${dbUser.socialPictures[2]}` : null,
+        ]);
         
         // 4. Update the local state with the database info
         // We use the spread operator (...) to fall back to our default empty arrays 
