@@ -467,6 +467,12 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                     onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                     required
                   />
+                  {/* The Error Message Display */}
+                  {dobError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {dobError}
+                    </p>
+                  )}
                 </div>
 
 
