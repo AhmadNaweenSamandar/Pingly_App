@@ -263,6 +263,45 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     setStep(step + 1);
   };
 
+  interface DobChangeEvent {
+    target: {
+      value: string;
+    };
+  }
+
+  const handleDobChange = (e: DobChangeEvent): void => {
+    const value: string = e.target.value;
+
+    // 1. Update your React state
+    setFormData((prevData) => ({
+      ...prevData,
+      dob: value,
+    }));
+
+    // 2. Run the instant validation
+    if (!value) {
+      setDobError(""); // Clear error if they delete the date
+      return;
+    }
+
+    const birthDate: Date = new Date(value);
+    const today: Date = new Date();
+    
+    let age: number = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference: number = today.getMonth() - birthDate.getMonth();
+
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    // Set the error instantly
+    if (age < 18) {
+      setDobError("You must be at least 18 years old to use Pingly.");
+    } else {
+      setDobError(""); 
+    }
+  };
+
 
 
   // =========================================
@@ -464,10 +503,12 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   <Input
                     type="date"
                     value={formData.dob}
-                    onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                    onChange={handleDobChange}
                     required
+                    className={`form-input ${dobError ? 'border-red-500' : 'border-gray-300'}`}
                   />
-                  {/* The Error Message Display */}
+
+                  {/* --- NEW: This actually prints the error message to the screen --- */}
                   {dobError && (
                     <p className="text-red-500 text-sm mt-1">
                       {dobError}
@@ -993,5 +1034,4 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     </div>
   );
 }
-
 
