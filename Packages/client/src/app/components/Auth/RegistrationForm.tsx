@@ -484,7 +484,7 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
 
                 {/* Field: Year of Study (Dropdown) */}
                 <div>
-                  <label className="block mb-2 text-gray-700">Year of Study *</label>
+                  <label className="block mb-2 text-gray-700">Expected Graduation Year *</label>
                   <Select
                     value={formData.expectedGraduationYear}
                     onValueChange={(value) => setFormData({ ...formData, expectedGraduationYear: value })}

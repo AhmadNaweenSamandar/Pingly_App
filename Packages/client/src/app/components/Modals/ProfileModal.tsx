@@ -329,7 +329,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm font-medium text-gray-700">Year of Study</label>
+                    <label className="block mb-2 text-sm font-medium text-gray-700">Expected Graduation Year</label>
                     <Select
                       value={profileData.expectedGraduationYear}
                       onValueChange={(value) => setProfileData({ ...profileData, expectedGraduationYear: value })}
