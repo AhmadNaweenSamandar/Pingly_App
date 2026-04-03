@@ -7,7 +7,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 const ensureArray = (value: any): string[] | undefined => {
   if (value === undefined || value === null) return undefined;
   if (Array.isArray(value)) return value;
-  return [value];
+  return [String(value)]; // Added String() to guarantee it is typed correctly
 };
 
 
