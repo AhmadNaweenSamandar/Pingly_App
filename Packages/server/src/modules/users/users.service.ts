@@ -36,25 +36,27 @@ export class UserService {
 
   async updateProfile(userId: string, updateData: UpdateProfileDto, filePaths: any) {
 
-    // 1. Normalize all array fields from the incoming text data
-    // This catches single selections that FormData sends as strings and wraps them in arrays
-    const normalizedUpdateData = {
-      ...updateData,
-      matchWithDisciplines: ensureArray(updateData.matchWithDisciplines),
-      matchWithYears: ensureArray(updateData.matchWithYears),
-      skills: ensureArray(updateData.skills),
-      industriesOfInterest: ensureArray(updateData.industriesOfInterest),
-      professionalGoals: ensureArray(updateData.professionalGoals),
-      hobbies: ensureArray(updateData.hobbies),
-      campusInvolvement: ensureArray(updateData.campusInvolvement),
-      socialGoals: ensureArray(updateData.socialGoals),
-      lookingFor: ensureArray(updateData.lookingFor),
-    };
 
     // 1. Merge the text data and the new image paths into one object
-    const dataToSave = {
-      ...normalizedUpdateData,
+    const baseData = {
+      ...updateData,
       ...filePaths, 
+    };
+
+
+    // 1. Normalize all array fields from the incoming text data
+    // This catches single selections that FormData sends as strings and wraps them in arrays
+    const dataToSave = {
+      ...baseData,
+      matchWithDisciplines: ensureArray(baseData.matchWithDisciplines),
+      matchWithYears: ensureArray(baseData.matchWithYears),
+      skills: ensureArray(baseData.skills),
+      industriesOfInterest: ensureArray(baseData.industriesOfInterest),
+      professionalGoals: ensureArray(baseData.professionalGoals),
+      hobbies: ensureArray(baseData.hobbies),
+      campusInvolvement: ensureArray(baseData.campusInvolvement),
+      socialGoals: ensureArray(baseData.socialGoals),
+      lookingFor: ensureArray(baseData.lookingFor),
     };
 
 
