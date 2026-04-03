@@ -99,6 +99,42 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // New error state for date validation
+  const [dobError, setDobError] = useState("");
+
+  const handleProfileDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // 1. Update the profileData state
+    setProfileData((prevData) => ({
+      ...prevData,
+      dob: value,
+    }));
+
+    // 2. Run instant 18+ validation
+    if (!value) {
+      setDobError(""); // Clear error if they delete the date
+      return;
+    }
+
+    const birthDate = new Date(value);
+    const today = new Date();
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    // Set the error instantly
+    if (age < 18) {
+      setDobError("You must be at least 18 years old to use Pingly.");
+    } else {
+      setDobError(""); 
+    }
+  };
+
 
   // =========================================
   // Effect: Fetch Data on Mount/Open
@@ -311,8 +347,11 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     <Input
                       type="date"
                       value={profileData.dob}
-                      onChange={(e) => setProfileData({ ...profileData, dob: e.target.value })}
+                      onChange={handleProfileDobChange}
+                      className={dobError ? 'border-red-500' : 'border-gray-300'}
                     />
+                    
+                    {dobError && <p className="text-red-500 text-sm mt-1">{dobError}</p>}
                   </div>
                   <div>
                     <label className="block mb-2 text-sm font-medium text-gray-700">University</label>
