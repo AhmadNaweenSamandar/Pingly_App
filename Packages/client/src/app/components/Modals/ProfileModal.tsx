@@ -5,6 +5,8 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Plus, Trash2, Camera } from 'lucide-react'; 
+
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -101,6 +103,53 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   // New error state for date validation
   const [dobError, setDobError] = useState("");
+
+  // --- IMAGE PREVIEW STATES ---
+  // These hold temporary URLs so the user can see what they just uploaded/deleted
+  const [profilePicPreview, setProfilePicPreview] = useState(profileData?.profilePicture || null);
+  const [socialPicPreviews, setSocialPicPreviews] = useState([
+    profileData?.socialPictures?.[0] || null,
+    profileData?.socialPictures?.[1] || null,
+    profileData?.socialPictures?.[2] || null,
+  ]);
+
+  // / --- IMAGE HANDLERS ---
+
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // e.target.files can occasionally be null, so we safely check for it using optional chaining (?)
+    const file = e.target.files?.[0]; 
+    if (file) {
+      // Save the actual file to your formData/profileData state here for backend upload later
+      // setProfileData({ ...profileData, newProfilePic: file }); 
+      
+      // Create a temporary URL just for the UI preview
+      setProfilePicPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSocialPicChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Save the actual file to your formData state here
+      // ...
+      
+      const newPreviews = [...socialPicPreviews];
+      newPreviews[index] = URL.createObjectURL(file);
+      setSocialPicPreviews(newPreviews);
+    }
+  };
+
+  const removeProfilePic = () => {
+    setProfilePicPreview(null);
+    // Also remove it from our formData state
+  };
+
+  const removeSocialPic = (index: number) => {
+    const newPreviews = [...socialPicPreviews];
+    newPreviews[index] = null;
+    setSocialPicPreviews(newPreviews);
+    // Also remove it from our formData state
+  };
 
   const handleProfileDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
