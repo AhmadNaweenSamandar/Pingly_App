@@ -4,6 +4,10 @@ import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/users/users.module';
 
+// ServeStaticModule is used to serve the uploaded images back to the frontend
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 //prisma module import 
 import { PrismaModule } from 'prisma/prisma.module';
 
@@ -19,6 +23,13 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true, // Makes the variables available everywhere in your app
       envFilePath: '.env', // Explicitly tells NestJS to look for this file
     }),
+
+    // --- NEW: ServeStaticModule to serve uploaded images ---
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads', // This means URLs will start with localhost:3000/uploads/
+    }),
+    
     AuthModule, UserModule, PrismaModule], // Importing the PrismaModule here makes the PrismaService available throughout the app
   /* Because we used the @Global() decorator, we will never need to import PrismaModule into your ProjectsModule or UsersModule.
   When we start writing our business logic, we simply inject it into the constructor of any service, like this:
@@ -26,5 +37,7 @@ import { ConfigModule } from '@nestjs/config';
   Then use it: await this.prisma.user.findMany(); */
   controllers: [AppController],
   providers: [AppService],
+
+  
 })
 export class AppModule {}
