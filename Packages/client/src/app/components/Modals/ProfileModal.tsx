@@ -106,11 +106,13 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   // --- IMAGE PREVIEW STATES ---
   // These hold temporary URLs so the user can see what they just uploaded/deleted
-  const [profilePicPreview, setProfilePicPreview] = useState(profileData?.profilePicture || null);
-  const [socialPicPreviews, setSocialPicPreviews] = useState([
-    profileData?.socialPictures?.[0] || null,
-    profileData?.socialPictures?.[1] || null,
-    profileData?.socialPictures?.[2] || null,
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(
+    typeof profileData?.profilePicture === 'string' ? profileData.profilePicture : null
+  );
+  const [socialPicPreviews, setSocialPicPreviews] = useState<(string | null)[]>([
+    typeof profileData?.socialPictures?.[0] === 'string' ? profileData.socialPictures[0] : null,
+    typeof profileData?.socialPictures?.[1] === 'string' ? profileData.socialPictures[1] : null,
+    typeof profileData?.socialPictures?.[2] === 'string' ? profileData.socialPictures[2] : null,
   ]);
 
   // / --- IMAGE HANDLERS ---
@@ -437,11 +439,113 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               </section>
 
               {/* ==========================================
-                  SECTION 2: Professional Profile
+                  SECTION 2: Professional Profile Picture
                   ========================================== */}
               <section>
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                   <span className="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+                  Professional Headshot
+                </h3>
+                
+                <div className="flex items-center gap-6">
+                  <div className="relative group">
+                    {profilePicPreview ? (
+                      // HAS PICTURE: Show image and delete button
+                      <div className="relative w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden">
+                        <img 
+                          src={typeof profilePicPreview === 'string' ? profilePicPreview : ''} 
+                          alt="Professional Headshot" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button 
+                            type="button"
+                            onClick={removeProfilePic}
+                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // EMPTY STATE: Dashed border with gradient icon
+                      <label className="flex flex-col items-center justify-center w-40 h-40 rounded-full border-2 border-dashed border-purple-600 bg-purple-100 cursor-pointer hover:bg-blue-100 hover:border-purple-600 transition-all duration-300">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center mb-2">
+                          <Camera className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-sm font-medium text-blue-800">Add Photo</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleProfilePicChange} 
+                          className="hidden" 
+                        />
+                      </label>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    <p className="font-medium text-gray-700">Make a great first impression.</p>
+                    <p>Upload a clear, well-lit headshot for your academic and professional connections.</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* ==========================================
+                  SECTION 3: Social Mode Pictures
+                  ========================================== */}
+              <section>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <span className="bg-pink-100 text-pink-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                  Social Gallery (Max 3)
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {[0, 1, 2].map((index) => (
+                    <div key={index} className="relative aspect-[3/4] group">
+                      {socialPicPreviews[index] ? (
+                        // HAS PICTURE
+                        <div className="w-full h-full rounded-2xl border border-gray-200 shadow-sm overflow-hidden relative">
+                          <img 
+                            src={socialPicPreviews[index]} 
+                            alt={`Social picture ${index + 1}`} 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button 
+                              type="button"
+                              onClick={() => removeSocialPic(index)}
+                              className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                            >
+                              <Trash2 className="w-6 h-6" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // EMPTY STATE: Pink dashed border
+                        <label className="flex flex-col items-center justify-center w-full h-full rounded-2xl border-2 border-dashed border-pink-300 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors duration-300">
+                          <div className="w-12 h-12 rounded-full bg-pink-200 flex items-center justify-center mb-3">
+                            <Plus className="w-6 h-6 text-pink-600" />
+                          </div>
+                          <span className="text-sm font-medium text-pink-600">Add Social Photo</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => handleSocialPicChange(index, e)} 
+                            className="hidden" 
+                          />
+                        </label>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ==========================================
+                  SECTION 4: Professional Profile
+                  ========================================== */}
+              <section>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <span className="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">4</span>
                   Professional Profile
                 </h3>
                 <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
@@ -523,7 +627,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   ========================================== */}
               <section>
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                  <span className="bg-pink-100 text-pink-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                  <span className="bg-pink-100 text-pink-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">5</span>
                   Social Profile
                 </h3>
                 <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
