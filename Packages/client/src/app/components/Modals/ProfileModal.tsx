@@ -115,42 +115,61 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     typeof profileData?.socialPictures?.[2] === 'string' ? profileData.socialPictures[2] : null,
   ]);
 
+  // Track explicit picture deletions in frontend state so we can inform the backend which images to remove from the database and filesystem
+  const [deleteProfilePic, setDeleteProfilePic] = useState(false);
+  const [deletedSocialPicIndices, setDeletedSocialPicIndices] = useState<number[]>([]);
+
+  // --- RAW FILE STATES (For uploading to backend) ---
+  const [newProfilePicFile, setNewProfilePicFile] = useState<File | null>(null);
+  const [newSocialPicFiles, setNewSocialPicFiles] = useState<(File | null)[]>([null, null, null]);
+
   // / --- IMAGE HANDLERS ---
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // e.target.files can occasionally be null, so we safely check for it using optional chaining (?)
-    const file = e.target.files?.[0]; 
-    if (file) {
-      // Save the actual file to your formData/profileData state here for backend upload later
-      // setProfileData({ ...profileData, newProfilePic: file }); 
-      
-      // Create a temporary URL just for the UI preview
-      setProfilePicPreview(URL.createObjectURL(file));
-    }
-  };
+      const file = e.target.files?.[0]; 
+      if (file) {
+        setNewProfilePicFile(file); // <-- SAVE THE RAW FILE
+        setProfilePicPreview(URL.createObjectURL(file));
+        setDeleteProfilePic(false); // If they upload a new one, cancel any previous deletion
+      }
+    };
 
   const handleSocialPicChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Save the actual file to your formData state here
-      // ...
+      // <-- SAVE THE RAW FILE into the array
+      const updatedFiles = [...newSocialPicFiles];
+      updatedFiles[index] = file;
+      setNewSocialPicFiles(updatedFiles);
       
       const newPreviews = [...socialPicPreviews];
       newPreviews[index] = URL.createObjectURL(file);
       setSocialPicPreviews(newPreviews);
+
+      // If they are replacing a deleted image, remove it from the graveyard
+      setDeletedSocialPicIndices(prev => prev.filter(i => i !== index));
     }
   };
 
   const removeProfilePic = () => {
     setProfilePicPreview(null);
-    // Also remove it from our formData state
+    setNewProfilePicFile(null); // <-- Clear the raw file if it exists
+    setDeleteProfilePic(true); 
   };
 
   const removeSocialPic = (index: number) => {
     const newPreviews = [...socialPicPreviews];
     newPreviews[index] = null;
     setSocialPicPreviews(newPreviews);
-    // Also remove it from our formData state
+
+    // <-- Clear the raw file from the array if it exists
+    const updatedFiles = [...newSocialPicFiles];
+    updatedFiles[index] = null;
+    setNewSocialPicFiles(updatedFiles);
+
+    if (!deletedSocialPicIndices.includes(index)) {
+      setDeletedSocialPicIndices([...deletedSocialPicIndices, index]);
+    }
   };
 
   const handleProfileDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -310,6 +329,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       alert("Session expired. Please log in again.");
       return;
     }
+    
 
     // 2. Separate File objects from standard JSON data
     // Just like the registration form, we exclude file objects until Multer is set up.
