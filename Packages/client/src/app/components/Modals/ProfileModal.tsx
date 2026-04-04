@@ -492,8 +492,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       value={profileData.expectedGraduationYear}
                       onValueChange={(value) => setProfileData({ ...profileData, expectedGraduationYear: value })}
                     >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
+                      <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                      {/* white background with shadow and border added for dropdown*/}
+                      <SelectContent className="bg-white z-50 shadow-md border border-gray-200 rounded-md">
                         <SelectItem value="2027">2027</SelectItem>
                         <SelectItem value="2028">2028</SelectItem>
                         <SelectItem value="2029">2029</SelectItem>
@@ -718,7 +719,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         onValueChange={(value) => setProfileData({ ...profileData, personalityType: value })}
                       >
                         <SelectTrigger className="bg-white"><SelectValue placeholder="Select MBTI" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white z-50 shadow-md border border-gray-200 rounded-md">
                           {personalityTypes.map((type) => (
                             <SelectItem key={type} value={type}>{type}</SelectItem>
                           ))}
