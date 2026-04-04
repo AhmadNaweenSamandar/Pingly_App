@@ -29,6 +29,14 @@ export class UpdateProfileDto {
   expectedGraduationYear?: string;
 
   @IsOptional()
+  @IsString()
+  deleteProfilePic?: string; // Comes in as a string "true" or "false"
+
+  @IsOptional()
+  @IsString()
+  deletedSocialPicIndices?: string; // Comes in as a stringified JSON array "[0, 2]"
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   matchWithDisciplines?: string[];
