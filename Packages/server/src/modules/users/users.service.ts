@@ -137,7 +137,7 @@ export class UserService {
     // 3. Update the database
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
-      data: dataToSave,
+      data: actualDbData, // This contains all the text fields and the new image paths, but NOT the temporary flags
     });
 
     // 4. Strip out the password for security before sending it back to React
