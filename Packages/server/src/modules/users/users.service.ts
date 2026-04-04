@@ -36,14 +36,22 @@ export class UserService {
 
   async updateProfile(userId: string, updateData: UpdateProfileDto, filePaths: any) {
 
+    // 1. EXTRACT THE TEMPORARY FLAGS IMMEDIATELY
+    // We pull these out so they don't get passed to Prisma.
+    // 'actualDbData' will contain everything else (name, dob, skills, etc.)
+    const { 
+      deleteProfilePic, 
+      deletedSocialPicIndices, 
+      ...actualDbData 
+    } = updateData;
+
+
     // --- DEBUGGING: Print exactly what NestJS received from the frontend ---
     console.log("Raw incoming updateData:", updateData);
     console.log("Raw incoming filePaths:", filePaths);
 
 
-
-
-    // 1. Merge the text data and the new image paths into one object
+    // 2. Merge the text data and the new image paths into one object
     const baseData = {
       ...updateData,
       ...filePaths, 
@@ -64,6 +72,36 @@ export class UserService {
       socialGoals: ensureArray(baseData.socialGoals),
       lookingFor: ensureArray(baseData.lookingFor),
     };
+
+    // --- TEMPORARY GRAVEYARD LOGIC ---
+    
+    // Fetch current user to know what images they already have
+    const currentUser = await this.prisma.user.findUnique({ where: { id: userId } });
+    let finalSocialPictures = currentUser.socialPictures || [];
+
+    // Process Profile Picture Deletion
+    if (deleteProfilePic === 'true') {
+      dataToSave.profilePicture = null; 
+    }
+
+    // Process Social Pictures Deletion
+    if (deletedSocialPicIndices) {
+      // Parse the stringified JSON array "[0, 2]" back into a real array
+      const indicesToRemove = JSON.parse(deletedSocialPicIndices);
+      
+      // Remove the targeted images by filtering them out
+      finalSocialPictures = finalSocialPictures.filter((_, index) => !indicesToRemove.includes(index));
+    }
+
+    // Append Newly Uploaded Social Pictures
+    if (filePaths.socialPictures && filePaths.socialPictures.length > 0) {
+       finalSocialPictures = [...finalSocialPictures, ...filePaths.socialPictures];
+    }
+
+    // Assign the newly processed array to our save object
+    dataToSave.socialPictures = finalSocialPictures;
+
+    // ---------------------------------
 
     // 2. The Date Formatting & Age Verification
     if (dataToSave.dob !== undefined) {
