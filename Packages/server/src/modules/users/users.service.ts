@@ -125,7 +125,7 @@ export class UserService {
       deleteProfilePic, 
       deletedSocialPicIndices, 
       ...actualDbData 
-    } = updateData;
+    } = dataToSave;
     
     console.log("Final updateData with ISO date ready for prisma:", updateData);
 
