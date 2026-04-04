@@ -495,12 +495,12 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
                       {/* white background with shadow and border added for dropdown*/}
                       <SelectContent className="bg-white z-50 shadow-md border border-gray-200 rounded-md">
-                        <SelectItem value="2027">2027</SelectItem>
-                        <SelectItem value="2028">2028</SelectItem>
-                        <SelectItem value="2029">2029</SelectItem>
-                        <SelectItem value="2030">2030</SelectItem>
-                        <SelectItem value="2031">2031</SelectItem>
-                        <SelectItem value="graduate">Graduate</SelectItem>
+                        <SelectItem value="2027" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2027</SelectItem>
+                        <SelectItem value="2028" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2028</SelectItem>
+                        <SelectItem value="2029" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2029</SelectItem>
+                        <SelectItem value="2030" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2030</SelectItem>
+                        <SelectItem value="2031" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2031</SelectItem>
+                        <SelectItem value="graduate" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">Graduate</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -721,7 +721,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         <SelectTrigger className="bg-white"><SelectValue placeholder="Select MBTI" /></SelectTrigger>
                         <SelectContent className="bg-white z-50 shadow-md border border-gray-200 rounded-md">
                           {personalityTypes.map((type) => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                            <SelectItem key={type} value={type} className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">{type}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
