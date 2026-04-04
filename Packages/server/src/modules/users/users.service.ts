@@ -36,29 +36,17 @@ export class UserService {
 
   async updateProfile(userId: string, updateData: UpdateProfileDto, filePaths: any) {
 
-    // 1. EXTRACT THE TEMPORARY FLAGS IMMEDIATELY
-    // We pull these out so they don't get passed to Prisma.
-    // 'actualDbData' will contain everything else (name, dob, skills, etc.)
-    const { 
-      deleteProfilePic, 
-      deletedSocialPicIndices, 
-      ...actualDbData 
-    } = updateData;
-
-
-    // --- DEBUGGING: Print exactly what NestJS received from the frontend ---
-    console.log("Raw incoming updateData:", updateData);
-    console.log("Raw incoming filePaths:", filePaths);
-
-
-    // 2. Merge the text data and the new image paths into one object
+    // 1. Merge the text data and the new image paths into one object
     const baseData = {
       ...updateData,
       ...filePaths, 
     };
 
+    // --- DEBUGGING: Print exactly what NestJS received from the frontend ---
+    console.log("Raw incoming updateData:", updateData);
+    console.log("Raw incoming filePaths:", filePaths);
 
-    // 1. Normalize all array fields from the incoming text data
+    // 2. Normalize all array fields from the incoming text data
     // This catches single selections that FormData sends as strings and wraps them in arrays
     const dataToSave = {
       ...baseData,
@@ -77,19 +65,15 @@ export class UserService {
     
     // Fetch current user to know what images they already have
     const currentUser = await this.prisma.user.findUnique({ where: { id: userId } });
-    let finalSocialPictures = currentUser.socialPictures || [];
+    let finalSocialPictures = currentUser?.socialPictures || [];
 
     // Process Profile Picture Deletion
-    if (deleteProfilePic === 'true') {
+    if (dataToSave.deleteProfilePic === 'true') {
       dataToSave.profilePicture = null; 
     }
 
-    // Process Social Pictures Deletion
-    if (deletedSocialPicIndices) {
-      // Parse the stringified JSON array "[0, 2]" back into a real array
-      const indicesToRemove = JSON.parse(deletedSocialPicIndices);
-      
-      // Remove the targeted images by filtering them out
+    if (dataToSave.deletedSocialPicIndices) {
+      const indicesToRemove = JSON.parse(dataToSave.deletedSocialPicIndices);
       finalSocialPictures = finalSocialPictures.filter((_, index) => !indicesToRemove.includes(index));
     }
 
@@ -103,7 +87,7 @@ export class UserService {
 
     // ---------------------------------
 
-    // 2. The Date Formatting & Age Verification
+    // 3. The Date Formatting & Age Verification
     if (dataToSave.dob !== undefined) {
       if (dataToSave.dob === '' || dataToSave.dob === 'null') {
         dataToSave.dob = null; 
@@ -127,12 +111,23 @@ export class UserService {
           }
           // --------------------------------------
 
-          dataToSave.dob = parsedDate; 
+          dataToSave.dob = parsedDate.toISOString(); 
         } else {
           delete dataToSave.dob; 
         }
       }
     }
+
+    // 4. EXTRACT THE TEMPORARY FLAGS IMMEDIATELY
+    // We pull these out so they don't get passed to Prisma.
+    // 'actualDbData' will contain everything else (name, dob, skills, etc.)
+    const { 
+      deleteProfilePic, 
+      deletedSocialPicIndices, 
+      ...actualDbData 
+    } = updateData;
+    
+    console.log("Final updateData with ISO date ready for prisma:", updateData);
 
     // 3. Update the database
     const updatedUser = await this.prisma.user.update({
