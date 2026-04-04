@@ -127,7 +127,7 @@ export class UserService {
       ...actualDbData 
     } = dataToSave;
     
-    console.log("Final updateData with ISO date ready for prisma:", updateData);
+    console.log("Final updateData with ISO date ready for prisma:", dataToSave);
 
     // 3. Update the database
     const updatedUser = await this.prisma.user.update({
