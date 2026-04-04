@@ -29,7 +29,7 @@ export const PersonalityInfoModal = ({ isOpen, onClose }: { isOpen: boolean; onC
             {/* Header (Sticky) */}
             <div className="bg-pink-50 border-b border-pink-100 p-6 flex justify-between items-center sticky top-0 z-10">
               <div>
-                <h2 className="text-2xl font-bold text-pink-800 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-pink-700 flex items-center gap-2">
                   <span>🧠</span> The 16 Personality Types
                 </h2>
                 <p className="text-pink-600 text-sm mt-1">Find the one that best describes you.</p>

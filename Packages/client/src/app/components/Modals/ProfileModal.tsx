@@ -6,6 +6,7 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Plus, Trash2, Camera } from 'lucide-react'; 
+import { PersonalityInfoModal } from "../PersonalityInfoModal";
 
 
 interface ProfileModalProps {
@@ -122,6 +123,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   // --- RAW FILE STATES (For uploading to backend) ---
   const [newProfilePicFile, setNewProfilePicFile] = useState<File | null>(null);
   const [newSocialPicFiles, setNewSocialPicFiles] = useState<(File | null)[]>([null, null, null]);
+
+  // state to control the personality modal nested inside the profile modal
+  const [isPersonalityModalOpen, setIsPersonalityModalOpen] = useState(false);
 
   // / --- IMAGE HANDLERS ---
 
@@ -725,6 +729,14 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                           ))}
                         </SelectContent>
                       </Select>
+                      {/* NEW: The Pink Link */}
+                      <button
+                        type="button" // Important so it doesn't accidentally submit the form!
+                        onClick={() => setIsPersonalityModalOpen(true)}
+                        className="mt-2 text-sm font-medium text-pink-500 hover:text-pink-700 transition-colors flex items-center gap-1"
+                      >
+                        <span>✨</span> Learn more here
+                      </button>
                     </div>
                   </div>
 
@@ -819,7 +831,12 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
           </div>
         </motion.div>
+        <PersonalityInfoModal 
+          isOpen={isPersonalityModalOpen} 
+          onClose={() => setIsPersonalityModalOpen(false)} 
+        />
       </div>
+      
       )}
     </AnimatePresence>
   );
