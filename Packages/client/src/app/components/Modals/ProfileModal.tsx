@@ -5,6 +5,9 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Plus, Trash2, Camera } from 'lucide-react'; 
+import { PersonalityInfoModal } from "../PersonalityInfoModal";
+
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -102,6 +105,77 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   // New error state for date validation
   const [dobError, setDobError] = useState("");
 
+  // --- IMAGE PREVIEW STATES ---
+  // These hold temporary URLs so the user can see what they just uploaded/deleted
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(
+    typeof profileData?.profilePicture === 'string' ? profileData.profilePicture : null
+  );
+  const [socialPicPreviews, setSocialPicPreviews] = useState<(string | null)[]>([
+    typeof profileData?.socialPictures?.[0] === 'string' ? profileData.socialPictures[0] : null,
+    typeof profileData?.socialPictures?.[1] === 'string' ? profileData.socialPictures[1] : null,
+    typeof profileData?.socialPictures?.[2] === 'string' ? profileData.socialPictures[2] : null,
+  ]);
+
+  // Track explicit picture deletions in frontend state so we can inform the backend which images to remove from the database and filesystem
+  const [deleteProfilePic, setDeleteProfilePic] = useState(false);
+  const [deletedSocialPicIndices, setDeletedSocialPicIndices] = useState<number[]>([]);
+
+  // --- RAW FILE STATES (For uploading to backend) ---
+  const [newProfilePicFile, setNewProfilePicFile] = useState<File | null>(null);
+  const [newSocialPicFiles, setNewSocialPicFiles] = useState<(File | null)[]>([null, null, null]);
+
+  // state to control the personality modal nested inside the profile modal
+  const [isPersonalityModalOpen, setIsPersonalityModalOpen] = useState(false);
+
+  // / --- IMAGE HANDLERS ---
+
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]; 
+      if (file) {
+        setNewProfilePicFile(file); // <-- SAVE THE RAW FILE
+        setProfilePicPreview(URL.createObjectURL(file));
+        setDeleteProfilePic(false); // If they upload a new one, cancel any previous deletion
+      }
+    };
+
+  const handleSocialPicChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // <-- SAVE THE RAW FILE into the array
+      const updatedFiles = [...newSocialPicFiles];
+      updatedFiles[index] = file;
+      setNewSocialPicFiles(updatedFiles);
+      
+      const newPreviews = [...socialPicPreviews];
+      newPreviews[index] = URL.createObjectURL(file);
+      setSocialPicPreviews(newPreviews);
+
+      // If they are replacing a deleted image, remove it from the graveyard
+      setDeletedSocialPicIndices(prev => prev.filter(i => i !== index));
+    }
+  };
+
+  const removeProfilePic = () => {
+    setProfilePicPreview(null);
+    setNewProfilePicFile(null); // <-- Clear the raw file if it exists
+    setDeleteProfilePic(true); 
+  };
+
+  const removeSocialPic = (index: number) => {
+    const newPreviews = [...socialPicPreviews];
+    newPreviews[index] = null;
+    setSocialPicPreviews(newPreviews);
+
+    // <-- Clear the raw file from the array if it exists
+    const updatedFiles = [...newSocialPicFiles];
+    updatedFiles[index] = null;
+    setNewSocialPicFiles(updatedFiles);
+
+    if (!deletedSocialPicIndices.includes(index)) {
+      setDeletedSocialPicIndices([...deletedSocialPicIndices, index]);
+    }
+  };
+
   const handleProfileDobChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
@@ -155,6 +229,9 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         return;
       }
 
+      // to this backend url the uploads will be added at the end to get the image from the backend server
+      const BACKEND_URL = 'http://localhost:3000';
+
       try {
         // 2. Call the NestJS GET route
         const response = await fetch('http://localhost:3000/user/profile', {
@@ -170,6 +247,15 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
         // 3. Parse the database response
         const dbUser = await response.json();
+
+        // Set the preview states using the exact paths from the database
+        setProfilePicPreview(dbUser.profilePicture ? `${BACKEND_URL}/${dbUser.profilePicture}` : null);
+        
+        setSocialPicPreviews([
+          dbUser.socialPictures?.[0] ? `${BACKEND_URL}/${dbUser.socialPictures[0]}` : null,
+          dbUser.socialPictures?.[1] ? `${BACKEND_URL}/${dbUser.socialPictures[1]}` : null,
+          dbUser.socialPictures?.[2] ? `${BACKEND_URL}/${dbUser.socialPictures[2]}` : null,
+        ]);
         
         // 4. Update the local state with the database info
         // We use the spread operator (...) to fall back to our default empty arrays 
@@ -247,20 +333,57 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       alert("Session expired. Please log in again.");
       return;
     }
+    // restructuring handleSave by directly storing the data in FormData
+    // and sending it to the backend without waiting for the image upload logic to be implemented, 
+    // this way we can test the backend integration and make sure the data is being sent and received correctly 
+    // before we add the complexity of file uploads.
+    // 1. Initialize FormData
+    const formData = new FormData();
 
-    // 2. Separate File objects from standard JSON data
-    // Just like the registration form, we exclude file objects until Multer is set up.
-    const { profilePicture, socialPictures, ...jsonPayload } = profileData;
+    // 2. Append standard text fields and arrays from profileData
+    Object.keys(profileData).forEach((key) => {
+      const value = profileData[key as keyof typeof profileData];
+
+      // Skip the old image URLs/objects from the database payload
+      if (key === 'profilePicture' || key === 'socialPictures') return;
+
+      // Handle Arrays (e.g., skills, hobbies)
+      if (Array.isArray(value)) {
+        value.forEach((item) => formData.append(key, item));
+      } 
+      // Handle standard strings and dates
+      else if (value !== null && value !== undefined && value !== "") {
+        formData.append(key, String(value));
+      }
+    });
+
+    // 3. Append the Deletion Flags ("The Graveyard")
+    formData.append('deleteProfilePic', deleteProfilePic.toString());
+    formData.append('deletedSocialPicIndices', JSON.stringify(deletedSocialPicIndices));
+
+    // 4. Append the RAW Image Files
+    if (newProfilePicFile) { 
+      formData.append('profilePicture', newProfilePicFile);
+    }
+    
+    // Append any newly selected social pictures
+    newSocialPicFiles.forEach((file) => {
+      if (file) {
+        // Multer expects multiple files appended to the exact same key name
+        formData.append('socialPictures', file);
+      }
+    });
 
     try {
-      // 3. Construct and await the fetch request (PATCH to update)
+      // 5. Construct and await the fetch request (PATCH to update - send the request to the backend with the formData as the body, and include the JWT in the headers for authentication)
       const response = await fetch('http://localhost:3000/user/profile', {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
+          // CRITICAL: We DO NOT set 'Content-Type' manually! 
+          // The browser automatically sets it to multipart/form-data with a boundary limit.
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify(jsonPayload) 
+        body: formData
       });
 
       // 4. Handle Backend Errors
@@ -373,14 +496,15 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       value={profileData.expectedGraduationYear}
                       onValueChange={(value) => setProfileData({ ...profileData, expectedGraduationYear: value })}
                     >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">2027</SelectItem>
-                        <SelectItem value="2">2028</SelectItem>
-                        <SelectItem value="3">2029</SelectItem>
-                        <SelectItem value="4">2030</SelectItem>
-                        <SelectItem value="5+">2031</SelectItem>
-                        <SelectItem value="graduate">Graduate</SelectItem>
+                      <SelectTrigger className="bg-white"><SelectValue /></SelectTrigger>
+                      {/* white background with shadow and border added for dropdown*/}
+                      <SelectContent className="bg-white z-50 shadow-md border border-gray-200 rounded-md">
+                        <SelectItem value="2027" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2027</SelectItem>
+                        <SelectItem value="2028" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2028</SelectItem>
+                        <SelectItem value="2029" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2029</SelectItem>
+                        <SelectItem value="2030" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2030</SelectItem>
+                        <SelectItem value="2031" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2031</SelectItem>
+                        <SelectItem value="graduate" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">Graduate</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -388,11 +512,113 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               </section>
 
               {/* ==========================================
-                  SECTION 2: Professional Profile
+                  SECTION 2: Professional Profile Picture
                   ========================================== */}
               <section>
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
                   <span className="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+                  Professional Headshot
+                </h3>
+                
+                <div className="flex items-center gap-6">
+                  <div className="relative group">
+                    {profilePicPreview ? (
+                      // HAS PICTURE: Show image and delete button
+                      <div className="relative w-40 h-40 rounded-full border-4 border-white shadow-lg overflow-hidden">
+                        <img 
+                          src={typeof profilePicPreview === 'string' ? profilePicPreview : ''} 
+                          alt="Professional Headshot" 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button 
+                            type="button"
+                            onClick={removeProfilePic}
+                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // EMPTY STATE: Dashed border with gradient icon
+                      <label className="flex flex-col items-center justify-center w-40 h-40 rounded-full border-2 border-dashed border-purple-600 bg-purple-100 cursor-pointer hover:bg-blue-100 hover:border-purple-600 transition-all duration-300">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center mb-2">
+                          <Camera className="w-5 h-5 text-white" />
+                        </div>
+                        <span className="text-sm font-medium text-blue-800">Add Photo</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleProfilePicChange} 
+                          className="hidden" 
+                        />
+                      </label>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    <p className="font-medium text-gray-700">Make a great first impression.</p>
+                    <p>Upload a clear, well-lit headshot for your academic and professional connections.</p>
+                  </div>
+                </div>
+              </section>
+
+              {/* ==========================================
+                  SECTION 3: Social Mode Pictures
+                  ========================================== */}
+              <section>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <span className="bg-pink-100 text-pink-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                  Social Gallery (Max 3)
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  {[0, 1, 2].map((index) => (
+                    <div key={index} className="relative aspect-[3/4] group">
+                      {socialPicPreviews[index] ? (
+                        // HAS PICTURE
+                        <div className="w-full h-full rounded-2xl border border-gray-200 shadow-sm overflow-hidden relative">
+                          <img 
+                            src={socialPicPreviews[index]} 
+                            alt={`Social picture ${index + 1}`} 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button 
+                              type="button"
+                              onClick={() => removeSocialPic(index)}
+                              className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                            >
+                              <Trash2 className="w-6 h-6" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        // EMPTY STATE: Pink dashed border
+                        <label className="flex flex-col items-center justify-center w-full h-full rounded-2xl border-2 border-dashed border-pink-300 bg-pink-50 cursor-pointer hover:bg-pink-100 transition-colors duration-300">
+                          <div className="w-12 h-12 rounded-full bg-pink-200 flex items-center justify-center mb-3">
+                            <Plus className="w-6 h-6 text-pink-600" />
+                          </div>
+                          <span className="text-sm font-medium text-pink-600">Add Social Photo</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => handleSocialPicChange(index, e)} 
+                            className="hidden" 
+                          />
+                        </label>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* ==========================================
+                  SECTION 4: Professional Profile
+                  ========================================== */}
+              <section>
+                <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                  <span className="bg-purple-100 text-purple-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">4</span>
                   Professional Profile
                 </h3>
                 <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
@@ -474,7 +700,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   ========================================== */}
               <section>
                 <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                  <span className="bg-pink-100 text-pink-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                  <span className="bg-pink-100 text-pink-700 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">5</span>
                   Social Profile
                 </h3>
                 <div className="space-y-6 bg-gray-50 p-6 rounded-xl border border-gray-100">
@@ -497,12 +723,20 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         onValueChange={(value) => setProfileData({ ...profileData, personalityType: value })}
                       >
                         <SelectTrigger className="bg-white"><SelectValue placeholder="Select MBTI" /></SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white z-50 shadow-md border border-gray-200 rounded-md">
                           {personalityTypes.map((type) => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                            <SelectItem key={type} value={type} className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">{type}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {/* NEW: The Pink Link */}
+                      <button
+                        type="button" // Important so it doesn't accidentally submit the form!
+                        onClick={() => setIsPersonalityModalOpen(true)}
+                        className="mt-2 text-sm font-medium text-pink-500 hover:text-pink-700 transition-colors flex items-center gap-1"
+                      >
+                        <span>✨</span> Learn more here
+                      </button>
                     </div>
                   </div>
 
@@ -597,7 +831,12 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
           </div>
         </motion.div>
+        <PersonalityInfoModal 
+          isOpen={isPersonalityModalOpen} 
+          onClose={() => setIsPersonalityModalOpen(false)} 
+        />
       </div>
+      
       )}
     </AnimatePresence>
   );

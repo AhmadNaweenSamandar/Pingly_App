@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { PersonalityInfoModal } from "../PersonalityInfoModal";
 
 
 //this interface help us to identify whether the registration form is complete
@@ -117,6 +118,9 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     socialGoals: [] as string[],                // e.g., ["Friendship", "Dating", "Gym Partner"
     campusInvolvement: [] as string[]         // e.g., ["Intramural Sports", "Student Govt"]
   });
+
+    // state to control the personality modal nested inside the profile modal
+  const [isPersonalityModalOpen, setIsPersonalityModalOpen] = useState(false);
 
 
 
@@ -548,16 +552,16 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                     value={formData.expectedGraduationYear}
                     onValueChange={(value) => setFormData({ ...formData, expectedGraduationYear: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">2027</SelectItem>
-                      <SelectItem value="2">2028</SelectItem>
-                      <SelectItem value="3">2029</SelectItem>
-                      <SelectItem value="4">2030</SelectItem>
-                      <SelectItem value="5+">2031</SelectItem>
-                      <SelectItem value="graduate">Graduate</SelectItem>
+                    <SelectContent className="bg-white z-50 shadow-md border border-gray-200 rounded-md">
+                      <SelectItem value="2027" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2027</SelectItem>
+                      <SelectItem value="2028" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2028</SelectItem>
+                      <SelectItem value="2029" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2029</SelectItem>
+                      <SelectItem value="2030" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2030</SelectItem>
+                      <SelectItem value="2031" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">2031</SelectItem>
+                      <SelectItem value="graduate" className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">Graduate</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -958,15 +962,25 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                     value={formData.personalityType}
                     onValueChange={(value) => setFormData({ ...formData, personalityType: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white">
                       <SelectValue placeholder="Select personality type (MBTI)" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white z-50 shadow-md border border-gray-200 rounded-md">
                       {personalityTypes.map((type) => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                        <SelectItem key={type} value={type} className="cursor-pointer hover:bg-gray-100 focus:bg-gray-100">
+                          {type}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                      {/* NEW: The Pink Link */}
+                      <button
+                        type="button" // Important so it doesn't accidentally submit the form!
+                        onClick={() => setIsPersonalityModalOpen(true)}
+                        className="mt-2 text-sm font-medium text-pink-500 hover:text-pink-700 transition-colors flex items-center gap-1"
+                      >
+                        <span>✨</span> Learn more here
+                      </button>
                 </div>
 
 
@@ -1027,10 +1041,15 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   </Button>
                 </div>
               </motion.div>
+              
             )}
           </AnimatePresence>
         </div>
       </motion.div>
+      <PersonalityInfoModal 
+        isOpen={isPersonalityModalOpen} 
+        onClose={() => setIsPersonalityModalOpen(false)} 
+      />
     </div>
   );
 }

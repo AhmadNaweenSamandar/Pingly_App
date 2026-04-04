@@ -1,9 +1,11 @@
 // server/src/modules/user/dto/update-profile.dto.ts
 import { IsString, IsArray, IsOptional } from 'class-validator';
 
-// for now profile picture and social images and avatar is skipped because we need to use another tool to store the images first somewhere in database
-// and then generate the link and store it in the schema
-// the id, name and password is already saved by auth module
+// for now profile picture and social images and avatar is skipped
+// and we do not need to include them in the DTO because they are handled separately by Multer and not sent as part of the JSON body.
+// when ever the POST data is send by API calls from the front end, the data is filtered to text data and images
+// the text data is sent as JSON and validated against this DTO, while the images are processed by Multer and their paths are sent separately to the service layer by @UploadedFiles() decorator in the controller. 
+// This separation allows us to keep our DTO focused on validating just the text fields, while still being able to handle file uploads effectively.
 export class UpdateProfileDto {
   // --- STEP 1: Identity ---
   @IsOptional()
@@ -25,6 +27,14 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   expectedGraduationYear?: string;
+
+  @IsOptional()
+  @IsString()
+  deleteProfilePic?: string; // Comes in as a string "true" or "false"
+
+  @IsOptional()
+  @IsString()
+  deletedSocialPicIndices?: string; // Comes in as a stringified JSON array "[0, 2]"
 
   @IsOptional()
   @IsArray()
