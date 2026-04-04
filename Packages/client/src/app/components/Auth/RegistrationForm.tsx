@@ -552,11 +552,11 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">2027</SelectItem>
-                      <SelectItem value="2">2028</SelectItem>
-                      <SelectItem value="3">2029</SelectItem>
-                      <SelectItem value="4">2030</SelectItem>
-                      <SelectItem value="5+">2031</SelectItem>
+                      <SelectItem value="2027">2027</SelectItem>
+                      <SelectItem value="2028">2028</SelectItem>
+                      <SelectItem value="2029">2029</SelectItem>
+                      <SelectItem value="2030">2030</SelectItem>
+                      <SelectItem value="2031">2031</SelectItem>
                       <SelectItem value="graduate">Graduate</SelectItem>
                     </SelectContent>
                   </Select>
