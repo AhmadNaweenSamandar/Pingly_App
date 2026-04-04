@@ -411,6 +411,14 @@ export function Header({
               </motion.button>
 
               {/* Menu Dropdown */}
+              <div className="relative" ref={menuRef}>
+                {/* 1. Three-Dotted Button */}
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                {/* 3-dot icon here */}
+              </button>
               <AnimatePresence>
                 {showMenu && (
                   <motion.div
@@ -452,6 +460,7 @@ export function Header({
                   </motion.div>
                 )}
               </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
