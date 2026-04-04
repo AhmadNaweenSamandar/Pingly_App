@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Sparkles,
@@ -174,6 +174,26 @@ export function Header({
   // Controls the visibility of the Profile Menu (three dots).
   // false = hidden (default), true = visible.
   const [showMenu, setShowMenu] = useState(false);
+
+  const menuRef = useRef<HTMLDivElement>(null); // Reference to the menu DOM element for click outside detection
+
+  // --- NEW: Click Outside Listener ---
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // If the menu is open AND the click happened outside of our menuRef
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false); // Close it!
+      }
+    };
+
+    // Listen for mouse clicks
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Cleanup the listener when the component unmounts
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // --- DERIVED LOGIC ---
   // These variables are calculated on the fly every time the component renders.
