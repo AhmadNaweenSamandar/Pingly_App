@@ -26,10 +26,12 @@ import { ConfigModule } from '@nestjs/config';
 
     // --- NEW: ServeStaticModule to serve uploaded images ---
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
+      // Change __dirname to process.cwd()
+      // This tells NestJS to serve files from the "uploads" directory at the root of your project, which is where Multer saves them.
+      rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads', // This means URLs will start with localhost:3000/uploads/
     }),
-    
+
     AuthModule, UserModule, PrismaModule], // Importing the PrismaModule here makes the PrismaService available throughout the app
   /* Because we used the @Global() decorator, we will never need to import PrismaModule into your ProjectsModule or UsersModule.
   When we start writing our business logic, we simply inject it into the constructor of any service, like this:
