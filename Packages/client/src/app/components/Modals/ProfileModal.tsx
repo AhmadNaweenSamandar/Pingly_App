@@ -329,21 +329,57 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       alert("Session expired. Please log in again.");
       return;
     }
-    
+    // restructuring handleSave by directly storing the data in FormData
+    // and sending it to the backend without waiting for the image upload logic to be implemented, 
+    // this way we can test the backend integration and make sure the data is being sent and received correctly 
+    // before we add the complexity of file uploads.
+    // 1. Initialize FormData
+    const formData = new FormData();
 
-    // 2. Separate File objects from standard JSON data
-    // Just like the registration form, we exclude file objects until Multer is set up.
-    const { profilePicture, socialPictures, ...jsonPayload } = profileData;
+    // 2. Append standard text fields and arrays from profileData
+    Object.keys(profileData).forEach((key) => {
+      const value = profileData[key as keyof typeof profileData];
+
+      // Skip the old image URLs/objects from the database payload
+      if (key === 'profilePicture' || key === 'socialPictures') return;
+
+      // Handle Arrays (e.g., skills, hobbies)
+      if (Array.isArray(value)) {
+        value.forEach((item) => formData.append(key, item));
+      } 
+      // Handle standard strings and dates
+      else if (value !== null && value !== undefined && value !== "") {
+        formData.append(key, String(value));
+      }
+    });
+
+    // 3. Append the Deletion Flags ("The Graveyard")
+    formData.append('deleteProfilePic', deleteProfilePic.toString());
+    formData.append('deletedSocialPicIndices', JSON.stringify(deletedSocialPicIndices));
+
+    // 4. Append the RAW Image Files
+    if (newProfilePicFile) { 
+      formData.append('profilePicture', newProfilePicFile);
+    }
+    
+    // Append any newly selected social pictures
+    newSocialPicFiles.forEach((file) => {
+      if (file) {
+        // Multer expects multiple files appended to the exact same key name
+        formData.append('socialPictures', file);
+      }
+    });
 
     try {
-      // 3. Construct and await the fetch request (PATCH to update)
+      // 5. Construct and await the fetch request (PATCH to update - send the request to the backend with the formData as the body, and include the JWT in the headers for authentication)
       const response = await fetch('http://localhost:3000/user/profile', {
         method: 'PATCH',
         headers: {
-          'Content-Type': 'application/json',
+          // CRITICAL: We DO NOT set 'Content-Type' manually! 
+          // The browser automatically sets it to multipart/form-data with a boundary limit.
           'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify(jsonPayload) 
+        body: formData
       });
 
       // 4. Handle Backend Errors
