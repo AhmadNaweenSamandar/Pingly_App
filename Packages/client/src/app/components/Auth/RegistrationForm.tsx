@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { PersonalityInfoModal } from "../PersonalityInfoModal";
 
 
 //this interface help us to identify whether the registration form is complete
@@ -117,6 +118,9 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
     socialGoals: [] as string[],                // e.g., ["Friendship", "Dating", "Gym Partner"
     campusInvolvement: [] as string[]         // e.g., ["Intramural Sports", "Student Govt"]
   });
+
+    // state to control the personality modal nested inside the profile modal
+  const [isPersonalityModalOpen, setIsPersonalityModalOpen] = useState(false);
 
 
 
@@ -969,6 +973,14 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                       ))}
                     </SelectContent>
                   </Select>
+                      {/* NEW: The Pink Link */}
+                      <button
+                        type="button" // Important so it doesn't accidentally submit the form!
+                        onClick={() => setIsPersonalityModalOpen(true)}
+                        className="mt-2 text-sm font-medium text-pink-500 hover:text-pink-700 transition-colors flex items-center gap-1"
+                      >
+                        <span>✨</span> Learn more here
+                      </button>
                 </div>
 
 
@@ -1029,10 +1041,15 @@ export function RegistrationForm({ onComplete }: RegistrationFormProps) {
                   </Button>
                 </div>
               </motion.div>
+              
             )}
           </AnimatePresence>
         </div>
       </motion.div>
+      <PersonalityInfoModal 
+        isOpen={isPersonalityModalOpen} 
+        onClose={() => setIsPersonalityModalOpen(false)} 
+      />
     </div>
   );
 }
