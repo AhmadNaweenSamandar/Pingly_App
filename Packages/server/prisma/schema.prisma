@@ -73,6 +73,8 @@ model User {
   comments         Comment[]         // Replies
   sentMessages     Message[]
 
+  // --- UPDATED: Our new Scalable Discussion Architecture ---
+  discussions        Discussion[]        // A user can author many discussions
 
   // Relationships: Social
   scheduleEntries  ScheduleEntry[]
@@ -124,7 +126,34 @@ model ProjectIdea {
   createdAt DateTime @default(now())
 }
 
-// questions and discussion are using the same model
+
+// The Main Discussion Model
+model Discussion {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(255) // Caps the title length for UI consistency
+  content     String   @db.Text         // Stores the Markdown string. @db.Text allows long content
+
+  // --- SCALABILITY WIN: Denormalization ---
+  // Instead of counting replies dynamically, we store the count here.
+  // Our backend will increment this by 1 every time a reply is created.
+  replyCount  Int      @default(0)
+
+  // Relations
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  replies     String //DiscussionReply[] - will implement seperately 
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // --- EFFICIENCY WIN: Database Indexes ---
+  // These indexes allow the database to fetch "Trending" or "Recent" feeds instantly, 
+  // even if you have 10 million discussions.
+  @@index([replyCount(sort: Desc)]) // For the "Trending" feed
+  @@index([createdAt(sort: Desc)])  // For the "Newest" feed
+}
+
+// questions same model
 model Post {
   id        Int       @id @default(autoincrement())
   type      PostType  // To distinguish "questions" from "discussions", It is enum to separate Questions from Discussions
