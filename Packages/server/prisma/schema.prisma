@@ -75,6 +75,7 @@ model User {
 
   // --- UPDATED: Our new Scalable Discussion Architecture ---
   discussions        Discussion[]        // A user can author many discussions
+  discussionReplies  DiscussionReply[]   // A user can author many replies
 
   // Relationships: Social
   scheduleEntries  ScheduleEntry[]
@@ -141,7 +142,7 @@ model Discussion {
   // Relations
   authorId    String
   author      User     @relation(fields: [authorId], references: [id])
-  replies     String //DiscussionReply[] - will implement seperately 
+  replies     DiscussionReply[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -151,6 +152,37 @@ model Discussion {
   // even if you have 10 million discussions.
   @@index([replyCount(sort: Desc)]) // For the "Trending" feed
   @@index([createdAt(sort: Desc)])  // For the "Newest" feed
+}
+
+
+// The Reply Model (Handles Level 1 & Level 2)
+model DiscussionReply {
+  id             Int      @id @default(autoincrement())
+  content        String   @db.Text // Stores the Markdown string
+
+  // Relation to the parent Discussion
+  discussionId   Int
+  discussion     Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+
+  // Relation to Author
+  authorId       String
+  author         User       @relation(fields: [authorId], references: [id])
+
+  // --- MAINTENANCE WIN: The Two-Level Flat Architecture ---
+  // We use a "self-relation" to link replies to other replies.
+  // - If parentId is NULL: This is a Level 1 reply (replying to the Discussion).
+  // - If parentId has an ID: This is a Level 2 reply (replying to another User).
+  parentId       Int?
+  parent         DiscussionReply?  @relation("ReplyToReply", fields: [parentId], references: [id], onDelete: Cascade)
+  children       DiscussionReply[] @relation("ReplyToReply")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Indexes to instantly fetch all replies for a specific discussion or parent reply
+  @@index([discussionId])
+  @@index([parentId])
+  @@index([createdAt(sort: Asc)]) // Ensures replies always load in chronological order
 }
 
 // questions same model
