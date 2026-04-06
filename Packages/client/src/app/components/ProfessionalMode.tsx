@@ -438,14 +438,14 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 {/* THE UPGRADED DIALOG MODAL */}
       <Dialog open={showDiscussionDialog} onOpenChange={setShowDiscussionDialog}>
         {/* max-w-2xl keeps it wide enough for the rich text editor */}
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 bg-white">
           <DialogHeader className="p-6 pb-4 border-b border-gray-100 flex-shrink-0">
             <DialogTitle className="text-xl font-bold">Create a Discussion</DialogTitle>
           </DialogHeader>
           
           {/* Using ScrollArea so the modal doesn't break the screen height on small laptops */}
           <ScrollArea className="flex-1 p-6 min-h-0">
-            <div className="space-y-5">
+            <div className="space-y-5 ">
               
               {/* Advanced Title Input */}
               <div>
