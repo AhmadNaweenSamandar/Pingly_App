@@ -1,49 +1,59 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  MessageCircle, ArrowLeft, Send, Reply, 
-  Bold, Italic, Link as LinkIcon, List 
-} from "lucide-react";
-import ReactMarkdown from "react-markdown"; 
+import { MessageCircle, ArrowLeft, Send, Reply, Image as ImageIcon } from "lucide-react";
 import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
 import { ScrollArea } from "./ui/scroll-area";
 
-// --- Mock Data Updated for Profile Pictures ---
+// --- NEW IMPORTS: The maintained WYSIWYG & Security ---
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css"; 
+import DOMPurify from "dompurify";
+
+// --- Mock Data Updated for HTML & Images ---
 const discussionsData = [
   {
     id: 1,
     title: "Best frameworks for full-stack development in 2024",
     author: "Alex Rivera",
-    // [SCALABILITY WIN]: The backend will selectively include this URL. If it's null, we fall back to initials.
-    authorProfilePicture: "https://i.pravatar.cc/150?u=alex", 
+    authorProfilePicture: "https://i.pravatar.cc/150?u=alex",
     replyCount: 47,
-    content: "What are your thoughts on the best frameworks for full-stack development this year? I'm torn between **Next.js** and **Remix**.",
+    
+    // [EFFICIENCY WIN]: A simple boolean so the feed knows there is an image without parsing HTML.
+    hasImage: true, 
+    imageUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80",
+    
+    // [SECURITY WIN]: This is now raw HTML from the WYSIWYG editor
+    content: "<p>What are your thoughts on the best frameworks for full-stack development this year? I'm torn between <strong>Next.js</strong> and <strong>Remix</strong>.</p>",
     messages: [
-      { id: 101, user: "Jamie Lee", profilePicture: "https://i.pravatar.cc/150?u=jamie", text: "I've been loving Next.js with Supabase for the backend. The DX is `amazing`!", time: "1 hour ago", parentId: null },
-      { id: 102, user: "Sam Chen", profilePicture: null, text: "SvelteKit is also worth considering. *Super fast* and the learning curve is gentle.", time: "45 min ago", parentId: null }
+      { id: 101, user: "Jamie Lee", profilePicture: "https://i.pravatar.cc/150?u=jamie", text: "<p>I've been loving Next.js with Supabase for the backend. The DX is <em>amazing</em>!</p>", time: "1 hour ago", parentId: null },
+      { id: 102, user: "Sam Chen", profilePicture: null, text: "<p>SvelteKit is also worth considering. <strong>Super fast</strong> and the learning curve is gentle.</p>", time: "45 min ago", parentId: null }
     ]
   }
 ];
 
+// [MAINTAINABILITY WIN]: Define toolbar settings OUTSIDE the component so it doesn't cause re-renders.
+const quillModules = {
+  toolbar: [
+    ['bold', 'italic', 'underline'],
+    [{ 'list': 'bullet' }, { 'list': 'ordered' }],
+    ['link'],
+    ['clean'] 
+  ],
+};
+
 export function Discussion() {
   const [selectedDiscussion, setSelectedDiscussion] = useState<typeof discussionsData[0] | null>(null);
-  const [newMessage, setNewMessage] = useState("");
+  const [newMessage, setNewMessage] = useState(""); 
   const [replyingToId, setReplyingToId] = useState<number | null>(null);
 
-  // [MAINTAINABILITY WIN]: We use a ref to track the textarea so our Markdown toolbar 
-  // knows exactly where the user's cursor is when they click "Bold" or "Italic".
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // ==========================================
-  // HANDLERS
-  // ==========================================
-
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      console.log("Sending payload:", { 
+    // Strip empty HTML tags to ensure the user actually typed something
+    const plainText = newMessage.replace(/(<([^>]+)>)/gi, "").trim();
+    
+    if (plainText) {
+      console.log("Sending HTML payload:", { 
         discussionId: selectedDiscussion?.id, 
-        text: newMessage,
+        htmlContent: newMessage, 
         parentId: replyingToId 
       });
       setNewMessage("");
@@ -51,36 +61,20 @@ export function Discussion() {
     }
   };
 
-  // [UX WIN]: The Markdown Injector
-  // This function grabs highlighted text and wraps it in markdown symbols (e.g., **text**)
-  const insertMarkdown = (prefix: string, suffix: string = '') => {
-    if (!textareaRef.current) return;
-    
-    const start = textareaRef.current.selectionStart;
-    const end = textareaRef.current.selectionEnd;
-    const text = newMessage;
-    
-    const before = text.substring(0, start);
-    const selected = text.substring(start, end);
-    const after = text.substring(end);
-
-    // If no text is selected, insert placeholder text
-    const insertedText = `${prefix}${selected || 'text'}${suffix}`;
-    setNewMessage(before + insertedText + after);
-
-    // UX detail: Keep focus on the textarea after clicking a toolbar button
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 0);
+  // [SECURITY WIN]: Always sanitize HTML before rendering it
+  const createSafeHTML = (html: string) => {
+    return { __html: DOMPurify.sanitize(html) };
   };
 
   return (
     <div className="relative w-full h-[700px] bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col">
+      <style>{`
+        .ql-toolbar.ql-snow { border: none; border-bottom: 1px solid #f3f4f6; background: #f9fafb; padding: 8px; border-radius: 8px 8px 0 0; }
+        .ql-container.ql-snow { border: none; font-family: inherit; font-size: 0.875rem; }
+        .ql-editor { min-height: 80px; max-height: 150px; overflow-y: auto; padding: 12px; }
+      `}</style>
+
       <AnimatePresence initial={false} mode="popLayout">
-        
-        {/* ==========================================
-            VIEW 1: THE FEED (Master)
-            ========================================== */}
         {!selectedDiscussion ? (
           <motion.div
             key="feed-view"
@@ -111,9 +105,8 @@ export function Discussion() {
                     className="flex gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 cursor-pointer transition-all group border border-transparent hover:border-indigo-200"
                     onClick={() => setSelectedDiscussion(discussion)}
                   >
-                    {/* [UX WIN]: Added Ranking Number Badge */}
                     <div className="flex-shrink-0 w-8 h-8 mt-1 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
-                      {index + 1}
+                      #{index + 1}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -122,7 +115,6 @@ export function Discussion() {
                       </h4>
                       <div className="flex items-center justify-between text-sm text-gray-500">
                         <div className="flex items-center gap-2">
-                          {/* Rendering the Author's Profile Picture */}
                           {discussion.authorProfilePicture ? (
                             <img src={discussion.authorProfilePicture} alt={discussion.author} className="w-5 h-5 rounded-full object-cover" />
                           ) : (
@@ -132,10 +124,19 @@ export function Discussion() {
                           )}
                           <span><span className="font-medium text-gray-700">{discussion.author}</span></span>
                         </div>
-                        <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm">
-                          <MessageCircle className="w-3.5 h-3.5 text-indigo-500" />
-                          {discussion.replyCount}
-                        </span>
+                        
+                        <div className="flex items-center gap-2">
+                          {/* The elegant visual clue for attached images */}
+                          {discussion.hasImage && (
+                            <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md text-gray-500">
+                              <ImageIcon className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm">
+                            <MessageCircle className="w-3.5 h-3.5 text-indigo-500" />
+                            {discussion.replyCount}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -145,7 +146,6 @@ export function Discussion() {
           </motion.div>
 
         ) : (
-
         /* ==========================================
            VIEW 2: THE DETAIL (Slider)
            ========================================== */
@@ -157,13 +157,10 @@ export function Discussion() {
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
             className="absolute inset-0 flex flex-col w-full h-full bg-white z-10"
           >
-            {/* Header */}
+            {/* Header: Always Pinned Top */}
             <div className="p-4 border-b border-gray-100 flex items-center gap-4 flex-shrink-0 bg-white/80 backdrop-blur-md">
               <button
-                onClick={() => {
-                  setSelectedDiscussion(null);
-                  setReplyingToId(null); 
-                }}
+                onClick={() => { setSelectedDiscussion(null); setReplyingToId(null); }}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors group"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-500 group-hover:text-gray-800" />
@@ -174,16 +171,17 @@ export function Discussion() {
             </div>
 
             {/* Content: Scrollable */}
-            <ScrollArea className="flex-1 p-6">
+            {/* [SCALABILITY WIN]: Added 'min-h-0'. This mathematically forces the flex-1 container 
+                to never push the footer off-screen, guaranteeing the scrollbar appears. */}
+            <ScrollArea className="flex-1 min-h-0 p-6">
               
-              {/* Original Post */}
               <div className="mb-8 pb-8 border-b border-gray-100">
                 <div className="flex items-center gap-3 mb-4">
                   {selectedDiscussion.authorProfilePicture ? (
                     <img src={selectedDiscussion.authorProfilePicture} alt={selectedDiscussion.author} className="w-10 h-10 rounded-full object-cover shadow-sm" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                      {selectedDiscussion.author.split(' ').map(n => n[0]).join('')}
+                      {selectedDiscussion.author.charAt(0)}
                     </div>
                   )}
                   <div>
@@ -191,16 +189,34 @@ export function Discussion() {
                     <p className="text-xs text-gray-500">Original Poster</p>
                   </div>
                 </div>
-                <div className="prose prose-sm md:prose-base prose-indigo max-w-none text-gray-700">
-                  <ReactMarkdown>{selectedDiscussion.content}</ReactMarkdown>
-                </div>
+
+                {/* [UX WIN]: Industry Standard Image Constraint */}
+                {/* Changed to max-h-80 (320px) with object-cover. Removed the hover effect that causes layout jumping. */}
+                {selectedDiscussion.imageUrl && (
+                  <div className="mb-6 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-900">
+                    <img 
+                      src={selectedDiscussion.imageUrl} 
+                      alt="Attachment" 
+                      className="w-full max-h-80 object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                      onClick={() => {
+                        // Phase 2: Add logic here to open a full-screen Lightbox modal!
+                        console.log("Open full-screen image");
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Rendering Safe HTML */}
+                <div 
+                  className="prose prose-sm md:prose-base prose-indigo max-w-none text-gray-700" 
+                  dangerouslySetInnerHTML={createSafeHTML(selectedDiscussion.content)} 
+                />
               </div>
 
-              {/* The Replies */}
+              {/* Replies */}
               <div className="space-y-6">
                 {selectedDiscussion.messages.map((message) => (
                   <div key={message.id} className="flex gap-4 group">
-                    {/* Level 1 Reply Avatar */}
                     {message.profilePicture ? (
                       <img src={message.profilePicture} alt={message.user} className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1 shadow-sm" />
                     ) : (
@@ -215,9 +231,6 @@ export function Discussion() {
                           <span className="font-medium text-gray-900 text-sm">{message.user}</span>
                           <span className="text-xs text-gray-400">{message.time}</span>
                         </div>
-                        
-                        {/* [UX WIN]: Mobile Hover Fix.
-                            'opacity-100 md:opacity-0' -> Always visible on phone screens, hidden on desktop until hovered. */}
                         <button 
                           onClick={() => setReplyingToId(message.id)}
                           className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-800"
@@ -226,64 +239,43 @@ export function Discussion() {
                         </button>
                       </div>
                       
-                      <div className="prose prose-sm max-w-none text-gray-600">
-                        <ReactMarkdown>{message.text}</ReactMarkdown>
-                      </div>
+                      <div 
+                        className="prose prose-sm max-w-none text-gray-600"
+                        dangerouslySetInnerHTML={createSafeHTML(message.text)}
+                      />
                     </div>
                   </div>
                 ))}
               </div>
             </ScrollArea>
 
-            {/* Input Footer */}
-            <div className="p-4 border-t border-gray-100 flex-shrink-0 bg-gray-50 flex flex-col gap-2">
-              
+            {/* Input Footer: Always Pinned Bottom */}
+            {/* [MAINTAINABILITY WIN]: flex-shrink-0 ensures this footer never gets compressed by the content above it. */}
+            <div className="p-4 border-t border-gray-100 flex-shrink-0 bg-white">
               {replyingToId && (
-                <div className="flex items-center justify-between px-2">
-                  <span className="text-xs text-indigo-600 font-medium flex items-center gap-1">
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <span className="text-xs text-indigo-600 font-medium flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded-md">
                     <Reply className="w-3 h-3" /> Replying to user...
                   </span>
-                  <button onClick={() => setReplyingToId(null)} className="text-xs text-gray-400 hover:text-gray-600">
+                  <button onClick={() => setReplyingToId(null)} className="text-xs text-gray-400 hover:text-gray-700 font-medium">
                     Cancel
                   </button>
                 </div>
               )}
 
-              {/* [UX WIN]: The Markdown Toolbar (No images included!) */}
-              <div className="flex items-center gap-1 px-2 pb-1">
-                <button onClick={() => insertMarkdown('**', '**')} className="p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-800 rounded transition-colors" title="Bold">
-                  <Bold className="w-4 h-4" />
-                </button>
-                <button onClick={() => insertMarkdown('*', '*')} className="p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-800 rounded transition-colors" title="Italic">
-                  <Italic className="w-4 h-4" />
-                </button>
-                <div className="w-px h-4 bg-gray-300 mx-1" /> {/* Divider */}
-                <button onClick={() => insertMarkdown('[', '](https://)')} className="p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-800 rounded transition-colors" title="Link">
-                  <LinkIcon className="w-4 h-4" />
-                </button>
-                <button onClick={() => insertMarkdown('- ')} className="p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-800 rounded transition-colors" title="Bullet List">
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="flex gap-3">
-                <Textarea
-                  ref={textareaRef} // Attach ref for toolbar targeting
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder={replyingToId ? "Write a reply..." : "Contribute to the main discussion..."}
-                  rows={2}
-                  className="flex-1 resize-none bg-white focus-visible:ring-indigo-500"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                />
+              <div className="flex gap-3 items-end">
+                <div className="flex-1 border border-gray-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-shadow bg-white z-20">
+                  <ReactQuill 
+                    theme="snow"
+                    value={newMessage} 
+                    onChange={setNewMessage} 
+                    modules={quillModules}
+                    placeholder={replyingToId ? "Write a reply..." : "Join the discussion..."}
+                  />
+                </div>
                 <Button
                   onClick={handleSendMessage}
-                  className="bg-indigo-600 hover:bg-indigo-700 self-end h-10 px-4"
+                  className="bg-indigo-600 hover:bg-indigo-700 flex-shrink-0 mb-[2px] h-10 px-4 rounded-xl shadow-sm"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
