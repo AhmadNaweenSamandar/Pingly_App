@@ -443,8 +443,9 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 
 {/* THE UPGRADED DIALOG MODAL */}
       <Dialog open={showDiscussionDialog} onOpenChange={setShowDiscussionDialog}>
-        {/* max-w-2xl keeps it wide enough for the rich text editor */}
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 bg-white">
+        {/* [UX WIN]: w-[calc(100%-2rem)] physically forces the modal to be 100% of the screen width MINUS 1rem on each side. 
+            'sm:max-w-2xl' ensures it doesn't get too wide on giant desktop monitors. */}
+        <DialogContent className="w-[calc(100%-2rem)] bg-white sm:w-full sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-2xl">
           <DialogHeader className="p-6 pb-4 border-b border-gray-100 flex-shrink-0">
             <DialogTitle className="text-xl font-bold">Create a Discussion</DialogTitle>
           </DialogHeader>
