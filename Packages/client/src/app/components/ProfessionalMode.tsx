@@ -441,7 +441,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         </DialogContent>
       </Dialog>
 
-{/* THE UPGRADED DIALOG MODAL */}
+      {/* THE UPGRADED DIALOG MODAL */}
       <Dialog open={showDiscussionDialog} onOpenChange={setShowDiscussionDialog}>
         {/* [UX WIN]: w-[calc(100%-2rem)] physically forces the modal to be 100% of the screen width MINUS 1rem on each side. 
             'sm:max-w-2xl' ensures it doesn't get too wide on giant desktop monitors. */}

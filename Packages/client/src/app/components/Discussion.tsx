@@ -99,7 +99,7 @@ export function Discussion({ feedData }: DiscussionProps) {
                     className="flex gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 cursor-pointer border border-transparent hover:border-indigo-200"
                     onClick={() => setSelectedDiscussion(discussion)}
                   >
-                    <div className="flex-shrink-0 w-8 h-8 mt-1 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">#{index + 1}</div>
+                    <div className="flex-shrink-0 w-8 h-8 mt-1 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">{index + 1}</div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-gray-800 font-semibold mb-2 line-clamp-2">{discussion.title}</h4>
                       <div className="flex items-center justify-between text-sm text-gray-500">
