@@ -134,6 +134,11 @@ model Discussion {
   title       String   @db.VarChar(255) // Caps the title length for UI consistency
   content     String   @db.Text         // Stores the Markdown string. @db.Text allows long content
 
+  // --- NEW: The Image Array ---
+  // Stores up to 3 image URLs (e.g., ["/uploads/img1.jpg", "/uploads/img2.jpg"])
+  images      String[]
+
+  
   // --- SCALABILITY WIN: Denormalization ---
   // Instead of counting replies dynamically, we store the count here.
   // Our backend will increment this by 1 every time a reply is created.
