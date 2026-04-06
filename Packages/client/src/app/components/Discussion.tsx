@@ -175,8 +175,8 @@ export function Discussion() {
                 to never push the footer off-screen, guaranteeing the scrollbar appears. */}
             <ScrollArea className="flex-1 min-h-0 p-6">
               
-              <div className="mb-8 pb-8 border-b border-gray-100">
-                <div className="flex items-center gap-3 mb-4">
+              <div className="mb-4 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-3">
                   {selectedDiscussion.authorProfilePicture ? (
                     <img src={selectedDiscussion.authorProfilePicture} alt={selectedDiscussion.author} className="w-10 h-10 rounded-full object-cover shadow-sm" />
                   ) : (
@@ -189,6 +189,14 @@ export function Discussion() {
                     <p className="text-xs text-gray-500">Original Poster</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Rendering Safe HTML */}
+                
+                <div 
+                  className="prose prose-sm md:prose-base prose-indigo max-w-none text-gray-700" 
+                  dangerouslySetInnerHTML={createSafeHTML(selectedDiscussion.content)} 
+                /> <br />
 
                 {/* [UX WIN]: Industry Standard Image Constraint */}
                 {/* Changed to max-h-80 (320px) with object-cover. Removed the hover effect that causes layout jumping. */}
@@ -206,12 +214,6 @@ export function Discussion() {
                   </div>
                 )}
 
-                {/* Rendering Safe HTML */}
-                <div 
-                  className="prose prose-sm md:prose-base prose-indigo max-w-none text-gray-700" 
-                  dangerouslySetInnerHTML={createSafeHTML(selectedDiscussion.content)} 
-                />
-              </div>
 
               {/* Replies */}
               <div className="space-y-6">
