@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   MessageSquarePlus,
   Lightbulb,
   MessageCircle,
   Plus,
+  ImagePlus,
+  X
 } from "lucide-react";
 import { PointTable } from "./PointTable";
 import { Discussion } from "./Discussion";
@@ -15,6 +17,21 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+import { ScrollArea } from "./ui/scroll-area";
+
+
+// (Keep our existing quillModules definition here)
+const quillModules = {
+  toolbar: [
+    ['bold', 'italic', 'underline'],
+    [{ 'list': 'bullet' }, { 'list': 'ordered' }],
+    ['link'],
+    ['clean'] 
+  ],
+};
 
 // Mock data for project ideas
 const projectIdeas = [
@@ -92,6 +109,34 @@ interface ProfessionalModeProps {
     | "questions";
 }
 
+// 2. THE MISSING DATA: mock data for discussions!
+const initialDiscussionsData = [
+  {
+    id: 1,
+    title: "Best frameworks for full-stack development in 2024",
+    author: "Alex Rivera",
+    authorProfilePicture: "https://i.pravatar.cc/150?u=alex",
+    replyCount: 47,
+    hasImage: true, 
+    imageUrl: "https://i.pravatar.cc/150?u=jamie",
+    content: "<p>What are your thoughts on the best frameworks for full-stack development this year?</p>",
+    messages: [
+      { 
+        id: 101, 
+        user: "Jamie Lee", 
+        profilePicture: "https://i.pravatar.cc/150?u=jamie", 
+        text: "<p>I've been loving Next.js with Supabase for the backend. The DX is <em>amazing</em>!</p>", 
+        time: "1 hour ago",
+        children: [
+          {
+            id: 201, user: "Taylor Smith", profilePicture: null, text: "<p>Agreed! The new app router makes data fetching so much cleaner.</p>", time: "30 min ago", parentId: 101
+          }
+        ]
+      }
+    ]
+  }
+];
+
 /**
  * ProfessionalMode Component
  * * The main container for the professional networking side of the application.
@@ -103,12 +148,74 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   // Modal Visibility State
   // =========================================
 
+  // 1. The Global Feed State (Lifted up from Discussion.tsx)
+  const [discussionsData, setDiscussionsData] = useState(initialDiscussionsData); // Use our mock array
+
   // Controls the "Create New Project" popup form
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   // Controls the "Ask a Question" popup form
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
   // Controls the "Post an Idea / Discussion" popup form
   const [showDiscussionDialog, setShowDiscussionDialog] = useState(false);
+
+  // 3. The Form State
+  const [newPostTitle, setNewPostTitle] = useState("");
+  const [newPostContent, setNewPostContent] = useState("");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // --- Image Handlers ---
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const newFiles = Array.from(e.target.files);
+    
+    if (selectedImages.length + newFiles.length > 3) {
+      alert("You can only attach a maximum of 3 images per post.");
+      return;
+    }
+    const updatedFiles = [...selectedImages, ...newFiles];
+    setSelectedImages(updatedFiles);
+    const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+    setImagePreviews(prev => [...prev, ...newPreviews]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    URL.revokeObjectURL(imagePreviews[indexToRemove]);
+    setSelectedImages(prev => prev.filter((_, i) => i !== indexToRemove));
+    setImagePreviews(prev => prev.filter((_, i) => i !== indexToRemove));
+  };
+
+  // --- Submission Handler ---
+  const handleCreatePost = () => {
+    if (!newPostTitle.trim() || !newPostContent.replace(/(<([^>]+)>)/gi, "").trim()) {
+      alert("Please provide both a title and content.");
+      return;
+    }
+
+    const newDiscussion = {
+      id: Date.now(),
+      title: newPostTitle,
+      author: "Current User",
+      authorProfilePicture: "https://i.pravatar.cc/150?u=current",
+      replyCount: 0,
+      hasImage: selectedImages.length > 0,
+      imageUrl: null,
+      content: newPostContent,
+      messages: []
+    };
+
+    // Add to the feed state!
+    setDiscussionsData([newDiscussion, ...discussionsData]);
+    
+    // Reset and Close
+    setNewPostTitle("");
+    setNewPostContent("");
+    setSelectedImages([]);
+    setImagePreviews([]);
+    setShowDiscussionDialog(false);
+  };
 
   const renderSection = () => {
     switch (currentSection) {
@@ -136,30 +243,31 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
       //discussions section shows the hot discussions ranked by engagement, using the Discussion component to display the data in a discussion format. It also includes a button to create a new discussion, which opens a dialog form when clicked.
       case "discussions":
         return (
-          <motion.div
-            key="discussions"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="max-w-4xl mx-auto"
-          >
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                Hot Discussions
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Join trending conversations ranked by engagement
-              </p>
-              <Button
-                onClick={() => setShowDiscussionDialog(true)}
-                className="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all"
-              >
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Create Discussion
-              </Button>
+        <motion.div
+          key="discussions"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          className="max-w-4xl mx-auto"
+        >
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Hot Discussions</h2>
+              <p className="text-gray-600">Join trending conversations ranked by engagement</p>
             </div>
-            <Discussion />
-          </motion.div>
+            {/* The Top-Level Button */}
+            <Button
+              onClick={() => setShowDiscussionDialog(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl transition-all h-10 px-4 rounded-xl"
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Create Discussion
+            </Button>
+          </div>
+
+          {/* WE PASS THE DATA DOWN TO THE CHILD */}
+          <Discussion feedData={discussionsData} />
+        </motion.div>
         );
       //projects section shows the user's active projects, using the Projects component to display the data in a project management format. It also includes a button to create a new project, which opens a dialog form when clicked.
       case "projects":
@@ -327,34 +435,83 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={showDiscussionDialog}
-        onOpenChange={setShowDiscussionDialog}
-      >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create a Discussion</DialogTitle>
+{/* THE UPGRADED DIALOG MODAL */}
+      <Dialog open={showDiscussionDialog} onOpenChange={setShowDiscussionDialog}>
+        {/* max-w-2xl keeps it wide enough for the rich text editor */}
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="p-6 pb-4 border-b border-gray-100 flex-shrink-0">
+            <DialogTitle className="text-xl font-bold">Create a Discussion</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div>
-              <label className="block mb-2">Discussion Topic</label>
-              <Input placeholder="Enter discussion topic..." />
+          
+          {/* Using ScrollArea so the modal doesn't break the screen height on small laptops */}
+          <ScrollArea className="flex-1 p-6 min-h-0">
+            <div className="space-y-5">
+              
+              {/* Advanced Title Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Discussion Topic</label>
+                <input 
+                  type="text" 
+                  placeholder="What do you want to discuss?"
+                  value={newPostTitle}
+                  onChange={(e) => setNewPostTitle(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-shadow text-gray-800 font-medium placeholder:font-normal"
+                />
+              </div>
+
+              {/* Advanced WYSIWYG Content */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Initial Message</label>
+                <div className="border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-shadow">
+                  <ReactQuill 
+                    theme="snow" 
+                    value={newPostContent} 
+                    onChange={setNewPostContent} 
+                    modules={quillModules} 
+                    placeholder="Share your thoughts, ask questions, or provide context..." 
+                  />
+                </div>
+              </div>
+
+              {/* Advanced Image Attachments */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Attachments (Max 3)</label>
+                
+                {imagePreviews.length > 0 && (
+                  <div className="flex flex-wrap gap-3 mb-3">
+                    {imagePreviews.map((preview, idx) => (
+                      <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 shadow-sm group">
+                        <img src={preview} alt="Upload preview" className="w-full h-full object-cover" />
+                        <button onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-black/60 opacity-0 group-hover:opacity-100 hover:bg-red-500 text-white rounded-full p-1 transition-all">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <input type="file" ref={fileInputRef} onChange={handleImageSelect} multiple accept="image/*" className="hidden" />
+                
+                {selectedImages.length < 3 && (
+                  <button 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors font-medium text-sm"
+                  >
+                    <ImagePlus className="w-4 h-4" /> Add Images
+                  </button>
+                )}
+              </div>
+
             </div>
-            <div>
-              <label className="block mb-2">Initial Message</label>
-              <Textarea placeholder="Start the conversation..." rows={6} />
-            </div>
-            <div className="flex gap-3 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => setShowDiscussionDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button className="bg-indigo-600 hover:bg-indigo-700">
-                Create Discussion
-              </Button>
-            </div>
+          </ScrollArea>
+
+          <div className="p-6 pt-4 border-t border-gray-100 flex gap-3 justify-end flex-shrink-0 bg-gray-50">
+            <Button variant="outline" onClick={() => setShowDiscussionDialog(false)} className="rounded-xl">
+              Cancel
+            </Button>
+            <Button onClick={handleCreatePost} className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md">
+              Create Discussion
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
