@@ -250,15 +250,21 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
           exit={{ opacity: 0, x: -20 }}
           className="max-w-4xl mx-auto"
         >
-          <div className="mb-6 flex items-center justify-between">
+          {/* [UX WIN]: Mobile-Responsive Header 
+              'flex-col' stacks them on phones. 
+              'sm:flex-row' puts them side-by-side on tablets/desktops. 
+              'gap-4' adds perfect spacing between them when stacked. */}
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Hot Discussions</h2>
               <p className="text-gray-600">Join trending conversations ranked by engagement</p>
             </div>
-            {/* The Top-Level Button */}
+            
+            {/* 'w-full sm:w-auto' makes the button full-width on phones for an easy tap target, 
+                and shrinks it to its normal size on desktop. */}
             <Button
               onClick={() => setShowDiscussionDialog(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl transition-all h-10 px-4 rounded-xl"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl transition-all h-10 px-4 rounded-xl w-full sm:w-auto"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               Create Discussion
