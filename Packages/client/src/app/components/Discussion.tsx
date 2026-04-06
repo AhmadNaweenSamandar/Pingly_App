@@ -91,7 +91,7 @@ export function Discussion({ feedData }: DiscussionProps) {
             {/* The header is removed! The parent handles it now. */}
             
             {/* We map over feedData instead of local state! */}
-            <ScrollArea className="flex-1 pr-4">
+            <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-3">
                 {feedData.map((discussion, index) => (
                   <motion.div
