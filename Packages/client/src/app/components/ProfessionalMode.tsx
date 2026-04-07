@@ -187,34 +187,77 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
     setImagePreviews(prev => prev.filter((_, i) => i !== indexToRemove));
   };
 
-  // --- Submission Handler ---
-  const handleCreatePost = () => {
+  // --- Submission Handler (Wired to Backend) ---
+  const handleCreatePost = async () => {
+    // 1. Validation
     if (!newPostTitle.trim() || !newPostContent.replace(/(<([^>]+)>)/gi, "").trim()) {
       alert("Please provide both a title and content.");
       return;
     }
 
-    const newDiscussion = {
-      id: Date.now(),
-      title: newPostTitle,
-      author: "Current User",
-      authorProfilePicture: "https://i.pravatar.cc/150?u=current",
-      replyCount: 0,
-      hasImage: selectedImages.length > 0,
-      imageUrl: null,
-      content: newPostContent,
-      messages: []
-    };
+    try {
+      // 2. Pack the data into FormData (Required for sending files)
+      const formData = new FormData();
+      formData.append("title", newPostTitle);
+      formData.append("content", newPostContent);
+      
+      // Append each image file to the "images" key so NestJS FilesInterceptor catches them
+      selectedImages.forEach((file) => {
+        formData.append("images", file);
+      });
 
-    // Add to the feed state!
-    setDiscussionsData([newDiscussion, ...discussionsData]);
-    
-    // Reset and Close
-    setNewPostTitle("");
-    setNewPostContent("");
-    setSelectedImages([]);
-    setImagePreviews([]);
-    setShowDiscussionDialog(false);
+      // 3. Get the JWT Token from localStorage with the name as access_token (This is the token we stored when the user logged in)
+      const token = localStorage.getItem("access_token"); 
+
+      // 4. Send to NestJS Backend
+      const response = await fetch("http://localhost:3000/discussions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          // [Important]: Do NOT manually set 'Content-Type': 'multipart/form-data' here!
+          // When we pass a FormData object to fetch(), the browser automatically sets the 
+          // correct multipart header along with a crucial, randomly generated 'boundary' string.
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create discussion");
+      }
+
+      // 5. Parse the returned database record
+      const savedDiscussion = await response.json();
+
+      // 6. Map the backend Prisma object to our Frontend UI State shape
+      const newFrontendDiscussion = {
+        id: savedDiscussion.id,
+        title: savedDiscussion.title,
+        // Map the author relation returned by Prisma
+        author: savedDiscussion.author.name || "Unknown User", 
+        authorProfilePicture: savedDiscussion.author.profilePicture,
+        replyCount: 0, 
+        // Check if the backend returned any uploaded image URLs
+        hasImage: savedDiscussion.images && savedDiscussion.images.length > 0,
+        // Grab the first image to use as the feed thumbnail, if it exists
+        imageUrl: savedDiscussion.images?.[0] || null, 
+        content: savedDiscussion.content,
+        messages: [], // Empty initially
+      };
+
+      // 7. Optimistic UI Update: Push it to the top of the feed instantly
+      setDiscussionsData([newFrontendDiscussion, ...discussionsData]);
+      
+      // 8. Clean up and close modal
+      setNewPostTitle("");
+      setNewPostContent("");
+      setSelectedImages([]);
+      setImagePreviews([]);
+      setShowDiscussionDialog(false);
+
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert("There was an error creating your discussion. Please try again.");
+    }
   };
 
   const renderSection = () => {

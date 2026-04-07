@@ -67,25 +67,25 @@ export class DiscussionController {
     return this.discussionService.createReply(userId, discussionId, createReplyDto);
   }
 
-  // =======================================================================
-  // 3. GET DISCUSSIONS (For our "Hot Discussions" Feed)
-  // =======================================================================
-  // Note: we added this route because our frontend needs a way to fetch the feed!
-  @UseGuards(JwtAuthGuard)
-  @Get()
-  async getDiscussions(@Query('sortBy') sortBy: 'trending' | 'newest' = 'trending') {
-    // You can implement this in our service:
-    // It should use Prisma's `orderBy` mapped to those @@index tags we created!
-    return this.discussionService.getDiscussions(sortBy);
-  }
+//   // =======================================================================
+//   // 3. GET DISCUSSIONS (For our "Hot Discussions" Feed)
+//   // =======================================================================
+//   // Note: we added this route because our frontend needs a way to fetch the feed!
+//   @UseGuards(JwtAuthGuard)
+//   @Get()
+//   async getDiscussions(@Query('sortBy') sortBy: 'trending' | 'newest' = 'trending') {
+//     // You can implement this in our service:
+//     // It should use Prisma's `orderBy` mapped to those @@index tags we created!
+//     return this.discussionService.getDiscussions(sortBy);
+//   }
 
-  // =======================================================================
-  // 4. GET SINGLE DISCUSSION (With Nested Replies)
-  // =======================================================================
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  async getDiscussionDetail(@Param('id', ParseIntPipe) discussionId: number) {
-    // Fetches the specific discussion, including the Level 1 and Level 2 replies
-    return this.discussionService.getDiscussionDetail(discussionId);
-  }
+//   // =======================================================================
+//   // 4. GET SINGLE DISCUSSION (With Nested Replies)
+//   // =======================================================================
+//   @UseGuards(JwtAuthGuard)
+//   @Get(':id')
+//   async getDiscussionDetail(@Param('id', ParseIntPipe) discussionId: number) {
+//     // Fetches the specific discussion, including the Level 1 and Level 2 replies
+//     return this.discussionService.getDiscussionDetail(discussionId);
+//   }
 }
