@@ -91,4 +91,36 @@ export class DiscussionService {
       throw new InternalServerErrorException('Failed to post reply');
     }
   }
+
+  // =======================================================================
+  // 3. GET FEED (The Highly Efficient Indexed Query)
+  // =======================================================================
+  async getDiscussions(sortBy: 'trending' | 'newest') {
+    try {
+      // Determine the sorting logic based on the user's request
+      // This hooks directly into the @@index tags we set up in Prisma!
+      const orderByLogic = sortBy === 'trending' 
+        ? { replyCount: 'desc' as const } 
+        : { createdAt: 'desc' as const };
+
+      const discussions = await this.prisma.discussion.findMany({
+        orderBy: orderByLogic,
+        // We do NOT include replies here to save massive amounts of bandwidth.
+        // We only pull the metadata needed for the Feed UI.
+        include: {
+          author: {
+            select: { id: true, name: true, profilePicture: true }
+          }
+        },
+        take: 20, // Pagination: Only grab the top 20 for now
+      });
+
+      return discussions;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch discussions');
+    }
+  }
+
 }
+
+
