@@ -121,6 +121,51 @@ export class DiscussionService {
     }
   }
 
+  // =======================================================================
+  // 4. GET SINGLE DISCUSSION (The Deep Dive)
+  // =======================================================================
+  async getDiscussionDetail(discussionId: number) {
+    // This method fetches a single discussion along with its nested replies. only when user clicks on a discussion to view details, we fetch the replies. This keeps our feed super fast and efficient.
+    try {
+      const discussion = await this.prisma.discussion.findUnique({
+        where: { id: discussionId },
+        include: {
+          author: {
+            select: { id: true, name: true, profilePicture: true }
+          },
+          // This is where your Flat-Tree architecture shines!
+          // We grab Level 1 replies (parentId: null) and their nested Level 2 children.
+          replies: {
+            where: { parentId: null }, // Only get top-level replies
+            orderBy: { createdAt: 'asc' }, // Chronological order
+            include: {
+              author: {
+                select: { id: true, name: true, profilePicture: true }
+              },
+              children: { // The Level 2 replies
+                orderBy: { createdAt: 'asc' },
+                include: {
+                  author: {
+                    select: { id: true, name: true, profilePicture: true }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!discussion) {
+        throw new NotFoundException('Discussion not found');
+      }
+
+      return discussion;
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Failed to fetch discussion details');
+    }
+  }
+
 }
 
 

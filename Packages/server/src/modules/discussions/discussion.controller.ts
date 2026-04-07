@@ -79,13 +79,13 @@ export class DiscussionController {
     return this.discussionService.getDiscussions(sortBy);
   }
 
-//   // =======================================================================
-//   // 4. GET SINGLE DISCUSSION (With Nested Replies)
-//   // =======================================================================
-//   @UseGuards(JwtAuthGuard)
-//   @Get(':id')
-//   async getDiscussionDetail(@Param('id', ParseIntPipe) discussionId: number) {
-//     // Fetches the specific discussion, including the Level 1 and Level 2 replies
-//     return this.discussionService.getDiscussionDetail(discussionId);
-//   }
-// }
+  // =======================================================================
+  // 4. GET SINGLE DISCUSSION (With Nested Replies)
+  // =======================================================================
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getDiscussionDetail(@Param('id', ParseIntPipe) discussionId: number) {
+    // Fetches the specific discussion, including the Level 1 and Level 2 replies
+    return this.discussionService.getDiscussionDetail(discussionId);
+  }
+}
