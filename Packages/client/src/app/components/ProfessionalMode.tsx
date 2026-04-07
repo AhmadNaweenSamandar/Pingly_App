@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   MessageSquarePlus,
@@ -148,8 +148,10 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   // Modal Visibility State
   // =========================================
 
-  // 1. The Global Feed State (Lifted up from Discussion.tsx)
-  const [discussionsData, setDiscussionsData] = useState(initialDiscussionsData); // Use our mock array
+  // 1. The Global Feed State
+  // Change from: const [discussionsData, setDiscussionsData] = useState(initialDiscussionsData);
+  const [discussionsData, setDiscussionsData] = useState<any[]>([]);
+  
 
   // Controls the "Create New Project" popup form
   const [showProjectDialog, setShowProjectDialog] = useState(false);
@@ -259,6 +261,55 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
       alert("There was an error creating your discussion. Please try again.");
     }
   };
+
+  useEffect(() => {
+    const fetchFeed = async () => {
+      try {
+        // 1. Grab the JWT token
+        const token = localStorage.getItem("access_token"); // This is the token we stored when the user logged in
+
+        // 2. Fetch from the backend (defaults to 'trending' sort based on our controller)
+        const response = await fetch("http://localhost:3000/discussions", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch discussions feed");
+        }
+
+        const dbDiscussions = await response.json();
+
+        // 3. Map the backend Prisma objects to our Frontend UI State shape
+        const formattedFeed = dbDiscussions.map((doc: any) => ({
+          id: doc.id,
+          title: doc.title,
+          author: doc.author.name || "Unknown User", 
+          authorProfilePicture: doc.author.profilePicture,
+          replyCount: doc.replyCount,
+          hasImage: doc.images && doc.images.length > 0,
+          imageUrl: doc.images?.[0] || null, 
+          content: doc.content,
+          // We leave messages empty here because the feed view doesn't need to load 
+          // 10,000 comments just to display the list! 
+          // We will fetch messages only when the user clicks a specific discussion.
+          messages: [] 
+        }));
+
+        // 4. Update the state to render the real data
+        setDiscussionsData(formattedFeed);
+
+      } catch (error) {
+        console.error("Error loading feed:", error);
+        // Optional: set some error state here to show a UI alert
+      }
+    };
+
+    fetchFeed();
+  }, []); // Empty dependency array means this runs ONCE when the component loads
 
   const renderSection = () => {
     switch (currentSection) {
