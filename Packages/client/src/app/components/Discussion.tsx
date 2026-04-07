@@ -1,440 +1,197 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { MessageCircle, X, Send, ArrowUp } from "lucide-react";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageCircle, ArrowLeft, Send, Reply, Image as ImageIcon } from "lucide-react";
 import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
 import { ScrollArea } from "./ui/scroll-area";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css"; 
+import DOMPurify from "dompurify";
 
-//Static dicussion instances for checking discussion.
-const discussionsData = [
-  {
-    rank: 1,
-    title: "Best frameworks for full-stack development in 2024",
-    author: "Alex Rivera",
-    replies: 47,
-    messages: [
-      { user: "Alex Rivera", text: "What are your thoughts on the best frameworks for full-stack development this year?", time: "2 hours ago" },
-      { user: "Jamie Lee", text: "I've been loving Next.js with Supabase for the backend. The DX is amazing!", time: "1 hour ago" },
-      { user: "Sam Chen", text: "SvelteKit is also worth considering. Super fast and the learning curve is gentle.", time: "45 min ago" }
-    ]
-  },
-  {
-    rank: 2,
-    title: "How to prepare for technical interviews?",
-    author: "Jordan Kim",
-    replies: 34,
-    messages: [
-      { user: "Jordan Kim", text: "Any tips for acing technical interviews at top tech companies?", time: "4 hours ago" },
-      { user: "Taylor Smith", text: "Practice on LeetCode daily and do mock interviews with peers.", time: "3 hours ago" }
-    ]
-  },
-  {
-    rank: 3,
-    title: "Understanding async/await in JavaScript",
-    author: "Casey Johnson",
-    replies: 28,
-    messages: [
-      { user: "Casey Johnson", text: "Can someone explain async/await in simple terms?", time: "5 hours ago" },
-      { user: "Morgan Davis", text: "Think of it as a way to write asynchronous code that looks synchronous!", time: "4 hours ago" }
-    ]
-  },
-  {
-    rank: 4,
-    title: "Best practices for Git workflow",
-    author: "River Thompson",
-    replies: 22,
-    messages: [
-      { user: "River Thompson", text: "What Git workflow do you use in your team?", time: "6 hours ago" }
-    ]
-  },
-  {
-    rank: 5,
-    title: "Docker vs VM: When to use what?",
-    author: "Quinn Martinez",
-    replies: 19,
-    messages: [
-      { user: "Quinn Martinez", text: "I'm confused about when to use Docker vs traditional VMs.", time: "8 hours ago" }
-    ]
-  }
-];
+// Define the shape of the props this component expects
+interface DiscussionProps {
+  feedData: any[]; // Ideally, type this strictly based on our data shape!
+}
 
-export function Discussion() {
+const quillModules = {
+  toolbar: [
+    ['bold', 'italic', 'underline'],
+    [{ 'list': 'bullet' }, { 'list': 'ordered' }],
+    ['link'],
+    ['clean'] 
+  ],
+};
 
+// Accept feedData as a prop from ProfessionalMode
+export function Discussion({ feedData }: DiscussionProps) {
+  
+  // Notice: The state for the whole array is gone! We only track the selected one.
+  const [selectedDiscussion, setSelectedDiscussion] = useState<any | null>(null);
+  
+  const [newMessage, setNewMessage] = useState(""); 
+  const [replyTarget, setReplyTarget] = useState<{ parentId: number, name: string } | null>(null);
 
-//State Management
-
-  /*
-   * 1. Selected Discussion State
-   * Purpose: Tracks which specific chat thread the user is currently viewing.
-   * Type Definition: 
-   * - `typeof discussionsData[0]`: Infers the shape of the state from mock data.
-   * - `| null`: Allows the state to be empty (e.g., on initial load).
-   * Initial Value: null (No discussion open by default).
-   */
-  const [selectedDiscussion, setSelectedDiscussion] = useState<typeof discussionsData[0] | null>(null);
-
-  /**
-   * 2. Message Input State
-   * Purpose: Controls the value of the text input field (Controlled Component).
-   * Initial Value: Empty string.
-   */
-  const [newMessage, setNewMessage] = useState("");
-
-
-  //Handler
-
-  /**
-   * handleSendMessage
-   * Purpose: Validates input and triggers the "send" logic.
-   * Triggered by: Form submission or "Send" button click.
-   */
-  const handleSendMessage = () => {
-    // Validation: .trim() removes whitespace from both ends.
-    // If the string is empty after trimming, it evaluates to false (falsy), skipping the block.
-    if (newMessage.trim()) {
-      // TODO: Connect to Backend
-      // In a production environment, I would call an API endpoint here.
-      // Example: await api.post('/messages', { chatId: selectedDiscussion.id, text: newMessage });
-      console.log("Sending message:", newMessage);
-
-      // UX Pattern: Clear the input field immediately after sending
-      // to allow the user to type their next message.
+  const handleSendReply = () => {
+    const plainText = newMessage.replace(/(<([^>]+)>)/gi, "").trim();
+    if (plainText && selectedDiscussion) {
+      console.log("Sending reply payload:", { 
+        discussionId: selectedDiscussion.id, 
+        htmlContent: newMessage, 
+        parentId: replyTarget?.parentId
+      });
       setNewMessage("");
+      setReplyTarget(null); 
     }
   };
 
+  const createSafeHTML = (html: string) => ({ __html: DOMPurify.sanitize(html) });
+
+  const MessageBlock = ({ message, isLevel2 = false, level1ParentId }: { message: any, isLevel2?: boolean, level1ParentId: number }) => (
+    <div className={`flex gap-3 md:gap-4 group ${isLevel2 ? "mt-4 relative" : ""}`}>
+      {isLevel2 && <div className="absolute -left-5 md:-left-8 top-0 bottom-0 w-px bg-gray-200" />}
+
+      {message.profilePicture ? (
+        <img src={message.profilePicture} alt={message.user} className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1 shadow-sm" />
+      ) : (
+        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium flex-shrink-0 mt-1 text-sm">{message.user.charAt(0)}</div>
+      )}
+      
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-900 text-sm truncate">{message.user}</span>
+            <span className="text-xs text-gray-400 flex-shrink-0">{message.time}</span>
+          </div>
+          {!isLevel2 && (
+            <button onClick={() => setReplyTarget({ parentId: level1ParentId, name: message.user })} className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-800 bg-indigo-50 md:bg-transparent px-2 py-1 md:p-0 rounded-md md:rounded-none">
+              <Reply className="w-3 h-3" /> Reply
+            </button>
+          )}
+        </div>
+        <div className="prose prose-sm max-w-none text-gray-600 leading-relaxed" dangerouslySetInnerHTML={createSafeHTML(message.text)} />
+      </div>
+    </div>
+  );
+
   return (
-    <>
-      <motion.div
-        className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 h-fit"
-        whileHover={{ boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
-      >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-xl">
-            <MessageCircle className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="text-gray-800">Hot Discussions</h3>
-            <p className="text-gray-500">Most active conversations</p>
-          </div>
-        </div>
+    <div className="relative w-full h-[700px] bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden flex flex-col">
+      <style>{`
+        .ql-toolbar.ql-snow { border: none; border-bottom: 1px solid #f3f4f6; background: #f9fafb; padding: 8px; border-radius: 8px 8px 0 0; }
+        .ql-container.ql-snow { border: none; font-family: inherit; font-size: 0.875rem; }
+        .ql-editor { min-height: 80px; max-height: 200px; overflow-y: auto; padding: 12px; }
+      `}</style>
 
-        <div className="space-y-3">
-        {/* ITERATION
-          * We map through the 'discussionsData' array. 
-          * 'index' is used to calculate the animation delay.
-            */}
-          {discussionsData.map((discussion, index) => (
-            // MOTION WRAPPER
-            // Uses Framer Motion to animate the entry of each list item.
-            <motion.div
-            // KEY: React needs a unique key for list items. 
-            // Ideally, use a unique ID (discussion.id) rather than rank if possible.
-              key={discussion.rank}
-              // ANIMATION PROPS
-            // Initial: Starts invisible (opacity 0) and slightly shifted left (x: -20)
-              initial={{ opacity: 0, x: -20 }}
-              // Animate: Fades in to 100% and moves to natural position (x: 0)
-              animate={{ opacity: 1, x: 0 }}
-              // Transition: Creates a "Staggered" effect. 
-                // Item 0 waits 0s, Item 1 waits 0.1s, Item 2 waits 0.2s, etc.
-              transition={{ delay: index * 0.1 }}
-              // STYLING (Tailwind)
-            // 'group': Marks this container as a parent group. 
-            // Child elements can change style when this parent is hovered (see group-hover below).
-              className="p-4 rounded-xl hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 cursor-pointer transition-all group border border-transparent hover:border-indigo-200"
-              // INTERACTION
-            // Updates the state variable 'selectedDiscussion' defined in const code.
-              onClick={() => setSelectedDiscussion(discussion)}
-            >
-              <div className="flex items-start gap-3">
-                {/* RANK BADGE / AVATAR */}
-                {/* 'flex-shrink-0': Prevents the circle from squishing if the text is too long */}
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex-shrink-0">
-                  {discussion.rank}
-                </div>
-                
-                {/* CONTENT CONTAINER */}
-                {/* 'min-w-0': Crucial Flexbox hack. Allows text truncation (line-clamp) to work inside a flex child. */}
-                <div className="flex-1 min-w-0">
-                {/* TITLE */}
-                {/* 'group-hover:text-indigo-600': When the PARENT (motion.div) is hovered, this TEXT turns indigo. */}
-                {/* 'line-clamp-2': Cuts off text after 2 lines and adds '...' */}
-                  <h4 className="text-gray-800 group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
-                    {discussion.title}
-                  </h4>
-
-                  {/* METADATA (Author & Replies) */}
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <span>{discussion.author}</span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle className="w-3 h-3" />
-                      {discussion.replies} replies
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Discussion Detail Popup: it will pop up discussion detail where user can send and receive new discussion */}
-      <AnimatePresence>
-        {/* CONDITIONAL RENDERING
-          * The modal only exists in the DOM if 'selectedDiscussion' is not null. 
-          */}
-        {selectedDiscussion && (
-          <>
-
-          {/* =========================================
-            OUTER WRAPPER (THE FIX)
-            - fixed inset-0: Fills the whole screen.
-            - flex items-center justify-center: Forces the modal to the dead center.
-            - z-50: Sits on top of everything.
-            - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
-           ========================================= */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* ------------------------------------------------------------------
-            * LAYER 1: THE BACKDROP (Overlay)
-            * This is the dark background behind the popup.
-            *   Changed to 'absolute' to fill the wrapper.
-            *   Handled click to close.
-            * ------------------------------------------------------------------ */}
-            <motion.div
-            // ANIMATION: Simple fade in/out
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              // STYLING:
-            // 'fixed inset-0': Pins the div to all 4 corners of the screen.
-            // 'z-50': Ensures this sits on top of everything else on the page.
-            // 'backdrop-blur-sm': Applies a frosted glass effect to the content BEHIND the overlay.
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            // INTERACTION:
-            // Clicking strictly on the background sets the state to null, closing the modal.
-              onClick={() => setSelectedDiscussion(null)}
-            />
-
-            {/* ------------------------------------------------------------------
-              * LAYER 2: THE MODAL CONTAINER
-              * This is the actual floating window.
-              *   Removed: fixed top-1/2 left-1/2 -translate... (The cause of the bug)
-              *   Added: relative (to sit above backdrop)
-              *   Added: bg-white (Fixes the "void" background issue)
-              *   Added: w-full max-w-2xl (Size constraints)
-              * ------------------------------------------------------------------ */}
-            <motion.div
-            // ANIMATION: "Pop" effect.
-            // Starts slightly smaller (scale 0.9) and lower (y: 20), then grows and rises into place.
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-
-            // STYLING (Centering Hack):
-            // 'fixed top-1/2 left-1/2': Puts the top-left corner of the div in the exact center of screen.
-            // '-translate-x-1/2 -translate-y-1/2': Shifts the div back by 50% of its own width/height 
-            // to achieve perfect centering.
-              className="relative w-full max-w-3xl max-h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl max-h-full"
-
-            // CRITICAL INTERACTION: Event Bubbling Prevention
-            // Without this, clicking INSIDE the white box would "bubble up" to the backdrop 
-            // and trigger the close action. This forces the click to stop here.
-              onClick={(e) => e.stopPropagation()}
-            >
-
-                {/* HEADER CONTAINER 
-                    - 'flex-shrink-0': This is CRITICAL. In a flex-column layout (the modal), 
-                    if the content below (messages) gets very long, CSS might try to "squish" the header 
-                    to make room. This forces the header to stay its full size no matter what.
-                    - 'border-b': Adds a subtle line to separate the header from the scrollable chat area.
-                */}
-
-              
-                {/* Header */}
-                <div className="p-6 border-b border-gray-200 flex-shrink-0">
-
-                {/* CLOSE BUTTON
-                    - 'absolute top-4 right-4': Removes the button from the normal flow and pins it 
-                    to the top-right corner of the parent container.
-                    - 'z-10': Ensures the button stays clickable even if other elements overlap it.
-                */}
-                  <button
-                    onClick={() => setSelectedDiscussion(null)}
-                    className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+      <AnimatePresence initial={false} mode="popLayout">
+        
+        {/* ==========================================
+            VIEW 1: THE FEED
+            ========================================== */}
+        {!selectedDiscussion ? (
+          <motion.div key="feed-view" initial={{ x: "-100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "-30%", opacity: 0 }} transition={{ type: "spring", bounce: 0, duration: 0.4 }} className="absolute inset-0 flex flex-col w-full h-full p-6">
+            
+            {/* The header is removed! The parent handles it now. */}
+            
+            {/* We map over feedData instead of local state! */}
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="space-y-3">
+                {feedData.map((discussion, index) => (
+                  <motion.div
+                    key={discussion.id}
+                    className="flex gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 cursor-pointer border border-transparent hover:border-indigo-200"
+                    onClick={() => setSelectedDiscussion(discussion)}
                   >
-                    <X className="w-5 h-5 text-gray-500" />
-                  </button>
-
-                {/* CONTENT WRAPPER 
-                    - 'pr-10': (Padding Right 40px). This adds empty space on the right side of the text.
-                    - WHY? Because we have an 'absolute' close button on the right. Without this padding, 
-                    a long title would run underneath the X button and become unreadable.
-                */}
-                  <div className="flex items-start gap-3 pr-10">
-
-                    {/* AVATAR CIRCLE 
-                    - 'flex-shrink-0': Prevents the circle from becoming an oval if the title text is long.
-                    */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white flex-shrink-0">
-                    {/* INITIALS GENERATOR LOGIC
-                        1. selectedDiscussion.author ('John Doe')
-                        2. .split(' ')  -> ['John', 'Doe']
-                        3. .map(n => n[0]) -> ['J', 'D']
-                        4. .join('')    -> 'JD'
-                    */}
-                      {selectedDiscussion.author.split(' ').map(n => n[0]).join('')}
-                    </div>
-
-                    {/* TEXT CONTAINER 
-                    - 'min-w-0': The standard Flexbox hack to allow text truncation inside a flex child.
-                    */}
+                    <div className="flex-shrink-0 w-8 h-8 mt-1 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">{index + 1}</div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-gray-800 mb-2">{selectedDiscussion.title}</h3>
-                      <div className="flex items-center gap-2 text-gray-500">
-                        <span>by {selectedDiscussion.author}</span>
-                        <span>•</span>
-                        <span>{selectedDiscussion.replies} replies</span>
+                      <h4 className="text-gray-800 font-semibold mb-2 line-clamp-2">{discussion.title}</h4>
+                      <div className="flex items-center justify-between text-sm text-gray-500">
+                        <span>{discussion.author}</span>
+                        <div className="flex items-center gap-2">
+                          {discussion.hasImage && <span className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded-md text-gray-500"><ImageIcon className="w-3.5 h-3.5" /></span>}
+                          <span className="flex items-center gap-1 bg-white px-2 py-1 rounded-md shadow-sm"><MessageCircle className="w-3.5 h-3.5 text-indigo-500" />{discussion.replyCount}</span>
+                        </div>
                       </div>
                     </div>
+                  </motion.div>
+                ))}
+              </div>
+            </ScrollArea>
+          </motion.div>
+        ) : (
+
+        /* ==========================================
+           VIEW 2: THE DETAIL (Replies)
+           ========================================== */
+          <motion.div key="detail-view" initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "100%", opacity: 0 }} transition={{ type: "spring", bounce: 0, duration: 0.4 }} className="absolute inset-0 flex flex-col w-full h-full bg-white z-10">
+            {/* The entire detail view remains exactly the same as Step 4! */}
+            <div className="p-4 border-b border-gray-100 flex items-center gap-4 flex-shrink-0 bg-white/80 backdrop-blur-md z-20">
+              <button onClick={() => { setSelectedDiscussion(null); setReplyTarget(null); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors group">
+                <ArrowLeft className="w-5 h-5 text-gray-500 group-hover:text-gray-800" />
+              </button>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-gray-800 font-bold truncate">{selectedDiscussion.title}</h3>
+              </div>
+            </div>
+
+            <ScrollArea className="flex-1 min-h-0 p-4 md:p-6">
+              <div className="mb-8 pb-8 border-b border-gray-100">
+                <div className="flex items-center gap-3 mb-4">
+                  {selectedDiscussion.authorProfilePicture ? (
+                    <img src={selectedDiscussion.authorProfilePicture} alt={selectedDiscussion.author} className="w-10 h-10 rounded-full object-cover shadow-sm" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">{selectedDiscussion.author.charAt(0)}</div>
+                  )}
+                  <div>
+                    <h4 className="font-medium text-gray-900">{selectedDiscussion.author}</h4>
+                    <p className="text-xs text-gray-500">Original Poster</p>
                   </div>
                 </div>
-
-                {/* Messages */}
-
-                {/* SCROLLABLE CONTAINER
-                - 'ScrollArea': This is likely a custom component (or from a library like Shadcn/Radix).
-                If you don't have this component, you can replace it with:
-                <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
-      
-                - 'flex-1': This is the MOST IMPORTANT class here.
-                It tells this container: "Take up all available height that isn't used by the Header or the Footer."
-                This pushes the Footer to the bottom and ensures the scrollbar only appears inside this middle section.
-                */}
-                <ScrollArea className="flex-1 p-6">
-
-                {/* MESSAGE STACK
-                - 'space-y-4': Adds distinct vertical spacing between each message block.
-                */}
-                  <div className="space-y-4">
-                    {selectedDiscussion.messages.map((message, index) => (
-
-                    // ANIMATED MESSAGE CARD
-                      <motion.div
-                        key={index} // Ideally use message.id if available, but index works for static data
-
-                        // ANIMATION: "Slide Up & Fade In"
-                        // Starts slightly transparent and lower (y: 10)
-                        initial={{ opacity: 0, y: 10 }}
-                        // Moves to natural position (y: 0) and full opacity
-                        animate={{ opacity: 1, y: 0 }}
-                        // STAGGER EFFECT:
-                        // Message 1 waits 0.1s, Message 2 waits 0.2s, etc.
-                        // This creates a pleasing "waterfall" effect as the chat loads.
-                        transition={{ delay: index * 0.1 }}
-                        className="flex gap-3"
-                      >
-
-                        {/* AVATAR
-                        - 'flex-shrink-0': Ensures the avatar stays circular (8x8) 
-                        even if the message text is huge.
-                        */}
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white flex-shrink-0">
-                          {message.user.split(' ').map(n => n[0]).join('')}
-                        </div>
-
-                        {/* MESSAGE CONTENT */}
-                        <div className="flex-1">
-
-                        {/* METADATA LINE (User Name & Time) */}
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-gray-800">{message.user}</span>
-                            <span className="text-gray-400">•</span>
-                            <span className="text-gray-500">{message.time}</span>
-                          </div>
-
-                        {/* TEXT BODY 
-                            - 'text-gray-700': standard readable dark gray.
-                            - Note: For a real chat, you might need 'break-words' here 
-                            to prevent long URLs from breaking the layout.
-                        */}
-                          <p className="text-gray-700">{message.text}</p>
-                        </div>
-                      </motion.div>
-                    ))}
+                
+                {selectedDiscussion.imageUrl && (
+                  <div className="mb-6 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-900">
+                    <img src={selectedDiscussion.imageUrl} alt="Attachment" className="w-full max-h-80 object-cover" />
                   </div>
-                </ScrollArea>
+                )}
+                
+                <div className="prose prose-sm md:prose-base prose-indigo max-w-none text-gray-700" dangerouslySetInnerHTML={createSafeHTML(selectedDiscussion.content)} />
+              </div>
 
-                {/* Reply Input */}
-
-                {/* FOOTER CONTAINER
-                    - 'flex-shrink-0': Like the Header, we force this container to keep its size.
-                    It will never shrink, even if the message list above it gets huge.
-                    - 'border-t': Adds a visual separator between the messages and the input area.
-                */}
-                <div className="p-6 border-t border-gray-200 flex-shrink-0">
-                {/* FLEX WRAPPER
-                    - Aligns the Textarea and Button side-by-side.
-                */}
-                  <div className="flex gap-3">
-
-                {/* TEXT INPUT
-                    - This is likely a custom component wrapping a standard <textarea>.
-                */}
-                    <Textarea
-                    // STATE BINDING (Controlled Component)
-                    // The input always reflects the 'newMessage' state variable.
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Contribute to the discussion..."
-
-                      // LAYOUT
-                    // 'rows={2}': Sets the initial height to show 2 lines of text.
-                    // 'resize-none': Prevents the user from dragging the corner to resize the box,
-                    // which often breaks the layout in fixed modals.
-                      rows={2}
-                      className="flex-1 resize-none"
-
-                    // KEYBOARD HANDLING (Crucial UX)
-                      onKeyDown={(e) => {
-                    // CHECK: Is the key "Enter"?
-                    // CHECK: Is the Shift key NOT held down?
-                        if (e.key === 'Enter' && !e.shiftKey) {
-
-                        // PREVENT DEFAULT: 
-                        // Normally, 'Enter' adds a new line (\n) to the text box.
-                        // We stop that because we want to SEND instead.
-                          e.preventDefault();
-
-                        // ACTION: Trigger the send function.
-                          handleSendMessage();
-                        }
-
-                        // If Shift+Enter is pressed, this block is skipped, 
-                        // allowing the default behavior (new line) to happen.
-                      }}
-                    />
-                    {/* SEND BUTTON
-                        - 'self-end': Flexbox alignment property.
-                        Since the text area has 'rows={2}', it is taller than the button.
-                        'self-end' pushes the button to the BOTTOM of the row, aligning it 
-                        with the last line of text.
-                    */}
-                    <Button
-                      onClick={handleSendMessage}
-                      className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 self-end"
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
+              <div className="space-y-8">
+                {selectedDiscussion.messages.map((level1Msg: any) => (
+                  <div key={level1Msg.id} className="flex flex-col">
+                    <MessageBlock message={level1Msg} level1ParentId={level1Msg.id} />
+                    {level1Msg.children && level1Msg.children.length > 0 && (
+                      <div className="mt-4 ml-8 md:ml-12 pl-2 flex flex-col gap-4">
+                        {level1Msg.children.map((level2Msg: any) => (
+                          <MessageBlock key={level2Msg.id} message={level2Msg} isLevel2={true} level1ParentId={level1Msg.id} />
+                        ))}
+                      </div>
+                    )}
                   </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            <div className="p-4 border-t border-gray-100 flex-shrink-0 bg-white">
+              {replyTarget && (
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <span className="text-xs text-indigo-600 font-medium flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded-md">
+                    <Reply className="w-3 h-3" /> Replying to <span className="font-bold">{replyTarget.name}</span>
+                  </span>
+                  <button onClick={() => setReplyTarget(null)} className="text-xs text-gray-400 hover:text-gray-700 font-medium">Cancel</button>
                 </div>
-              
-            </motion.div>
-          </div>
-          </>
+              )}
+
+              <div className="flex gap-2 md:gap-3 items-end">
+                <div className="flex-1 border border-gray-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-shadow bg-white z-20">
+                  <ReactQuill theme="snow" value={newMessage} onChange={setNewMessage} modules={quillModules} placeholder={replyTarget ? "Write a reply..." : "Join the discussion..."} />
+                </div>
+                <Button onClick={handleSendReply} className="bg-indigo-600 hover:bg-indigo-700 flex-shrink-0 mb-[2px] h-[42px] px-3 md:px-4 rounded-xl shadow-sm">
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
