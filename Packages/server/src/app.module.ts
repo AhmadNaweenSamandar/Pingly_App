@@ -34,6 +34,18 @@ import { DiscussionModule } from './modules/discussions/discussion.module';
       serveRoot: '/uploads', // This means URLs will start with localhost:3000/uploads/
     }),
 
+    // --- Sends actual images not text/html ---
+    ServeStaticModule.forRoot({
+      // This tells NestJS where the physical folder is located.
+      // __dirname is usually /src, so we go up one level (..) to the root, then into /uploads
+      rootPath: join(__dirname, '..', 'uploads'), 
+      
+      // This maps the URL path to the folder. 
+      // So http://localhost:3000/uploads/.... maps to the folder above.
+      serveRoot: '/uploads', 
+    }),
+    // -----------------------
+
     AuthModule, UserModule, PrismaModule, DiscussionModule], // Importing the PrismaModule here makes the PrismaService available throughout the app
   /* Because we used the @Global() decorator, we will never need to import PrismaModule into your ProjectsModule or UsersModule.
   When we start writing our business logic, we simply inject it into the constructor of any service, like this:
