@@ -30,7 +30,7 @@ export function Discussion({ feedData }: DiscussionProps) {
   const [newMessage, setNewMessage] = useState(""); 
   const [replyTarget, setReplyTarget] = useState<{ parentId: number, name: string } | null>(null);
 
-  // Define your backend URL (Ideally move this to an environment variable later)
+  // Our backend URL (Ideally move this to an environment variable later)
   const BACKEND_URL = "http://localhost:3000";
 
   // =======================================================================
@@ -38,7 +38,7 @@ export function Discussion({ feedData }: DiscussionProps) {
   // =======================================================================
   const handleDiscussionClick = async (discussionId: number) => {
     try {
-      const token = localStorage.getItem("access_token"); // Adjust if your token key is different
+      const token = localStorage.getItem("access_token");
       
       const response = await fetch(`${BACKEND_URL}/discussions/${discussionId}`, {
         method: "GET",
