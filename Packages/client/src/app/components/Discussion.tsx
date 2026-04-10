@@ -30,6 +30,86 @@ export function Discussion({ feedData }: DiscussionProps) {
   const [newMessage, setNewMessage] = useState(""); 
   const [replyTarget, setReplyTarget] = useState<{ parentId: number, name: string } | null>(null);
 
+  // Define your backend URL (Ideally move this to an environment variable later)
+  const BACKEND_URL = "http://localhost:3000";
+
+  // =======================================================================
+  // 4. GET SINGLE DISCUSSION (Triggered on Click)
+  // =======================================================================
+  const handleDiscussionClick = async (discussionId: number) => {
+    try {
+      const token = localStorage.getItem("access_token"); // Adjust if your token key is different
+      
+      const response = await fetch(`${BACKEND_URL}/discussions/${discussionId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch discussion details");
+      }
+
+      const dbDetail = await response.json();
+
+      // Helper function to safely format image URLs
+      const formatImageUrl = (path: string | null) => {
+        if (!path) return null;
+        // If it's an external link (like a Pravatar mock), leave it. Otherwise, prepend backend URL.
+        return path.startsWith("http") ? path : `${BACKEND_URL}${path}`;
+      };
+
+      // Helper function to format dates nicely (e.g., "10/24/2024, 2:30 PM")
+      const formatTime = (dateString: string) => {
+        return new Date(dateString).toLocaleString([], { 
+          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+        });
+      };
+
+      // 3. Map the heavily nested Prisma data to our Frontend UI Shape
+      const formattedDetail = {
+        id: dbDetail.id,
+        title: dbDetail.title,
+        content: dbDetail.content,
+        author: dbDetail.author.name || "Unknown User",
+        authorProfilePicture: formatImageUrl(dbDetail.author.profilePicture),
+        
+        // Grab the first attached image if it exists
+        imageUrl: dbDetail.images && dbDetail.images.length > 0 
+          ? formatImageUrl(dbDetail.images[0]) 
+          : null,
+        
+        // Map the Level 1 Replies
+        messages: dbDetail.replies.map((level1Msg: any) => ({
+          id: level1Msg.id,
+          user: level1Msg.author.name || "Unknown User",
+          profilePicture: formatImageUrl(level1Msg.author.profilePicture),
+          text: level1Msg.content,
+          time: formatTime(level1Msg.createdAt),
+          
+          // Map the Level 2 Replies (Children)
+          children: level1Msg.children ? level1Msg.children.map((level2Msg: any) => ({
+            id: level2Msg.id,
+            user: level2Msg.author.name || "Unknown User",
+            profilePicture: formatImageUrl(level2Msg.author.profilePicture),
+            text: level2Msg.content,
+            time: formatTime(level2Msg.createdAt),
+            parentId: level2Msg.parentId
+          })) : []
+        }))
+      };
+
+      // 4. Update the state to switch the view from Feed to Detail!
+      setSelectedDiscussion(formattedDetail);
+
+    } catch (error) {
+      console.error("Error fetching discussion details:", error);
+      alert("Could not load discussion details. Please try again.");
+    }
+  };
+
   const handleSendReply = () => {
     const plainText = newMessage.replace(/(<([^>]+)>)/gi, "").trim();
     if (plainText && selectedDiscussion) {
@@ -97,7 +177,7 @@ export function Discussion({ feedData }: DiscussionProps) {
                   <motion.div
                     key={discussion.id}
                     className="flex gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 cursor-pointer border border-transparent hover:border-indigo-200"
-                    onClick={() => setSelectedDiscussion(discussion)}
+                    onClick={() => handleDiscussionClick(discussion.id)}
                   >
                     <div className="flex-shrink-0 w-8 h-8 mt-1 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">{index + 1}</div>
                     <div className="flex-1 min-w-0">

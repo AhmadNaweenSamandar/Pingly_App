@@ -17,7 +17,7 @@ export class DiscussionService {
     try {
       // 1. Map the saved files to URL strings for the database
       // If no files, it defaults to an empty array
-      const imageUrls = files?.map(file => `/uploads/discussion/${file.filename}`) || [];
+      const imageUrls = files?.map(file => `/uploads/discussions/${file.filename}`) || [];
 
       // 2. Sanitize HTML on the backend (Zero Trust - never trust the frontend)
       const cleanContent = DOMPurify.sanitize(dto.content);

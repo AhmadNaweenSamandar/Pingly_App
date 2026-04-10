@@ -262,6 +262,11 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
     }
   };
 
+
+  // =========================================
+  // Data Fetching with Get (Read) - Fetch the discussions feed from the backend when the component loads
+  // It does not load the pictures or replies for each discussion yet, just the main feed data. We will fetch messages only when the user clicks a specific discussion.
+  // =========================================
   useEffect(() => {
     const fetchFeed = async () => {
       try {
