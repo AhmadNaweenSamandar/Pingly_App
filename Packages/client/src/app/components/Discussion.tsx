@@ -57,8 +57,14 @@ export function Discussion({ feedData }: DiscussionProps) {
       // Helper function to safely format image URLs
       const formatImageUrl = (path: string | null) => {
         if (!path) return null;
-        // If it's an external link (like a Pravatar mock), leave it. Otherwise, prepend backend URL.
-        return path.startsWith("http") ? path : `${BACKEND_URL}${path}`;
+        // If it's already a full web URL, return it as-is
+        if (path.startsWith("http")) return path;
+
+        // If the path already starts with a slash, just append it
+        // If it doesn't, add the slash manually in the middle
+        return path.startsWith("/") 
+          ? `${BACKEND_URL}${path}` 
+          : `${BACKEND_URL}/${path}`;
       };
 
       // Helper function to format dates nicely (e.g., "10/24/2024, 2:30 PM")
@@ -100,6 +106,11 @@ export function Discussion({ feedData }: DiscussionProps) {
           })) : []
         }))
       };
+
+      // --- ADD THESE TWO LINES ---
+      console.log("1. Raw Backend JSON:", dbDetail.author.profilePicture);
+      console.log("2. Mapped Frontend State:", formattedDetail.authorProfilePicture);
+      // ---------------------------
 
       // 4. Update the state to switch the view from Feed to Detail!
       setSelectedDiscussion(formattedDetail);

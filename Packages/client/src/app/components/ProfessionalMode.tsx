@@ -274,9 +274,15 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
     
     const formatImageUrl = (path: string | null) => {
       if (!path) return null;
-      // If it's already an external link (like Pravatar), leave it alone.
-      // Otherwise, slap the backend URL on the front of the local path.
-      return path.startsWith("http") ? path : `${BACKEND_URL}${path}`;
+      
+      // If it's already a full web URL, return it as-is
+      if (path.startsWith("http")) return path;
+
+      // If the path already starts with a slash, just append it
+      // If it doesn't, add the slash manually in the middle
+      return path.startsWith("/") 
+        ? `${BACKEND_URL}${path}` 
+        : `${BACKEND_URL}/${path}`;
     };
 
 
@@ -314,7 +320,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 
           // [FIX APPLIED HERE]: Wrapping the discussion attachment
           imageUrl: doc.images?.[0] ? formatImageUrl(doc.images[0]) : null,
-          
+
           content: doc.content,
           // We leave messages empty here because the feed view doesn't need to load 
           // 10,000 comments just to display the list! 
