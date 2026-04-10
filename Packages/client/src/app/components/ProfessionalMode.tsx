@@ -268,6 +268,18 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   // It does not load the pictures or replies for each discussion yet, just the main feed data. We will fetch messages only when the user clicks a specific discussion.
   // =========================================
   useEffect(() => {
+
+    // 1. Define the URL and our formatter helper right at the top
+    const BACKEND_URL = "http://localhost:3000";
+    
+    const formatImageUrl = (path: string | null) => {
+      if (!path) return null;
+      // If it's already an external link (like Pravatar), leave it alone.
+      // Otherwise, slap the backend URL on the front of the local path.
+      return path.startsWith("http") ? path : `${BACKEND_URL}${path}`;
+    };
+
+
     const fetchFeed = async () => {
       try {
         // 1. Grab the JWT token
@@ -292,11 +304,17 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         const formattedFeed = dbDiscussions.map((doc: any) => ({
           id: doc.id,
           title: doc.title,
-          author: doc.author.name || "Unknown User", 
-          authorProfilePicture: doc.author.profilePicture,
+          author: doc.author.name || "Unknown User",
+
+          // [FIX APPLIED HERE]: Wrapping the profile picture
+          authorProfilePicture: formatImageUrl(doc.author.profilePicture),
+
           replyCount: doc.replyCount,
           hasImage: doc.images && doc.images.length > 0,
-          imageUrl: doc.images?.[0] || null, 
+
+          // [FIX APPLIED HERE]: Wrapping the discussion attachment
+          imageUrl: doc.images?.[0] ? formatImageUrl(doc.images[0]) : null,
+          
           content: doc.content,
           // We leave messages empty here because the feed view doesn't need to load 
           // 10,000 comments just to display the list! 
