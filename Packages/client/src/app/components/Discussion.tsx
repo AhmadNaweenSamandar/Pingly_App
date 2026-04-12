@@ -33,6 +33,9 @@ export function Discussion({ feedData }: DiscussionProps) {
   // state to track which image is currently active in the lightbox and user clicked on it 
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
 
+  // state to handle text expansion in individual discussion (for long content) - optional enhancement
+  const [isTextExpanded, setIsTextExpanded] = useState(false);
+
   // Our backend URL (Ideally move this to an environment variable later)
   const BACKEND_URL = "http://localhost:3000";
 
