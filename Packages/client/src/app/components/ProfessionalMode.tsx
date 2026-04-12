@@ -230,6 +230,14 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
       // 5. Parse the returned database record
       const savedDiscussion = await response.json();
 
+      // Helper function to safely format the URLs 
+      const BACKEND_URL = "http://localhost:3000";
+      const formatImageUrl = (path: string | null) => {
+        if (!path) return null;
+        if (path.startsWith("http")) return path;
+        return path.startsWith("/") ? `${BACKEND_URL}${path}` : `${BACKEND_URL}/${path}`;
+      };
+
       // 6. Map the backend Prisma object to our Frontend UI State shape
       const newFrontendDiscussion = {
         id: savedDiscussion.id,
@@ -240,8 +248,11 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         replyCount: 0, 
         // Check if the backend returned any uploaded image URLs
         hasImage: savedDiscussion.images && savedDiscussion.images.length > 0,
-        // Grab the first image to use as the feed thumbnail, if it exists
-        imageUrl: savedDiscussion.images?.[0] || null, 
+        // --- connected the image array itself  ---
+        // Instead of imageUrl grabbing [0], we map the whole array with our formatter
+        images: savedDiscussion.images && savedDiscussion.images.length > 0
+          ? savedDiscussion.images.map((img: string) => formatImageUrl(img))
+          : [],
         content: savedDiscussion.content,
         messages: [], // Empty initially
       };
