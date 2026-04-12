@@ -28,7 +28,7 @@ export class DiscussionController {
   // =======================================================================
   @UseGuards(JwtAuthGuard)
   @Post()
-  @UseInterceptors(FilesInterceptor('discussion', 3, {
+  @UseInterceptors(FilesInterceptor('images', 3, {
     storage: diskStorage({
         // in uploads/discussions in our server directory
       destination: './uploads/discussions', 
