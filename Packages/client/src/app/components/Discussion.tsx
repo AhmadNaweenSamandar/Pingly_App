@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, ArrowLeft, Send, Reply, Image as ImageIcon, ChevronLeft, X } from "lucide-react";
+import { MessageCircle, ArrowLeft, Send, Reply, Image as ImageIcon, ChevronLeft, X, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import ReactQuill from "react-quill-new";
@@ -86,7 +86,7 @@ export function Discussion({ feedData }: DiscussionProps) {
         authorProfilePicture: formatImageUrl(dbDetail.author.profilePicture),
         
         // Grab the full array of the images 
-        imageUrl: dbDetail.images && dbDetail.images.length > 0 
+        images: dbDetail.images && dbDetail.images.length > 0 
           ? dbDetail.images.map((img: string) => formatImageUrl(img)) 
           : [],
         
@@ -227,6 +227,7 @@ export function Discussion({ feedData }: DiscussionProps) {
 
             <ScrollArea className="flex-1 min-h-0 p-4 md:p-6">
               <div className="mb-8 pb-8 border-b border-gray-100">
+                {/* 1. Original Poster Info */}
                 <div className="flex items-center gap-3 mb-4">
                   {selectedDiscussion.authorProfilePicture ? (
                     <img src={selectedDiscussion.authorProfilePicture} alt={selectedDiscussion.author} className="w-10 h-10 rounded-full object-cover shadow-sm" />
@@ -239,13 +240,131 @@ export function Discussion({ feedData }: DiscussionProps) {
                   </div>
                 </div>
                 
-                {selectedDiscussion.imageUrl && (
-                  <div className="mb-6 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-900">
-                    <img src={selectedDiscussion.imageUrl} alt="Attachment" className="w-full max-h-80 object-cover" />
+                {/* 2. Text Content (Moved ABOVE images) */}
+                <div className="prose prose-sm md:prose-base prose-indigo max-w-none text-gray-700 mb-6" dangerouslySetInnerHTML={createSafeHTML(selectedDiscussion.content)} />
+
+                {/* 3. Dynamic Image Grid / Gallery */}
+                {selectedDiscussion.images && selectedDiscussion.images.length > 0 && (
+                  <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-900 min-h-[300px]">
+                    <AnimatePresence mode="wait">
+                      
+                      {/* --- GRID VIEW --- */}
+                      {activeImageIndex === null ? (
+                        <motion.div
+                          key="grid-view"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="w-full"
+                        >
+                          {/* Case A: 1 Image */}
+                          {selectedDiscussion.images.length === 1 && (
+                            <img 
+                              src={selectedDiscussion.images[0]} 
+                              alt="Discussion attachment" 
+                              className="w-full max-h-[400px] object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                              onClick={() => setActiveImageIndex(0)}
+                            />
+                          )}
+
+                          {/* Case B: 2 Images (50/50 Split) */}
+                          {selectedDiscussion.images.length === 2 && (
+                            <div className="grid grid-cols-2 gap-1 h-[300px]">
+                              {selectedDiscussion.images.map((img: string, i: number) => (
+                                <img 
+                                  key={i} src={img} alt={`Attachment ${i+1}`} 
+                                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                                  onClick={() => setActiveImageIndex(i)}
+                                />
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Case C: 3 Images (60/40 Split using Grid 5 Cols) */}
+                          {selectedDiscussion.images.length >= 3 && (
+                            <div className="grid grid-cols-5 gap-1 h-[400px]">
+                              {/* Left Large Image (60%) */}
+                              <div className="col-span-3 h-full">
+                                <img 
+                                  src={selectedDiscussion.images[0]} alt="Attachment 1" 
+                                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                                  onClick={() => setActiveImageIndex(0)}
+                                />
+                              </div>
+                              {/* Right Stacked Images (40%) */}
+                              <div className="col-span-2 flex flex-col gap-1 h-full">
+                                <img 
+                                  src={selectedDiscussion.images[1]} alt="Attachment 2" 
+                                  className="w-full h-1/2 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                                  onClick={() => setActiveImageIndex(1)}
+                                />
+                                <img 
+                                  src={selectedDiscussion.images[2]} alt="Attachment 3" 
+                                  className="w-full h-1/2 object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                                  onClick={() => setActiveImageIndex(2)}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+
+                      ) : (
+                        
+                        /* --- GALLERY VIEW --- */
+                        <motion.div
+                          key="gallery-view"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="relative w-full h-[400px] flex items-center justify-center bg-gray-950 group"
+                        >
+                          {/* Close Button */}
+                          <button 
+                            onClick={() => setActiveImageIndex(null)}
+                            className="absolute top-3 right-3 p-1.5 bg-black/50 hover:bg-black/80 text-white rounded-full z-10 transition-colors"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+
+                          {/* Prev Navigation Button */}
+                          {selectedDiscussion.images.length > 1 && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveImageIndex((prev) => prev === 0 ? selectedDiscussion.images.length - 1 : prev! - 1);
+                              }}
+                              className="absolute left-3 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full z-10 transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              <ChevronLeft className="w-5 h-5" />
+                            </button>
+                          )}
+
+                          {/* The Image */}
+                          <img 
+                            src={selectedDiscussion.images[activeImageIndex]} 
+                            alt={`Gallery image ${activeImageIndex + 1}`} 
+                            className="max-w-full max-h-full object-contain"
+                          />
+
+                          {/* Next Navigation Button */}
+                          {selectedDiscussion.images.length > 1 && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveImageIndex((prev) => prev === selectedDiscussion.images.length - 1 ? 0 : prev! + 1);
+                              }}
+                              className="absolute right-3 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full z-10 transition-colors opacity-0 group-hover:opacity-100"
+                            >
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )}
-                
-                <div className="prose prose-sm md:prose-base prose-indigo max-w-none text-gray-700" dangerouslySetInnerHTML={createSafeHTML(selectedDiscussion.content)} />
               </div>
 
               <div className="space-y-8">
