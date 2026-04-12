@@ -6,6 +6,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; 
 import DOMPurify from "dompurify";
+import { is } from "date-fns/locale";
 
 // Define the shape of the props this component expects
 interface DiscussionProps {
@@ -35,6 +36,9 @@ export function Discussion({ feedData }: DiscussionProps) {
 
   // state to handle text expansion in individual discussion (for long content) - optional enhancement
   const [isTextExpanded, setIsTextExpanded] = useState(false);
+
+  // Add a loading state to prevent double-submissions
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Our backend URL (Ideally move this to an environment variable later)
   const BACKEND_URL = "http://localhost:3000";
@@ -127,18 +131,121 @@ export function Discussion({ feedData }: DiscussionProps) {
     }
   };
 
-  const handleSendReply = () => {
+  // api/discussions.js (or wherever you keep your API utilities)
+
+  const createDiscussionReply = async (discussionId: number, payload: any) => {
+    // 1. Retrieve the token safely
+    const token = localStorage.getItem('access_token');
+    
+    if (!token) {
+      throw new Error('User is not authenticated');
+    }
+
+    // 2. Execute the fetch request
+    const response = await fetch(`http://localhost:3000/discussions/${discussionId}/replies`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    // 3. Handle standard HTTP errors
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to post reply');
+    }
+
+    // 4. Return the newly created record (which includes the populated author)
+    return response.json();
+  };
+
+  const handleSendReply = async () => {
     const plainText = newMessage.replace(/(<([^>]+)>)/gi, "").trim();
-    if (plainText && selectedDiscussion) {
-      console.log("Sending reply payload:", { 
-        discussionId: selectedDiscussion.id, 
-        htmlContent: newMessage, 
-        parentId: replyTarget?.parentId
+
+    // Guard clause: Don't fire if empty, missing discussion, or already submitting
+    if (!plainText || !selectedDiscussion || isSubmitting) return;
+
+    setIsSubmitting(true); // Lock the UI
+
+    try {
+      // 1. Prepare the payload for NestJS
+      const payload = {
+        content: newMessage, // NestJS DOMPurify will sanitize this
+        parentId: replyTarget?.parentId || null
+      };
+
+      // 2. Fire the request
+      const newBackendReply = await createDiscussionReply(selectedDiscussion.id, payload);
+
+      // DEBUG 1: Did we get the right data from NestJS?
+      console.log("1. Backend Data Received:", newBackendReply);
+
+      // 3. Map Backend schema -> Frontend component props
+      // We must format the NestJS return object into what <MessageBlock /> expects
+      const formattedReply = {
+        id: newBackendReply.id,
+        user: newBackendReply.author.name,
+        profilePicture: newBackendReply.author.profilePicture,
+        time: "Just now", // Or format newBackendReply.createdAt using date-fns/dayjs
+        text: newBackendReply.content, 
+        children: [] // Initialize empty array in case someone replies to this later
+      };
+
+      // DEBUG 2: Is the mapping correct?
+      console.log("2. Formatted for Frontend:", formattedReply);
+
+
+
+      // 4. The Pessimistic State Update (Option A)
+      setSelectedDiscussion(prevDiscussion => {
+
+        // DEBUG 3: What is the current state?
+        console.log("3. Previous Discussion State:", prevDiscussion);
+
+        if (!prevDiscussion) return prevDiscussion;
+
+        // Handle the case where messages might be undefined on a brand new discussion
+        const updatedMessages = prevDiscussion.messages ? [...prevDiscussion.messages] : [];
+
+        if (!payload.parentId) {
+          // LEVEL 1: Append directly to the main discussion thread
+          updatedMessages.push(formattedReply);
+          // DEBUG 4: Check the new messages array after pushing a Level 1 reply
+          console.log("4. Pushed Level 1 Reply. New array:", updatedMessages);
+        } else {
+          // LEVEL 2: Find the parent Level 1 message and append to its children
+          const parentIndex = updatedMessages.findIndex(msg => msg.id === payload.parentId);
+          
+          if (parentIndex !== -1) {
+            const parentMsg = updatedMessages[parentIndex];
+            updatedMessages[parentIndex] = {
+              ...parentMsg,
+              children: [...(parentMsg.children || []), formattedReply]
+            };
+          }
+        }
+        //Debug 4.5: Check the final updated messages array before returning the new state
+        console.log("Total messages React is trying to render:", selectedDiscussion?.messages?.length);
+
+        // Return the entirely new discussion object to trigger the re-render
+        return { ...prevDiscussion, messages: updatedMessages };
       });
+
+      // 5. Clean up the UI
       setNewMessage("");
-      setReplyTarget(null); 
+      setReplyTarget(null);
+
+    } catch (error) {
+      // DEBUG 5: checking if there's an error
+      console.error("Failed to post reply:", error);
+      // TODO: Trigger a toast notification here (e.g., toast.error(error.message))
+    } finally {
+      setIsSubmitting(false); // Unlock the UI
     }
   };
+    
 
   const createSafeHTML = (html: string) => ({ __html: DOMPurify.sanitize(html) });
 
@@ -370,7 +477,13 @@ return (
                 <div className="flex-1 border border-gray-200 rounded-xl overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-shadow bg-white z-20">
                   <ReactQuill theme="snow" value={newMessage} onChange={setNewMessage} modules={quillModules} placeholder={replyTarget ? "Write a reply..." : "Join the discussion..."} />
                 </div>
-                <button onClick={handleSendReply} className="bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center flex-shrink-0 mb-[2px] h-[42px] px-3 md:px-4 rounded-xl shadow-sm">
+                <button 
+                  onClick={handleSendReply} 
+                  disabled={isSubmitting || !newMessage.trim()}
+                  className={`flex items-center justify-center flex-shrink-0 mb-[2px] h-[42px] px-3 md:px-4 rounded-xl shadow-sm transition-colors
+                    ${isSubmitting ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'} 
+                    text-white`}
+                >
                   <Send className="w-4 h-4" />
                 </button>
               </div>
