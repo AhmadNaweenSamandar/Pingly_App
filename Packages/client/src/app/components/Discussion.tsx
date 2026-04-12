@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, ArrowLeft, Send, Reply, Image as ImageIcon } from "lucide-react";
+import { MessageCircle, ArrowLeft, Send, Reply, Image as ImageIcon, ChevronLeft, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import ReactQuill from "react-quill-new";
@@ -29,6 +29,9 @@ export function Discussion({ feedData }: DiscussionProps) {
   
   const [newMessage, setNewMessage] = useState(""); 
   const [replyTarget, setReplyTarget] = useState<{ parentId: number, name: string } | null>(null);
+
+  // state to track which image is currently active in the lightbox and user clicked on it 
+  const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
 
   // Our backend URL (Ideally move this to an environment variable later)
   const BACKEND_URL = "http://localhost:3000";
