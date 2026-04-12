@@ -82,10 +82,10 @@ export function Discussion({ feedData }: DiscussionProps) {
         author: dbDetail.author.name || "Unknown User",
         authorProfilePicture: formatImageUrl(dbDetail.author.profilePicture),
         
-        // Grab the first attached image if it exists
+        // Grab the full array of the images 
         imageUrl: dbDetail.images && dbDetail.images.length > 0 
-          ? formatImageUrl(dbDetail.images[0]) 
-          : null,
+          ? dbDetail.images.map((img: string) => formatImageUrl(img)) 
+          : [],
         
         // Map the Level 1 Replies
         messages: dbDetail.replies.map((level1Msg: any) => ({
