@@ -43,6 +43,20 @@ export function Discussion({ feedData }: DiscussionProps) {
   // Our backend URL (Ideally move this to an environment variable later)
   const BACKEND_URL = "http://localhost:3000";
 
+  // Helper function to safely format image URLs
+  // this function is moved out of POST API call to top level of the component so that both api calls can use it
+  const formatImageUrl = (path: string | null) => {
+    if (!path) return null;
+      // If it's already a full web URL, return it as-is
+    if (path.startsWith("http")) return path;
+
+    // If the path already starts with a slash, just append it
+    // If it doesn't, add the slash manually in the middle
+    return path.startsWith("/") 
+      ? `${BACKEND_URL}${path}` 
+      : `${BACKEND_URL}/${path}`;
+  };
+
   // =======================================================================
   // 4. GET SINGLE DISCUSSION (Triggered on Click)
   // =======================================================================
@@ -63,19 +77,6 @@ export function Discussion({ feedData }: DiscussionProps) {
       }
 
       const dbDetail = await response.json();
-
-      // Helper function to safely format image URLs
-      const formatImageUrl = (path: string | null) => {
-        if (!path) return null;
-        // If it's already a full web URL, return it as-is
-        if (path.startsWith("http")) return path;
-
-        // If the path already starts with a slash, just append it
-        // If it doesn't, add the slash manually in the middle
-        return path.startsWith("/") 
-          ? `${BACKEND_URL}${path}` 
-          : `${BACKEND_URL}/${path}`;
-      };
 
       // Helper function to format dates nicely (e.g., "10/24/2024, 2:30 PM")
       const formatTime = (dateString: string) => {
@@ -194,7 +195,8 @@ export function Discussion({ feedData }: DiscussionProps) {
       const formattedReply = {
         id: newBackendReply.id,
         user: newBackendReply.author.name,
-        profilePicture: newBackendReply.author.profilePicture,
+        //the profile picture formater is used here to ensure that if the backend returns a relative path, we convert it to a full URL for the frontend to display the image correctly
+        profilePicture: formatImageUrl(newBackendReply.author.profilePicture),
         time: formatTime(new Date().toISOString()), // Or format newBackendReply.createdAt using date-fns/dayjs
         text: newBackendReply.content, 
         children: [] // Initialize empty array in case someone replies to this later
