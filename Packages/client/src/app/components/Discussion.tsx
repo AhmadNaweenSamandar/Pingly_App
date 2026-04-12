@@ -182,13 +182,20 @@ export function Discussion({ feedData }: DiscussionProps) {
       // DEBUG 1: Did we get the right data from NestJS?
       console.log("1. Backend Data Received:", newBackendReply);
 
+      // Helper function to format dates nicely (e.g., "10/24/2024, 2:30 PM")
+      const formatTime = (dateString: string) => {
+        return new Date(dateString).toLocaleString([], { 
+          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+        });
+      };
+
       // 3. Map Backend schema -> Frontend component props
       // We must format the NestJS return object into what <MessageBlock /> expects
       const formattedReply = {
         id: newBackendReply.id,
         user: newBackendReply.author.name,
         profilePicture: newBackendReply.author.profilePicture,
-        time: "Just now", // Or format newBackendReply.createdAt using date-fns/dayjs
+        time: formatTime(new Date().toISOString()), // Or format newBackendReply.createdAt using date-fns/dayjs
         text: newBackendReply.content, 
         children: [] // Initialize empty array in case someone replies to this later
       };
@@ -450,7 +457,7 @@ return (
                 {selectedDiscussion.messages?.map((level1Msg: any) => (
                   <div key={level1Msg.id} className="flex flex-col">
                     {/* Assuming MessageBlock exists in your scope */}
-                    {/* <MessageBlock message={level1Msg} level1ParentId={level1Msg.id} /> */}
+                    <MessageBlock message={level1Msg} level1ParentId={level1Msg.id} />
                     {level1Msg.children && level1Msg.children.length > 0 && (
                       <div className="mt-4 ml-8 md:ml-12 pl-2 flex flex-col gap-4">
                         {level1Msg.children.map((level2Msg: any) => (
