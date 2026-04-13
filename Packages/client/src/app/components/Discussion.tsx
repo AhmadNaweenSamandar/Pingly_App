@@ -132,7 +132,10 @@ export function Discussion({ feedData }: DiscussionProps) {
     }
   };
 
-  // api/discussions.js (or wherever you keep your API utilities)
+  //------------------------------------
+  // POST CALL TO CREATE A REPLY (Level 1 or Level 2)
+  // Helper function to create a reply (handles both Level 1 and Level 2 based on presence of parentId)
+  //------------------------------------
 
   const createDiscussionReply = async (discussionId: number, payload: any) => {
     // 1. Retrieve the token safely
@@ -225,14 +228,24 @@ export function Discussion({ feedData }: DiscussionProps) {
           console.log("4. Pushed Level 1 Reply. New array:", updatedMessages);
         } else {
           // LEVEL 2: Find the parent Level 1 message and append to its children
-          const parentIndex = updatedMessages.findIndex(msg => msg.id === payload.parentId);
+
+          // 1. FORCE THE ID TO BE A NUMBER to prevent Type Coercion bugs
+          const targetParentId = Number(payload.parentId);
+
+          // 2. Find the Level 1 parent
+          const parentIndex = updatedMessages.findIndex(msg => Number(msg.id) === targetParentId);
           
           if (parentIndex !== -1) {
             const parentMsg = updatedMessages[parentIndex];
+
+            // 3. Immutably update the parent's children array
             updatedMessages[parentIndex] = {
               ...parentMsg,
               children: [...(parentMsg.children || []), formattedReply]
             };
+          } else {
+            // Safety net log so you know immediately if the ID matching fails again
+            console.error(`Could not find Level 1 parent with ID: ${targetParentId} in state.`);
           }
         }
         //Debug 4.5: Check the final updated messages array before returning the new state
