@@ -476,7 +476,7 @@ return (
                     {level1Msg.children && level1Msg.children.length > 0 && (
                       <div className="mt-4 ml-8 md:ml-12 pl-2 flex flex-col gap-4">
                         {level1Msg.children.map((level2Msg: any) => (
-                          {/* <MessageBlock key={level2Msg.id} message={level2Msg} isLevel2={true} level1ParentId={level1Msg.id} /> */}
+                          <MessageBlock key={level2Msg.id} message={level2Msg} isLevel2={true} level1ParentId={level1Msg.id} />
                         ))}
                       </div>
                     )}
