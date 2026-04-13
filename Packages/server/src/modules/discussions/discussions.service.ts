@@ -100,7 +100,9 @@ export class DiscussionService {
       // Determine the sorting logic based on the user's request
       // This hooks directly into the @@index tags we set up in Prisma!
       const orderByLogic = sortBy === 'trending' 
-        ? { replyCount: 'desc' as const } 
+        // PRIMARY: Highest replies. SECONDARY (Tie-breaker): Newest date.
+        ? [ { replyCount: 'desc' as const }, { createdAt: 'desc' as const } ]
+        // Just sort by newest date for the "Newest" feed
         : { createdAt: 'desc' as const };
 
       const discussions = await this.prisma.discussion.findMany({
