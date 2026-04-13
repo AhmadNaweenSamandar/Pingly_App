@@ -230,6 +230,14 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
       // 5. Parse the returned database record
       const savedDiscussion = await response.json();
 
+      // Helper function to safely format the URLs 
+      const BACKEND_URL = "http://localhost:3000";
+      const formatImageUrl = (path: string | null) => {
+        if (!path) return null;
+        if (path.startsWith("http")) return path;
+        return path.startsWith("/") ? `${BACKEND_URL}${path}` : `${BACKEND_URL}/${path}`;
+      };
+
       // 6. Map the backend Prisma object to our Frontend UI State shape
       const newFrontendDiscussion = {
         id: savedDiscussion.id,
@@ -240,8 +248,11 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         replyCount: 0, 
         // Check if the backend returned any uploaded image URLs
         hasImage: savedDiscussion.images && savedDiscussion.images.length > 0,
-        // Grab the first image to use as the feed thumbnail, if it exists
-        imageUrl: savedDiscussion.images?.[0] || null, 
+        // --- connected the image array itself  ---
+        // Instead of imageUrl grabbing [0], we map the whole array with our formatter
+        images: savedDiscussion.images && savedDiscussion.images.length > 0
+          ? savedDiscussion.images.map((img: string) => formatImageUrl(img))
+          : [],
         content: savedDiscussion.content,
         messages: [], // Empty initially
       };
@@ -262,7 +273,30 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
     }
   };
 
+
+  // =========================================
+  // Data Fetching with Get (Read) - Fetch the discussions feed from the backend when the component loads
+  // It does not load the pictures or replies for each discussion yet, just the main feed data. We will fetch messages only when the user clicks a specific discussion.
+  // =========================================
   useEffect(() => {
+
+    // 1. Define the URL and our formatter helper right at the top
+    const BACKEND_URL = "http://localhost:3000";
+    
+    const formatImageUrl = (path: string | null) => {
+      if (!path) return null;
+      
+      // If it's already a full web URL, return it as-is
+      if (path.startsWith("http")) return path;
+
+      // If the path already starts with a slash, just append it
+      // If it doesn't, add the slash manually in the middle
+      return path.startsWith("/") 
+        ? `${BACKEND_URL}${path}` 
+        : `${BACKEND_URL}/${path}`;
+    };
+
+
     const fetchFeed = async () => {
       try {
         // 1. Grab the JWT token
@@ -287,11 +321,17 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         const formattedFeed = dbDiscussions.map((doc: any) => ({
           id: doc.id,
           title: doc.title,
-          author: doc.author.name || "Unknown User", 
-          authorProfilePicture: doc.author.profilePicture,
+          author: doc.author.name || "Unknown User",
+
+          // [FIX APPLIED HERE]: Wrapping the profile picture
+          authorProfilePicture: formatImageUrl(doc.author.profilePicture),
+
           replyCount: doc.replyCount,
           hasImage: doc.images && doc.images.length > 0,
-          imageUrl: doc.images?.[0] || null, 
+
+          // [FIX APPLIED HERE]: Wrapping the discussion attachment
+          imageUrl: doc.images?.[0] ? formatImageUrl(doc.images[0]) : null,
+
           content: doc.content,
           // We leave messages empty here because the feed view doesn't need to load 
           // 10,000 comments just to display the list! 

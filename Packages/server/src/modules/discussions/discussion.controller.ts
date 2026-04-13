@@ -31,7 +31,7 @@ export class DiscussionController {
   @UseInterceptors(FilesInterceptor('images', 3, {
     storage: diskStorage({
         // in uploads/discussions in our server directory
-      destination: '../../../uploads/discussions', 
+      destination: './uploads/discussions', 
       filename: (req, file, cb) => {
         // Generates: images-1680000000000-123456789.jpg
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
