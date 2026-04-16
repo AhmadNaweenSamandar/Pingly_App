@@ -156,14 +156,26 @@ model ProjectMember {
 
 // project idea posting feature model
 
+// ==========================================
+// 3. PROJECT IDEAS (FEED)
+// ==========================================
+
 model ProjectIdea {
-  id        Int      @id @default(autoincrement())
-  idea      String
-  skills    String[]
-  wishes    Int      @default(0) // "Wishes" counter from Interface 3
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id          String            @id @default(cuid())
+  idea        String            @db.Text
+  skills      String[]          // Postgres Array for display/filtering
+  wishesCount Int               @default(0) // Cached integer for fast UI reads
+  
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Concurrency: Explicit table to track who wished for what
+  wishes      ProjectIdeaWish[] 
+
+  createdAt   DateTime          @default(now())
+
+  // Efficiency: Index for sorting the Ideas feed
+  @@index([createdAt(sort: Desc)])
 }
 
 
