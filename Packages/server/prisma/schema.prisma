@@ -178,6 +178,21 @@ model ProjectIdea {
   @@index([createdAt(sort: Desc)])
 }
 
+// Concurrency fix: Prevents users from wishing multiple times and tracks engagement
+model ProjectIdeaWish {
+  id            String      @id @default(cuid())
+  userId        String
+  projectIdeaId String
+  createdAt     DateTime    @default(now())
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectIdea   ProjectIdea @relation(fields: [projectIdeaId], references: [id], onDelete: Cascade)
+
+  // A user can only wish for a specific idea once
+  @@unique([userId, projectIdeaId])
+  @@index([projectIdeaId])
+}
+
 
 // The Main Discussion Model
 model Discussion {
