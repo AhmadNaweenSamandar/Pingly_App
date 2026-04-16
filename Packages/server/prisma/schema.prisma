@@ -97,7 +97,9 @@ model User {
 // PROFESSIONAL MODE MODELS
 // -----------------------------------------------------------------------------
 
-
+// ==========================================
+// 1. CORE PROJECT ARCHITECTURE
+// ==========================================
 // Project model that stores posted project details
 
 model Project {
@@ -120,6 +122,36 @@ model Project {
   // Efficiency: Indexes for feed sorting and fast owner lookups
   @@index([ownerId])
   @@index([datePosted(sort: Desc)])
+}
+
+// The State Machine for Join Requests & Membership
+model ProjectMember {
+  id             String   @id @default(cuid())
+  projectId      String
+  userId         String
+  
+  // Maintainability: Role and Status management
+  role           String   @default("MEMBER")  // e.g., "OWNER", "MEMBER"
+  status         String   @default("PENDING") // e.g., "PENDING", "APPROVED", "REJECTED"
+  
+  // The "Why do you want to join?" answer
+  message        String?  @db.Text 
+  
+  // Scalability: Unread message tracking for group chats
+  lastChatReadAt DateTime @default(now()) 
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user           User     @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  // A user can only have one active relationship/request per project
+  @@unique([projectId, userId])
+  
+  // Efficiency: Fast lookups for "My Projects" and "Project Roster" queries
+  @@index([projectId])
+  @@index([userId])
 }
 
 // project idea posting feature model
