@@ -334,20 +334,30 @@ model ScheduleEntry {
 
 // the message model is polymorphic it is used for both the GroupChat in project and the chat among matches
 model Message {
-  id          Int      @id @default(autoincrement())
-  text        String
+  id          String   @id @default(cuid())
+  content     String   @db.Text 
+  
   senderId    String
-  sender      User     @relation(fields: [senderId], references: [id])
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // --- Exclusive Arc: Message belongs to EITHER a Project OR a Match ---
   
-  // Message can belong to either a Project Group or a Direct Match
-  // Polymorphic-like links: A message belongs to either a Project or a Match
-  projectId   Int?
-  project     Project? @relation("ProjectGroupChat", fields: [projectId], references: [id])
-  matchId     Int?
-  match       Match?   @relation("DirectMatchChat", fields: [matchId], references: [id])
+  projectId   String?
+  project     Project? @relation("ProjectGroupChat", fields: [projectId], references: [id], onDelete: Cascade)
+
+  matchId     String?
+  // match    Match?   @relation("DirectMatchChat", fields: [matchId], references: [id], onDelete: Cascade)
+
+  // --- Read State ---
+  // ONLY for 1-on-1 Direct Matches. 
+  // Project group chats calculate unread state dynamically using ProjectMember.lastChatReadAt
+  isMatchRead Boolean  @default(false) 
   
-  read        Boolean  @default(false)
-  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  // Efficiency: Crucial compound indexes for loading chat history instantly
+  @@index([projectId, createdAt(sort: Asc)]) 
+  @@index([matchId, createdAt(sort: Asc)])
 }
 
 // notificaiton model for whole application 
