@@ -67,11 +67,12 @@ model User {
   
   // Relationships: Professional
   ownedProjects    Project[]         @relation("ProjectOwner")
-  memberProjects   Project[]         @relation("ProjectMembers")
+  projectMemberships ProjectMember[] @relation("UserMemberships") // NEW: Replaces direct project link
   projectIdeas     ProjectIdea[]
+  ideaWishes       ProjectIdeaWish[] // NEW: Tracks which ideas the user wished for
   posts            Post[]            // Questions & Discussions
   comments         Comment[]         // Replies
-  sentMessages     Message[]
+  sentMessages     Message[]         @relation("SentMessages")
 
   // --- UPDATED: Our new Scalable Discussion Architecture ---
   discussions        Discussion[]        // A user can author many discussions
@@ -100,19 +101,25 @@ model User {
 // Project model that stores posted project details
 
 model Project {
-  id             Int       @id @default(autoincrement())
+  id             String       @id @default(cuid())
   name           String
   description    String
 
-  // Ownership & Membership (Interface 2 & 11)
+  // Ownership 
   ownerId        String
   owner          User      @relation("ProjectOwner", fields: [ownerId], references: [id])
-  members        User[]    @relation("ProjectMembers")
+
+  // Membership & Join Requests (Explicit Junction Table)
+  memberships ProjectMember[]
+
+  //Group Chat
+  messages    Message[] @relation("ProjectGroupChat")
+
   datePosted     DateTime  @default(now())
   
-  // For the "unreadMessages" and "group chat" features
-  // Chat Integration (Interface 11)
-  messages       Message[] @relation("ProjectGroupChat")
+  // Efficiency: Indexes for feed sorting and fast owner lookups
+  @@index([ownerId])
+  @@index([datePosted(sort: Desc)])
 }
 
 // project idea posting feature model
