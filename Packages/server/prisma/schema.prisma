@@ -162,6 +162,7 @@ model ProjectMember {
 
 model ProjectIdea {
   id          String            @id @default(cuid())
+  title       String            //store project title
   idea        String            @db.Text
   skills      String[]          // Postgres Array for display/filtering
   wishesCount Int               @default(0) // Cached integer for fast UI reads
