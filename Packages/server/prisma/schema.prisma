@@ -67,11 +67,12 @@ model User {
   
   // Relationships: Professional
   ownedProjects    Project[]         @relation("ProjectOwner")
-  memberProjects   Project[]         @relation("ProjectMembers")
+  projectMemberships ProjectMember[] @relation("UserMemberships") // NEW: Replaces direct project link
   projectIdeas     ProjectIdea[]
+  ideaWishes       ProjectIdeaWish[] // NEW: Tracks which ideas the user wished for
   posts            Post[]            // Questions & Discussions
   comments         Comment[]         // Replies
-  sentMessages     Message[]
+  sentMessages     Message[]         @relation("SentMessages")
 
   // --- UPDATED: Our new Scalable Discussion Architecture ---
   discussions        Discussion[]        // A user can author many discussions
@@ -96,35 +97,101 @@ model User {
 // PROFESSIONAL MODE MODELS
 // -----------------------------------------------------------------------------
 
-
+// ==========================================
+// 1. CORE PROJECT ARCHITECTURE
+// ==========================================
 // Project model that stores posted project details
 
 model Project {
-  id             Int       @id @default(autoincrement())
+  id             String       @id @default(cuid())
   name           String
   description    String
 
-  // Ownership & Membership (Interface 2 & 11)
+  // Ownership 
   ownerId        String
   owner          User      @relation("ProjectOwner", fields: [ownerId], references: [id])
-  members        User[]    @relation("ProjectMembers")
+
+  // Membership & Join Requests (Explicit Junction Table)
+  memberships ProjectMember[]
+
+  //Group Chat
+  messages    Message[] @relation("ProjectGroupChat")
+
   datePosted     DateTime  @default(now())
   
-  // For the "unreadMessages" and "group chat" features
-  // Chat Integration (Interface 11)
-  messages       Message[] @relation("ProjectGroupChat")
+  // Efficiency: Indexes for feed sorting and fast owner lookups
+  @@index([ownerId])
+  @@index([datePosted(sort: Desc)])
+}
+
+// The State Machine for Join Requests & Membership
+model ProjectMember {
+  id             String   @id @default(cuid())
+  projectId      String
+  userId         String
+  
+  // Maintainability: Role and Status management
+  role           String   @default("MEMBER")  // e.g., "OWNER", "MEMBER"
+  status         String   @default("PENDING") // e.g., "PENDING", "APPROVED", "REJECTED"
+  
+  // The "Why do you want to join?" answer
+  message        String?  @db.Text 
+  
+  // Scalability: Unread message tracking for group chats
+  lastChatReadAt DateTime @default(now()) 
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user           User     @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  // A user can only have one active relationship/request per project
+  @@unique([projectId, userId])
+  
+  // Efficiency: Fast lookups for "My Projects" and "Project Roster" queries
+  @@index([projectId])
+  @@index([userId])
 }
 
 // project idea posting feature model
 
+// ==========================================
+// 3. PROJECT IDEAS (FEED)
+// ==========================================
+
 model ProjectIdea {
-  id        Int      @id @default(autoincrement())
-  idea      String
-  skills    String[]
-  wishes    Int      @default(0) // "Wishes" counter from Interface 3
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id          String            @id @default(cuid())
+  title       String            //store project title
+  idea        String            @db.Text
+  skills      String[]          // Postgres Array for display/filtering
+  wishesCount Int               @default(0) // Cached integer for fast UI reads
+  
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Concurrency: Explicit table to track who wished for what
+  wishes      ProjectIdeaWish[] 
+
+  createdAt   DateTime          @default(now())
+
+  // Efficiency: Index for sorting the Ideas feed
+  @@index([createdAt(sort: Desc)])
+}
+
+// Concurrency fix: Prevents users from wishing multiple times and tracks engagement
+model ProjectIdeaWish {
+  id            String      @id @default(cuid())
+  userId        String
+  projectIdeaId String
+  createdAt     DateTime    @default(now())
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectIdea   ProjectIdea @relation(fields: [projectIdeaId], references: [id], onDelete: Cascade)
+
+  // A user can only wish for a specific idea once
+  @@unique([userId, projectIdeaId])
+  @@index([projectIdeaId])
 }
 
 
@@ -268,20 +335,30 @@ model ScheduleEntry {
 
 // the message model is polymorphic it is used for both the GroupChat in project and the chat among matches
 model Message {
-  id          Int      @id @default(autoincrement())
-  text        String
+  id          String   @id @default(cuid())
+  content     String   @db.Text 
+  
   senderId    String
-  sender      User     @relation(fields: [senderId], references: [id])
+  sender      User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  // --- Exclusive Arc: Message belongs to EITHER a Project OR a Match ---
   
-  // Message can belong to either a Project Group or a Direct Match
-  // Polymorphic-like links: A message belongs to either a Project or a Match
-  projectId   Int?
-  project     Project? @relation("ProjectGroupChat", fields: [projectId], references: [id])
-  matchId     Int?
-  match       Match?   @relation("DirectMatchChat", fields: [matchId], references: [id])
+  projectId   String?
+  project     Project? @relation("ProjectGroupChat", fields: [projectId], references: [id], onDelete: Cascade)
+
+  matchId     String?
+  // match    Match?   @relation("DirectMatchChat", fields: [matchId], references: [id], onDelete: Cascade)
+
+  // --- Read State ---
+  // ONLY for 1-on-1 Direct Matches. 
+  // Project group chats calculate unread state dynamically using ProjectMember.lastChatReadAt
+  isMatchRead Boolean  @default(false) 
   
-  read        Boolean  @default(false)
-  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  // Efficiency: Crucial compound indexes for loading chat history instantly
+  @@index([projectId, createdAt(sort: Asc)]) 
+  @@index([matchId, createdAt(sort: Asc)])
 }
 
 // notificaiton model for whole application 
