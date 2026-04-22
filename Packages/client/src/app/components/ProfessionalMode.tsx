@@ -176,10 +176,37 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 4. Maintainability: Local state to track the array of selected skills from professinalSkills for the project idea form. 
+
+
+// ------------------------------------
+// POST PROJECT IDEA LOGIC - start
+// ------------------------------------
+  // 1. Post project idea states: Maintainability: Local state to track the array of selected skills from professinalSkills for the project idea form. 
   // This will allow us to easily send the selected skills to the backend when posting a new project idea.
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
+  // 2. Add skill handler
+  const handleAddSkill = (skill: string) => {
+    if (skill && !selectedSkills.includes(skill)) {
+      setSelectedSkills([...selectedSkills, skill]);
+    }
+  };
+
+  // 3. Remove skill handler
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSelectedSkills(selectedSkills.filter(skill => skill !== skillToRemove));
+  };
+
+
+// ------------------------------------
+// POST PROJECT IDEA LOGIC - end
+// ------------------------------------
+
+
+
+// ------------------------------------
+// DISCUSSION FETCH LOGIC - start
+// ------------------------------------
 
   // --- Image Handlers ---
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,7 +314,6 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
     }
   };
 
-
   // =========================================
   // Data Fetching with Get (Read) - Fetch the discussions feed from the backend when the component loads
   // It does not load the pictures or replies for each discussion yet, just the main feed data. We will fetch messages only when the user clicks a specific discussion.
@@ -361,6 +387,13 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         // Optional: set some error state here to show a UI alert
       }
     };
+// ------------------------------------
+// DISCUSSION FETCH LOGIC - end\
+// ------------------------------------
+
+
+
+
 
     fetchFeed();
   }, []); // Empty dependency array means this runs ONCE when the component loads
