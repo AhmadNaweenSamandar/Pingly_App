@@ -513,35 +513,52 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
                   Post Project Idea
                 </Button>
 
-                {/* Right Side: Segmented Control Filter */}
-                <div className="flex bg-white-100 p-1 rounded-lg border border-white-200 shadow-sm">
-                  <button
-                    onClick={() => setActiveTab('latest')}
-                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                      activeTab === 'latest'
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'
-                    }`}
-                  >
-                    Latest
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('forYou')}
-                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                      activeTab === 'forYou'
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'
-                    }`}
-                  >
-                    For You
-                  </button>
+                {/* Right Side: Pure White Container with Gray Border */}
+                <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+                  
+                  {/* We map over the options to keep the code DRY and animate seamlessly */}
+                  {[
+                    { id: 'latest', label: 'Latest' },
+                    { id: 'forYou', label: 'For You' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as 'latest' | 'forYou')}
+                      className={`relative px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                        activeTab === tab.id 
+                          ? 'text-white' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      {/* The sliding background pill */}
+                      {activeTab === tab.id && (
+                        <motion.div
+                          layoutId="activeFilterPill"
+                          className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-md shadow-md"
+                          // A spring animation gives it that snappy, native iOS feel
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          style={{ zIndex: 0 }} // Keeps the pill behind the text
+                        />
+                      )}
+                      
+                      {/* The Text */}
+                      <span className="relative z-10">{tab.label}</span>
+                    </button>
+                  ))}
                 </div>
 
               </div>
             </div>
 
             
-            <div className="space-y-4">
+            {/* The Feed - with a gentle fade-in when the tab changes */}
+            <motion.div 
+              key={activeTab} // Changing the key forces a re-mount animation when switching tabs
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
+            >
               {projectIdeas.map((project, index) => (
                 <ProjectIdeaCard
                   key={project.id}
@@ -549,7 +566,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
                   delay={index * 0.1}
                 />
               ))}
-            </div>
+            </motion.div>
           </motion.div>
         );
       //questions section shows the Q&A feed, using the QuestionCard component to display each question in a card format. It also includes a button to ask a new question, which opens a dialog form when clicked.
