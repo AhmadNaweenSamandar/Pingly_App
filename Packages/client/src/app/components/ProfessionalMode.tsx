@@ -560,7 +560,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 
       {/* Dialogs */}
       <Dialog open={showProjectDialog} onOpenChange={setShowProjectDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white">
           <DialogHeader>
             <DialogTitle>Post a Project Idea</DialogTitle>
           </DialogHeader>
