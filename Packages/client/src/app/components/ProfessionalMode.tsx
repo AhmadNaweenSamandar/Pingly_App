@@ -576,20 +576,75 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
                 rows={6}
               />
             </div>
+
+            {/* New updates to skills input: drop down menu to select the skills */}
+
             <div>
-              <label className="block mb-2">
-                Required Skills (comma separated)
-              </label>
-              <Input placeholder="e.g., React, Node.js, MongoDB" />
+              <label className="block mb-2 text-sm font-medium">Required Skills</label>
+              
+              {/* Display selected skills as removable badges */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedSkills.length === 0 && (
+                  <span className="text-sm text-gray-500 italic">No skills selected yet.</span>
+                )}
+                {selectedSkills.map(skill => (
+                  <span 
+                    key={skill} 
+                    className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 border border-blue-200"
+                  >
+                    {skill}
+                    <button 
+                      onClick={() => handleRemoveSkill(skill)}
+                      className="hover:text-red-600 transition-colors focus:outline-none"
+                      aria-label={`Remove ${skill}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              {/* Dropdown to add new skills */}
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onChange={(e) => {
+                  handleAddSkill(e.target.value);
+                  e.target.value = ""; // Reset the select dropdown back to default after choosing
+                }}
+                defaultValue=""
+              >
+                <option value="" disabled>Select a skill to add...</option>
+                {professionalSkills
+                  .filter(skill => !selectedSkills.includes(skill)) // Efficiency: Hide skills they already selected
+                  .sort() // Maintainability: Alphabetical sorting makes it easier for users to scan
+                  .map(skill => (
+                    <option key={skill} value={skill}>
+                      {skill}
+                    </option>
+                  ))
+                }
+              </select>
             </div>
+            {/* --- End of new updates --- */}
+
             <div className="flex gap-3 justify-end">
               <Button
                 variant="outline"
-                onClick={() => setShowProjectDialog(false)}
+                onClick={() => { setShowProjectDialog(false);
+                  setSelectedSkills([]); // Clear selected skills when closing the modal
+                }}
               >
                 Cancel
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  // Here is where we will bundle title, description, and selectedSkills
+                  // to send to our new NestJS backend!
+                  console.log("Submitting:", selectedSkills);
+                }}
+                disabled={selectedSkills.length === 0} // Optional: Prevent submission without skills
+              >
                 Post Idea
               </Button>
             </div>
