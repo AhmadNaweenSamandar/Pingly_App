@@ -176,6 +176,11 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 4. Maintainability: Local state to track the array of selected skills from professinalSkills for the project idea form. 
+  // This will allow us to easily send the selected skills to the backend when posting a new project idea.
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+
+
   // --- Image Handlers ---
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
