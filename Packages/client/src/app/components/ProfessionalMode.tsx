@@ -181,6 +181,11 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 // ------------------------------------
 // POST PROJECT IDEA LOGIC - start
 // ------------------------------------
+
+  // 0. state variable to hold the filter value for latest or forYou
+  const [activeTab, setActiveTab] = useState<"latest" | "forYou">("latest");
+
+
   // 1. Post project idea states: Maintainability: Local state to track the array of selected skills from professinalSkills for the project idea form. 
   // This will allow us to easily send the selected skills to the backend when posting a new project idea.
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
@@ -476,6 +481,8 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
             <Projects />
           </motion.div>
         );
+
+
       //ideas section shows the project ideas feed, using the ProjectIdeaCard component to display each idea in a card format. It also includes a button to post a new project idea, which opens a dialog form when clicked.
       case "ideas":
         return (
@@ -493,14 +500,47 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
               <p className="text-gray-600 mb-4">
                 Discover and share innovative project concepts
               </p>
-              <Button
-                onClick={() => setShowProjectDialog(true)}
-                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
-              >
-                <Lightbulb className="w-4 h-4 mr-2" />
-                Post Project Idea
-              </Button>
+
+              {/* New update filter toggle button: justify-between pushes them to opposite sides */}
+              <div className="flex items-center justify-between w-full">
+                
+                {/* Left Side: Primary Action Button */}
+                <Button
+                  onClick={() => setShowProjectDialog(true)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Lightbulb className="w-4 h-4 mr-2" />
+                  Post Project Idea
+                </Button>
+
+                {/* Right Side: Segmented Control Filter */}
+                <div className="flex bg-white-100 p-1 rounded-lg border border-white-200 shadow-sm">
+                  <button
+                    onClick={() => setActiveTab('latest')}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                      activeTab === 'latest'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'
+                    }`}
+                  >
+                    Latest
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('forYou')}
+                    className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                      activeTab === 'forYou'
+                        ? 'bg-blue-600 text-white shadow-md'
+                        : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/50'
+                    }`}
+                  >
+                    For You
+                  </button>
+                </div>
+
+              </div>
             </div>
+
+            
             <div className="space-y-4">
               {projectIdeas.map((project, index) => (
                 <ProjectIdeaCard
