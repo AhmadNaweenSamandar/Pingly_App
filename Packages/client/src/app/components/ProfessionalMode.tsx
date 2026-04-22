@@ -137,6 +137,15 @@ const initialDiscussionsData = [
   }
 ];
 
+// skills list for the project idea form (can be used for a dropdown)
+const professionalSkills = [
+  "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
+  "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
+  "Machine Learning", "Data Science", "Mobile Development",
+  "UI/UX Design", "Graphic Design", "Video Editing", "Copywriting", "3D Modeling",
+  "Project Management", "Financial Modeling", "Marketing", "Sales", "Public Speaking", "Data Analysis"
+];
+
 /**
  * ProfessionalMode Component
  * * The main container for the professional networking side of the application.
