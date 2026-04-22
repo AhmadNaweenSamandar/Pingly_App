@@ -137,6 +137,15 @@ const initialDiscussionsData = [
   }
 ];
 
+// skills list for the project idea form (can be used for a dropdown)
+const professionalSkills = [
+  "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
+  "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
+  "Machine Learning", "Data Science", "Mobile Development",
+  "UI/UX Design", "Graphic Design", "Video Editing", "Copywriting", "3D Modeling",
+  "Project Management", "Financial Modeling", "Marketing", "Sales", "Public Speaking", "Data Analysis"
+];
+
 /**
  * ProfessionalMode Component
  * * The main container for the professional networking side of the application.
@@ -166,6 +175,43 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+
+
+// ------------------------------------
+// POST PROJECT IDEA LOGIC - start
+// ------------------------------------
+
+  // 0. state variable to hold the filter value for latest or forYou
+  const [activeTab, setActiveTab] = useState<"latest" | "forYou">("latest");
+
+
+  // 1. Post project idea states: Maintainability: Local state to track the array of selected skills from professinalSkills for the project idea form. 
+  // This will allow us to easily send the selected skills to the backend when posting a new project idea.
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+
+  // 2. Add skill handler
+  const handleAddSkill = (skill: string) => {
+    if (skill && !selectedSkills.includes(skill)) {
+      setSelectedSkills([...selectedSkills, skill]);
+    }
+  };
+
+  // 3. Remove skill handler
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSelectedSkills(selectedSkills.filter(skill => skill !== skillToRemove));
+  };
+
+
+// ------------------------------------
+// POST PROJECT IDEA LOGIC - end
+// ------------------------------------
+
+
+
+// ------------------------------------
+// DISCUSSION FETCH LOGIC - start
+// ------------------------------------
 
   // --- Image Handlers ---
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -273,7 +319,6 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
     }
   };
 
-
   // =========================================
   // Data Fetching with Get (Read) - Fetch the discussions feed from the backend when the component loads
   // It does not load the pictures or replies for each discussion yet, just the main feed data. We will fetch messages only when the user clicks a specific discussion.
@@ -347,6 +392,13 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         // Optional: set some error state here to show a UI alert
       }
     };
+// ------------------------------------
+// DISCUSSION FETCH LOGIC - end\
+// ------------------------------------
+
+
+
+
 
     fetchFeed();
   }, []); // Empty dependency array means this runs ONCE when the component loads
@@ -429,6 +481,8 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
             <Projects />
           </motion.div>
         );
+
+
       //ideas section shows the project ideas feed, using the ProjectIdeaCard component to display each idea in a card format. It also includes a button to post a new project idea, which opens a dialog form when clicked.
       case "ideas":
         return (
@@ -446,15 +500,65 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
               <p className="text-gray-600 mb-4">
                 Discover and share innovative project concepts
               </p>
-              <Button
-                onClick={() => setShowProjectDialog(true)}
-                className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
-              >
-                <Lightbulb className="w-4 h-4 mr-2" />
-                Post Project Idea
-              </Button>
+
+              {/* New update filter toggle button: justify-between pushes them to opposite sides */}
+              <div className="flex items-center justify-between w-full">
+                
+                {/* Left Side: Primary Action Button */}
+                <Button
+                  onClick={() => setShowProjectDialog(true)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Lightbulb className="w-4 h-4 mr-2" />
+                  Post Project Idea
+                </Button>
+
+                {/* Right Side: Pure White Container with Gray Border */}
+                <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+                  
+                  {/* We map over the options to keep the code DRY and animate seamlessly */}
+                  {[
+                    { id: 'latest', label: 'Latest' },
+                    { id: 'forYou', label: 'For You' }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as 'latest' | 'forYou')}
+                      className={`relative px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
+                        activeTab === tab.id 
+                          ? 'text-white' 
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      {/* The sliding background pill */}
+                      {activeTab === tab.id && (
+                        <motion.div
+                          layoutId="activeFilterPill"
+                          className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-md shadow-md"
+                          // A spring animation gives it that snappy, native iOS feel
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          style={{ zIndex: 0 }} // Keeps the pill behind the text
+                        />
+                      )}
+                      
+                      {/* The Text */}
+                      <span className="relative z-10">{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+              </div>
             </div>
-            <div className="space-y-4">
+
+            
+            {/* The Feed - with a gentle fade-in when the tab changes */}
+            <motion.div 
+              key={activeTab} // Changing the key forces a re-mount animation when switching tabs
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-4"
+            >
               {projectIdeas.map((project, index) => (
                 <ProjectIdeaCard
                   key={project.id}
@@ -462,7 +566,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
                   delay={index * 0.1}
                 />
               ))}
-            </div>
+            </motion.div>
           </motion.div>
         );
       //questions section shows the Q&A feed, using the QuestionCard component to display each question in a card format. It also includes a button to ask a new question, which opens a dialog form when clicked.
@@ -513,7 +617,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 
       {/* Dialogs */}
       <Dialog open={showProjectDialog} onOpenChange={setShowProjectDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-white">
           <DialogHeader>
             <DialogTitle>Post a Project Idea</DialogTitle>
           </DialogHeader>
@@ -529,20 +633,75 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
                 rows={6}
               />
             </div>
+
+            {/* New updates to skills input: drop down menu to select the skills */}
+
             <div>
-              <label className="block mb-2">
-                Required Skills (comma separated)
-              </label>
-              <Input placeholder="e.g., React, Node.js, MongoDB" />
+              <label className="block mb-2 text-sm font-medium">Required Skills</label>
+              
+              {/* Display selected skills as removable badges */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {selectedSkills.length === 0 && (
+                  <span className="text-sm text-gray-500 italic">No skills selected yet.</span>
+                )}
+                {selectedSkills.map(skill => (
+                  <span 
+                    key={skill} 
+                    className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 border border-blue-200"
+                  >
+                    {skill}
+                    <button 
+                      onClick={() => handleRemoveSkill(skill)}
+                      className="hover:text-red-600 transition-colors focus:outline-none"
+                      aria-label={`Remove ${skill}`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+
+              {/* Dropdown to add new skills */}
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onChange={(e) => {
+                  handleAddSkill(e.target.value);
+                  e.target.value = ""; // Reset the select dropdown back to default after choosing
+                }}
+                defaultValue=""
+              >
+                <option value="" disabled>Select a skill to add...</option>
+                {professionalSkills
+                  .filter(skill => !selectedSkills.includes(skill)) // Efficiency: Hide skills they already selected
+                  .sort() // Maintainability: Alphabetical sorting makes it easier for users to scan
+                  .map(skill => (
+                    <option key={skill} value={skill}>
+                      {skill}
+                    </option>
+                  ))
+                }
+              </select>
             </div>
+            {/* --- End of new updates --- */}
+
             <div className="flex gap-3 justify-end">
               <Button
                 variant="outline"
-                onClick={() => setShowProjectDialog(false)}
+                onClick={() => { setShowProjectDialog(false);
+                  setSelectedSkills([]); // Clear selected skills when closing the modal
+                }}
               >
                 Cancel
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => {
+                  // Here is where we will bundle title, description, and selectedSkills
+                  // to send to our new NestJS backend!
+                  console.log("Submitting:", selectedSkills);
+                }}
+                disabled={selectedSkills.length === 0} // Optional: Prevent submission without skills
+              >
                 Post Idea
               </Button>
             </div>
