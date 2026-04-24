@@ -2,6 +2,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service'; // path to our PrismaService
 import { CreateProjectIdeaDto } from './dto/create-project-idea.dto';
+import { FeedTab, GetProjectIdeasDto } from './dto/get-project-ideas.dto';
 
 @Injectable()
 export class ProjectIdeasService {
@@ -36,4 +37,76 @@ export class ProjectIdeasService {
       throw new InternalServerErrorException('Failed to post project idea');
     }
   }
+
+  async getIdeas(userId: string, queryDto: GetProjectIdeasDto) {
+    try {
+      const { tab, cursor, limit = 20 } = queryDto;
+      
+      let whereClause: any = {};
+
+    
+      // --------------------------------------
+      // ForYou Algorithmic Filter (The personalized project idea feed based on user skills)
+      // Scalability in mind
+      // --------------------------------------
+      if (tab === FeedTab.FOR_YOU) {
+        // Fetch the current user's skills
+        const currentUser = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: { skills: true },
+        });
+
+        // If the user has skills, filter ideas that overlap with their skills
+        if (currentUser && currentUser.skills.length > 0) {
+          whereClause = {
+            skills: { hasSome: currentUser.skills },
+          };
+        }
+      }
+
+      // EFFICIENCY: Cursor-based pagination query
+      const ideas = await this.prisma.projectIdea.findMany({
+        where: whereClause,
+        take: limit + 1, // Fetch one extra to check if there is a next page
+        ...(cursor && {
+          cursor: { id: cursor },
+          skip: 1, // Skip the cursor itself so we don't return duplicates
+        }),
+        orderBy: [
+          { createdAt: 'desc' },
+          { id: 'desc' } // Tie-breaker for deterministic sorting
+        ],
+        include: {
+          user: {
+            select: {
+              name: true,
+              profilePicture: true,
+            },
+          },
+        },
+      });
+
+      let nextCursor: string | null = null;
+      
+      // If we got more items than the limit, we have a next page
+      if (ideas.length > limit) {
+        const nextItem = ideas.pop(); // Remove the extra item
+        if (nextItem) {
+          nextCursor = nextItem.id; // Set the cursor for the next frontend request
+        }
+      }
+
+      return {
+        ideas,
+        meta: {
+          nextCursor, // Frontend will use this in its next fetch call
+          hasMore: nextCursor !== null,
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching project ideas:', error);
+      throw new InternalServerErrorException('Failed to retrieve the feed');
+    }
+  }
+
 }
