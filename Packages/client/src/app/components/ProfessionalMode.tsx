@@ -21,6 +21,7 @@ import { Textarea } from "./ui/textarea";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { ScrollArea } from "./ui/scroll-area";
+import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
 
 
 // (Keep our existing quillModules definition here)
@@ -190,17 +191,59 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   // This will allow us to easily send the selected skills to the backend when posting a new project idea.
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
-  // 2. Add skill handler
+  // 2. POST request states for implementing the POST request to the backend when creating a new project idea. 
+  // isSubmitting can be used to disable the form and show a loading state while the request is in progress, improving the user experience and preventing duplicate submissions.
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+
+  // 3. Add skill handler
   const handleAddSkill = (skill: string) => {
     if (skill && !selectedSkills.includes(skill)) {
       setSelectedSkills([...selectedSkills, skill]);
     }
   };
 
-  // 3. Remove skill handler
+  // 4. Remove skill handler
   const handleRemoveSkill = (skillToRemove: string) => {
     setSelectedSkills(selectedSkills.filter(skill => skill !== skillToRemove));
   };
+
+  // The submit handler
+  const handlePostIdea = async () => {
+    if (!title || !description || selectedSkills.length === 0) {
+      alert("Please fill out all fields and select at least one skill.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await projectIdeasApi.createIdea({
+        title,
+        description,
+        skills: selectedSkills,
+      });
+
+      console.log("Success!", response.data);
+      
+      // Reset form and close dialog on success
+      setTitle('');
+      setDescription('');
+      setSelectedSkills([]);
+      setShowProjectDialog(false);
+      
+      // TODO: We need to inject this new idea into the feed!
+
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
 
 
 // ------------------------------------
@@ -694,15 +737,11 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
                 Cancel
               </Button>
               <Button 
-                className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => {
-                  // Here is where we will bundle title, description, and selectedSkills
-                  // to send to our new NestJS backend!
-                  console.log("Submitting:", selectedSkills);
-                }}
-                disabled={selectedSkills.length === 0} // Optional: Prevent submission without skills
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                onClick={handlePostIdea}
+                disabled={isSubmitting || selectedSkills.length === 0} // Optional: Prevent submission without skills
               >
-                Post Idea
+                {isSubmitting ? "Posting..." : "Post Idea"}
               </Button>
             </div>
           </div>
