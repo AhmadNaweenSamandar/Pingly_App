@@ -10,11 +10,15 @@ import { Textarea } from "./ui/textarea";
 //Project idea objects created
 interface ProjectIdeaProps {
   project: {
-    id: number;
-    user: { name: string; avatar: string };
+    id: string; //CHANGE: to string to match backend UUID
+    title: string;
     idea: string;
     skills: string[];
-    wishes: number;
+    wishesCount: number;
+    userId: string;
+    createdAt: string;
+    user: { name: string; profilePicture: string };
+    
   };
   delay: number;
 }
@@ -37,7 +41,7 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
 
   // Local state for the "Wish" (Like) count. 
   // Initialized with the value from props so we can increment it locally.
-  const [wishes, setWishes] = useState(project.wishes);
+  const [wishes, setWishes] = useState(project.wishesCount);
 
   // Boolean flag to track if the current user has already clicked "Wish".
   // Prevents multiple votes on the same item during this session.
@@ -89,7 +93,7 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
                 if the flex container gets crowded.
           */}
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white flex-shrink-0">
-            {project.user.avatar}
+            {project.user.profilePicture}
           </div>
 
           {/* Content Wrapper 
@@ -98,8 +102,13 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
                 instead of overflowing the container.
           */}
           <div className="flex-1 min-w-0">
-            <h4 className="text-gray-800 mb-1">{project.user.name}</h4>
+            {/* <h4 className="text-gray-900 mb-1">{project.user.name}</h4> */}
 
+            {/* Project Title 
+                - text-lg: Makes the title stand out.
+                - font-semibold: Adds weight to the title for emphasis.
+            */}
+            <h3 className="font-semibold text-gray-800 mb-1">{project.title}</h3>
             {/* Project Idea / Pitch 
                 - leading-relaxed: Increases line-height for better readability of paragraph text.
             */}

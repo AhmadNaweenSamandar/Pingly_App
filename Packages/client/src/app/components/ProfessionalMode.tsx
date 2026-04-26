@@ -527,7 +527,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         );
 
 
-      //the actual project idea tab is implemented in its own component (ProjectIdeasTab) because it has a lot of complex logic related to fetching and posting project ideas, 
+      // the actual project idea tab is implemented in its own component (ProjectIdeasTab) because it has a lot of complex logic related to fetching and posting project ideas, 
       // as well as the tab toggle between "Latest" and "For You". This keeps our ProfessionalMode component cleaner and more focused on just routing between sections, 
       // while the ProjectIdeasTab can handle all the specific logic for that feed.
       case "ideas":
