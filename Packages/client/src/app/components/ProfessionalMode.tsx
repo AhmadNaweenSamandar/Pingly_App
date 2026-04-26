@@ -648,15 +648,31 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="space-y-4"
+              className="space-y-4 mt-6"
             >
-              {projectIdeas.map((project, index) => (
-                <ProjectIdeaCard
-                  key={project.id}
-                  project={project}
-                  delay={index * 0.1}
-                />
+              {/* React Query groups data by "pages", so we map over pages, then ideas */}
+              {data.pages.map((page, pageIndex) => (
+                <React.Fragment key={pageIndex}>
+                  {page.data.map((project, index) => (
+                    <ProjectIdeaCard
+                      key={project.id}
+                      project={project}
+                      delay={index * 0.1}
+                    />
+                  ))}
+                </React.Fragment>
               ))}
+              {/* The Tripwire Element: 
+                We attach the 'ref' here. When this div enters the screen, 
+                'inView' becomes true, triggering the useEffect above to fetch more.
+              */}
+              <div ref={ref} className="py-6 flex justify-center items-center h-20">
+                {isFetchingNextPage ? (
+                  <span className="text-gray-500 text-sm animate-pulse">Loading more ideas...</span>
+                ) : !hasNextPage ? (
+                  <span className="text-gray-400 text-sm">You've reached the end!</span>
+                ) : null}
+              </div>
             </motion.div>
           </motion.div>
         );
