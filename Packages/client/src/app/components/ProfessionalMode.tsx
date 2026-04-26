@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   MessageSquarePlus,
@@ -22,6 +22,8 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { ScrollArea } from "./ui/scroll-area";
 import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInView } from 'react-intersection-observer';
 
 
 // (Keep our existing quillModules definition here)
@@ -184,7 +186,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 // ------------------------------------
 
   // 0. state variable to hold the filter value for latest or forYou
-  const [activeTab, setActiveTab] = useState<"latest" | "forYou">("latest");
+  const [activeTab, setActiveTab] = React.useState<"latest" | "forYou">("latest");
 
 
   // 1. Post project idea states: Maintainability: Local state to track the array of selected skills from professinalSkills for the project idea form. 
@@ -249,6 +251,52 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 // ------------------------------------
 // POST PROJECT IDEA LOGIC - end
 // ------------------------------------
+
+// ------------------------------------------------------
+// POST PROJECT IDEA GET LOGIC with React Query- start
+// ------------------------------------------------------
+
+  // 1. The Invisible Tripwire setup
+  const { ref, inView } = useInView({
+    rootMargin: '200px', // Triggers the fetch 200px BEFORE the user hits the bottom
+  });
+
+  // 2. The React Query Magic (Replaces useState/useEffect)
+  const {
+    data,
+    status,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['projectIdeas', activeTab], // Caches "latest" and "forYou" separately!
+    queryFn: ({ pageParam }) => projectIdeasApi.getFeed(activeTab, pageParam),
+    initialPageParam: undefined as string | undefined,
+    // This tells React Query how to find the next cursor from our backend response
+    getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined, 
+  });
+
+  // 3. Trigger the next fetch when the user scrolls to the tripwire
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Handle initial loading state
+  if (status === 'pending') {
+    return <div className="text-center py-10">Loading ideas...</div>; // Replace with a nice skeleton loader later
+  }
+
+  // Handle error state
+  if (status === 'error') {
+    return <div className="text-center text-red-500 py-10">Error: {(error as Error).message}</div>;
+  }
+
+// ------------------------------------------------------
+// POST PROJECT IDEA GET LOGIC with React Query - end
+// ------------------------------------------------------
 
 
 
