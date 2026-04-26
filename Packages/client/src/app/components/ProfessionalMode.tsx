@@ -589,13 +589,18 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
           <div className="space-y-4 mt-4">
             <div>
               <label className="block mb-2">Project Title</label>
-              <Input placeholder="Enter your project idea title..." />
+              <Input 
+                placeholder="Enter your project idea title..."
+                value={title} //Bind to state
+                onChange={(e) => setTitle(e.target.value)} /> {/* Update state on typing */}
             </div>
             <div>
               <label className="block mb-2">Description</label>
               <Textarea
                 placeholder="Describe your project idea in detail..."
                 rows={6}
+                value={description} //Bind to state
+                onChange={(e) => setDescription(e.target.value)} //Update state on typing
               />
             </div>
 
