@@ -40,15 +40,6 @@ export function ProjectIdeasTab({ setShowProjectDialog }) {
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // Now, if it errors, it ONLY returns this error UI inside the ideas tab!
-  if (status === 'error') {
-    return (
-      <div className="max-w-4xl mx-auto text-center py-20 text-red-500 bg-red-50 rounded-xl">
-        <h3 className="font-bold text-lg mb-2">Oops! Couldn't load ideas.</h3>
-        <p>{(error as Error).message}</p>
-      </div>
-    );
-  }
 
   return (
     <motion.div
@@ -100,7 +91,26 @@ export function ProjectIdeasTab({ setShowProjectDialog }) {
       {/* The Feed */}
       {status === 'pending' ? (
         <div className="py-10 text-center text-gray-500 animate-pulse">Loading feed...</div>
+      ) : status === 'error' ? (
+        
+        // The error is now contained ONLY to the feed section
+        <div className="mt-6 py-10 text-center text-red-500 bg-red-50 border border-red-100 rounded-xl">
+          <h3 className="font-bold text-lg mb-2">Oops! Couldn't load ideas.</h3>
+          <p>{(error as Error).message}</p>
+        </div>
+
+      ) : data?.pages[0].data.length === 0 ? (
+        
+        // UX WIN: What to show when the database is actually empty!
+        <div className="mt-6 py-16 text-center bg-gray-50 border border-gray-100 rounded-xl">
+          <Lightbulb className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <h3 className="text-gray-800 font-medium text-lg">No project ideas yet.</h3>
+          <p className="text-gray-500 text-sm mt-1">Be the first to share an innovative concept!</p>
+        </div>
+
       ) : (
+        // The actual feed when data exists. We use the "pages" array from useInfiniteQuery to render all loaded pages, 
+        // and we also include the invisible tripwire at the bottom for infinite scrolling.
         <motion.div 
           key={activeTab} 
           initial={{ opacity: 0, y: 10 }}
