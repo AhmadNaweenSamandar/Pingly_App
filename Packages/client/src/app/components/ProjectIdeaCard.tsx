@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { formatImageUrl } from "./utils/imageUtils";
 
 
 //Project idea objects created
@@ -66,6 +67,9 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
     }
   };
 
+  // Format the URL once before rendering
+  const profilePicUrl = formatImageUrl(project.user.profilePicture);
+
     return (
     <>
 
@@ -92,8 +96,16 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
               - flex-shrink-0: CRITICAL. Prevents the avatar circle from squishing 
                 if the flex container gets crowded.
           */}
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white flex-shrink-0">
-            {project.user.profilePicture}
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <img 
+              className="w-full h-full object-cover"
+              src={profilePicUrl} 
+              alt={`${project.user.name}'s profile`} 
+              // Optional: Add a fallback image locally in your public folder in case the backend image 404s
+              onError={(e) => {
+                e.currentTarget.src = '/default-avatar.png'; 
+              }}
+            />
           </div>
 
           {/* Content Wrapper 
