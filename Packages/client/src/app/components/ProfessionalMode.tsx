@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   MessageSquarePlus,
@@ -22,6 +22,7 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { ScrollArea } from "./ui/scroll-area";
 import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
+import { ProjectIdeasTab } from "./ProjectIdeasTab";
 
 
 // (Keep our existing quillModules definition here)
@@ -184,7 +185,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 // ------------------------------------
 
   // 0. state variable to hold the filter value for latest or forYou
-  const [activeTab, setActiveTab] = useState<"latest" | "forYou">("latest");
+  const [activeTab, setActiveTab] = React.useState<"latest" | "forYou">("latest");
 
 
   // 1. Post project idea states: Maintainability: Local state to track the array of selected skills from professinalSkills for the project idea form. 
@@ -526,92 +527,13 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
         );
 
 
-      //ideas section shows the project ideas feed, using the ProjectIdeaCard component to display each idea in a card format. It also includes a button to post a new project idea, which opens a dialog form when clicked.
+      //the actual project idea tab is implemented in its own component (ProjectIdeasTab) because it has a lot of complex logic related to fetching and posting project ideas, 
+      // as well as the tab toggle between "Latest" and "For You". This keeps our ProfessionalMode component cleaner and more focused on just routing between sections, 
+      // while the ProjectIdeasTab can handle all the specific logic for that feed.
       case "ideas":
-        return (
-          <motion.div
-            key="ideas"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="max-w-4xl mx-auto"
-          >
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                Project Ideas
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Discover and share innovative project concepts
-              </p>
+        return <ProjectIdeasTab setShowProjectDialog={setShowProjectDialog} />;
 
-              {/* New update filter toggle button: justify-between pushes them to opposite sides */}
-              <div className="flex items-center justify-between w-full">
-                
-                {/* Left Side: Primary Action Button */}
-                <Button
-                  onClick={() => setShowProjectDialog(true)}
-                  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
-                >
-                  <Lightbulb className="w-4 h-4 mr-2" />
-                  Post Project Idea
-                </Button>
-
-                {/* Right Side: Pure White Container with Gray Border */}
-                <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-                  
-                  {/* We map over the options to keep the code DRY and animate seamlessly */}
-                  {[
-                    { id: 'latest', label: 'Latest' },
-                    { id: 'forYou', label: 'For You' }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id as 'latest' | 'forYou')}
-                      className={`relative px-4 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
-                        activeTab === tab.id 
-                          ? 'text-white' 
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      {/* The sliding background pill */}
-                      {activeTab === tab.id && (
-                        <motion.div
-                          layoutId="activeFilterPill"
-                          className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-md shadow-md"
-                          // A spring animation gives it that snappy, native iOS feel
-                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                          style={{ zIndex: 0 }} // Keeps the pill behind the text
-                        />
-                      )}
-                      
-                      {/* The Text */}
-                      <span className="relative z-10">{tab.label}</span>
-                    </button>
-                  ))}
-                </div>
-
-              </div>
-            </div>
-
-            
-            {/* The Feed - with a gentle fade-in when the tab changes */}
-            <motion.div 
-              key={activeTab} // Changing the key forces a re-mount animation when switching tabs
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-4"
-            >
-              {projectIdeas.map((project, index) => (
-                <ProjectIdeaCard
-                  key={project.id}
-                  project={project}
-                  delay={index * 0.1}
-                />
-              ))}
-            </motion.div>
-          </motion.div>
-        );
+        
       //questions section shows the Q&A feed, using the QuestionCard component to display each question in a card format. It also includes a button to ask a new question, which opens a dialog form when clicked.
       case "questions":
         return (
