@@ -114,13 +114,13 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
                 instead of overflowing the container.
           */}
           <div className="flex-1 min-w-0">
-            {/* <h4 className="text-gray-900 mb-1">{project.user.name}</h4> */}
+            <h4 className="text-gray-800 mb-1">{project.user.name}</h4>
 
             {/* Project Title 
                 - text-lg: Makes the title stand out.
                 - font-semibold: Adds weight to the title for emphasis.
             */}
-            <h3 className="font-semibold text-gray-800 mb-1">{project.title}</h3>
+            <h3 className="font-semibold text-gray-900 mb-1">{project.title}</h3>
             {/* Project Idea / Pitch 
                 - leading-relaxed: Increases line-height for better readability of paragraph text.
             */}
