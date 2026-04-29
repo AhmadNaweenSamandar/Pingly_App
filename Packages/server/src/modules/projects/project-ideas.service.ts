@@ -83,6 +83,13 @@ export class ProjectIdeasService {
               profilePicture: true,
             },
           },
+
+          // EFFICIENCY: Only fetch the wish if it belongs to the requesting user.
+          // We only select the ID because we just need to know if the record exists.
+          wishes: {
+            where: { userId: userId },
+            select: { id: true },
+          },
         },
       });
 
@@ -96,7 +103,19 @@ export class ProjectIdeasService {
         }
       }
 
+      // MAINTAINABILITY: Flatten the payload for the frontend
+      // Convert the array of wishes into a simple boolean and strip out the raw array
+      const formattedIdeas = ideas.map((idea) => {
+        const hasWished = idea.wishes.length > 0;
+        const { wishes, ...ideaData } = idea; 
+        return {
+          ...ideaData,
+          hasWished,
+        };
+      });
+
       return {
+        data: formattedIdeas, // Changed to match our frontend expectation of page.data
         ideas,
         meta: {
           nextCursor, // Frontend will use this in its next fetch call
@@ -106,6 +125,70 @@ export class ProjectIdeasService {
     } catch (error) {
       console.error('Error fetching project ideas:', error);
       throw new InternalServerErrorException('Failed to retrieve the feed');
+    }
+  }
+
+  // --------------------------------------
+  // SCALABILITY: Atomic Toggle Endpoint
+  // --------------------------------------
+  async toggleWish(userId: string, ideaId: string) {
+    try {
+      // 1. Verify the idea actually exists first
+      const ideaExists = await this.prisma.projectIdea.findUnique({
+        where: { id: ideaId },
+        select: { id: true },
+      });
+
+      if (!ideaExists) {
+        throw new NotFoundException('Project idea not found');
+      }
+
+      // 2. Check if the user has already wished for this idea
+      const existingWish = await this.prisma.projectIdeaWish.findUnique({
+        where: {
+          userId_projectIdeaId: {
+            userId: userId,
+            projectIdeaId: ideaId,
+          },
+        },
+      });
+
+      if (existingWish) {
+        // UN-WISH: User already wished, so we remove it and decrement
+        await this.prisma.$transaction([
+          this.prisma.projectIdeaWish.delete({
+            where: { id: existingWish.id },
+          }),
+          this.prisma.projectIdea.update({
+            where: { id: ideaId },
+            data: { wishesCount: { decrement: 1 } },
+          }),
+        ]);
+
+        return { message: 'Wish removed', hasWished: false };
+      } else {
+        // WISH: User hasn't wished, so we create it and increment
+        await this.prisma.$transaction([
+          this.prisma.projectIdeaWish.create({
+            data: {
+              userId: userId,
+              projectIdeaId: ideaId,
+            },
+          }),
+          this.prisma.projectIdea.update({
+            where: { id: ideaId },
+            data: { wishesCount: { increment: 1 } },
+          }),
+        ]);
+
+        return { message: 'Wish added', hasWished: true };
+      }
+    } catch (error) {
+      // Rethrow NestJS HTTP exceptions (like NotFoundException) so they aren't swallowed
+      if (error instanceof NotFoundException) throw error;
+      
+      console.error('Error toggling wish:', error);
+      throw new InternalServerErrorException('Failed to toggle wish');
     }
   }
 
