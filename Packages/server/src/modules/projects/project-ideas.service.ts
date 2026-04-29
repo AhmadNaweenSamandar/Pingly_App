@@ -1,5 +1,5 @@
 // project-ideas.service.ts
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service'; // path to our PrismaService
 import { CreateProjectIdeaDto } from './dto/create-project-idea.dto';
 import { FeedTab, GetProjectIdeasDto } from './dto/get-project-ideas.dto';

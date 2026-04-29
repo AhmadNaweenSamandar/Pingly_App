@@ -7,6 +7,9 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { formatImageUrl } from "./utils/imageUtils";
 import { formatTimeAgo } from "./utils/dateUtils";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
 
 
 //Project idea objects created
@@ -17,12 +20,14 @@ interface ProjectIdeaProps {
     idea: string;
     skills: string[];
     wishesCount: number;
+    hasWished: boolean; // Indicates if the current user has already wished for this idea
     userId: string;
     createdAt: string;
     user: { name: string; profilePicture: string };
     
   };
   delay: number;
+  activeTab: 'latest' | 'forYou';
 }
 
 
@@ -32,7 +37,7 @@ interface ProjectIdeaProps {
  * * Handles user interactions like "Wishing" (voting) on an idea and opening the Join form.
  * * @param {ProjectIdeaProps} props - Contains the idea data and animation delay.
  */
-export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
+export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
 
   // =========================================
   // State Definitions
@@ -49,6 +54,64 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
   // Prevents multiple votes on the same item during this session.
   const [hasWished, setHasWished] = useState(false);
 
+  // =========================================
+  // Nutation Function for "Wishing" (Liking) an Idea
+  // =========================================
+
+  const queryClient = useQueryClient();
+
+  const wishMutation = useMutation({
+    mutationFn: () => projectIdeasApi.toggleWish(project.id),
+    
+    // 1. OPTIMISTIC UPDATE: Fires immediately on click
+    onMutate: async () => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['projectIdeas', activeTab] });
+
+      // Snapshot the previous value in case we need to roll back
+      const previousFeed = queryClient.getQueryData(['projectIdeas', activeTab]);
+
+      // Update the cache instantly
+      queryClient.setQueryData(['projectIdeas', activeTab], (oldData: any) => {
+        if (!oldData) return oldData;
+        
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((idea: any) => {
+              if (idea.id === project.id) {
+                // Toggle the state and increment/decrement math
+                const isWishing = !idea.hasWished;
+                return {
+                  ...idea,
+                  hasWished: isWishing,
+                  wishesCount: isWishing ? idea.wishesCount + 1 : idea.wishesCount - 1,
+                };
+              }
+              return idea;
+            }),
+          })),
+        };
+      });
+
+      return { previousFeed }; // Pass snapshot to onError
+    },
+    
+    // 2. ERROR ROLLBACK: If the API fails, revert to the snapshot
+    onError: (err, variables, context) => {
+      if (context?.previousFeed) {
+        queryClient.setQueryData(['projectIdeas', activeTab], context.previousFeed);
+      }
+      console.error("Failed to update wish status");
+    },
+    
+    // 3. SETTLED: Always refetch in the background to ensure strict server sync
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectIdeas', activeTab] });
+    },
+  });
+
 
   // =========================================
   // Event Handlers
@@ -56,16 +119,13 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
 
   /**
    * Handles the "Make a Wish" (Like) action.
-   * Increments the counter only if the user hasn't voted yet.
+   * - Prevents multiple rapid clicks while a mutation is in flight.
+   * - Triggers the mutation which optimistically updates the UI and syncs with the backend.
    */
   const handleWish = () => {
-    if (!hasWished) {
-        // Optimistic Update: Increment UI immediately for better responsiveness
-      setWishes(wishes + 1);
-
-      // Lock the button to prevent spamming
-      setHasWished(true);
-    }
+    // Prevent spam clicking while a request is actively resolving
+    if (wishMutation.isPending) return;
+    wishMutation.mutate();
   };
 
   // Format the URL once before rendering
@@ -81,7 +141,7 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
         // Animation States:
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay }}
+        transition={{ delay: 0.1 }}
 
         // Card Styling:
         // - hover:shadow-xl: Increases shadow depth on mouseover for interactivity.
