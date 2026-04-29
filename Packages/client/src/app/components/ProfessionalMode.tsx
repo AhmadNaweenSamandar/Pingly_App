@@ -23,6 +23,7 @@ import "react-quill-new/dist/quill.snow.css";
 import { ScrollArea } from "./ui/scroll-area";
 import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
 import { ProjectIdeasTab } from "./ProjectIdeasTab";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 
 // (Keep our existing quillModules definition here)
@@ -178,6 +179,8 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  
+
 
 
 // ------------------------------------
@@ -210,6 +213,56 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
     setSelectedSkills(selectedSkills.filter(skill => skill !== skillToRemove));
   };
 
+// --------------------------------------------------------------------------
+// useMutation
+// useMutation from React Query to fetch the posted idea instantly to feed
+// --------------------------------------------------------------------------
+
+  // 1. Initialize the query client to access the cache
+  const queryClient = useQueryClient();
+
+  // 2. Set up the React Query Mutation
+  const createIdeaMutation = useMutation({
+    mutationFn: projectIdeasApi.createIdea,
+    onSuccess: (newProjectData) => {
+      // 1. Reset our form states
+      setTitle('');
+      setDescription('');
+      setSelectedSkills([]);
+      setShowProjectDialog(false);
+
+      // 2. The Magic: Inject the new idea directly into the 'latest' feed cache
+      queryClient.setQueryData(['projectIdeas', 'latest'], (oldData: any) => {
+        if (!oldData || !oldData.pages) return oldData;
+
+        // We map over the pages of the infinite query cache
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any, index: number) => {
+            // We only want to inject the new idea into the very first page
+            if (index === 0) {
+              return {
+                ...page,
+                // Prepend the new project to the front of the data array
+                // Note: our backend POST response returns the fully constructed project object
+                data: [newProjectData.data, ...page.data], 
+              };
+            }
+            return page;
+          }),
+        };
+      });
+
+      // Optional but recommended: Also invalidate the query in the background 
+      // just to ensure everything stays perfectly synced with the database
+      queryClient.invalidateQueries({ queryKey: ['projectIdeas', 'latest'] });
+    },
+    onError: (error) => {
+      console.error("Failed to post idea:", error);
+      alert("Something went wrong. Please try again.");
+    }
+  });
+
   // The submit handler
   const handlePostIdea = async () => {
     if (!title || !description || selectedSkills.length === 0) {
@@ -217,31 +270,13 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      const response = await projectIdeasApi.createIdea({
-        title,
-        description,
-        skills: selectedSkills,
-      });
-
-      console.log("Success!", response.data);
-      
-      // Reset form and close dialog on success
-      setTitle('');
-      setDescription('');
-      setSelectedSkills([]);
-      setShowProjectDialog(false);
-      
-      // TODO: We need to inject this new idea into the feed!
-
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Trigger the mutation. 
+    // React Query handles the loading state (createIdeaMutation.isPending) automatically.
+    createIdeaMutation.mutate({
+      title,
+      description,
+      skills: selectedSkills,
+    });
   };
 
 
@@ -666,9 +701,9 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
               <Button 
                 className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                 onClick={handlePostIdea}
-                disabled={isSubmitting || selectedSkills.length === 0} // Optional: Prevent submission without skills
+                disabled={createIdeaMutation.isPending || selectedSkills.length === 0} // Optional: Prevent submission without skills
               >
-                {isSubmitting ? "Posting..." : "Post Idea"}
+                {createIdeaMutation.isPending ? "Posting..." : "Post Idea"}
               </Button>
             </div>
           </div>
