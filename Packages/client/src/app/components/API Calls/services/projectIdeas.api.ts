@@ -55,5 +55,20 @@ export const projectIdeasApi = {
     }
 
     return response.json();
-  }
+  },
+
+  // --- 3. POST: Toggle a wish ---
+  toggleWish: async (ideaId: string) => {
+    const token = localStorage.getItem("access_token");
+    
+    const response = await fetch(`${API_BASE_URL}/project-ideas/${ideaId}/wish`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to toggle wish');
+    return response.json();
+  },
 };
