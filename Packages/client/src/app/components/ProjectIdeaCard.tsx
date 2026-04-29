@@ -6,6 +6,7 @@ import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { formatImageUrl } from "./utils/imageUtils";
+import { formatTimeAgo } from "./utils/dateUtils";
 
 
 //Project idea objects created
@@ -114,16 +115,21 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
                 instead of overflowing the container.
           */}
           <div className="flex-1 min-w-0">
-            <h4 className="text-gray-800 mb-1">{project.user.name}</h4>
+            {/* Header Row: Name + Timestamp */}
+            <div className="flex items-center gap-2 mb-2.5"> {/* mb-2.5 adds exactly 10px of space below */}
+              <h4 className="text-gray-800 font-medium leading-none">{project.user.name}</h4>
+              
+              <div className="flex items-center text-gray-500 text-sm leading-none">
+                <span className="mr-2 text-gray-400">•</span>
+                
+                <span>{formatTimeAgo(project.createdAt)}</span>
+              </div>
+            </div>
 
-            {/* Project Title 
-                - text-lg: Makes the title stand out.
-                - font-semibold: Adds weight to the title for emphasis.
-            */}
+            {/* Project Title */}
             <h3 className="font-semibold text-gray-900 mb-1">{project.title}</h3>
-            {/* Project Idea / Pitch 
-                - leading-relaxed: Increases line-height for better readability of paragraph text.
-            */}
+            
+            {/* Project Idea / Pitch */}
             <p className="text-gray-700 leading-relaxed">{project.idea}</p>
           </div>
         </div>
