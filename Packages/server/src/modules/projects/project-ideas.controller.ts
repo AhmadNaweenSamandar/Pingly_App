@@ -1,5 +1,5 @@
 // project-ideas.controller.ts
-import { Controller, Post, Body, UseGuards, Req, Get, Query } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, Get, Query, Param } from '@nestjs/common';
 import { ProjectIdeasService } from './project-ideas.service';
 import { CreateProjectIdeaDto } from './dto/create-project-idea.dto';
 // Replace with your actual auth guard implementation
@@ -44,5 +44,16 @@ export class ProjectIdeasController {
       data: result.ideas,
       meta: result.meta, // Contains the nextCursor for infinite scroll
     };
+  }
+
+  @Post(':id/wish')
+  async toggleWish(
+    @Param('id') ideaId: string,  // This will now resolve correctly
+    @Req() req: any // Inject the standard Express request object
+     
+  ) {
+    // Extract the user ID from the JWT payload attached to the request
+    const userId = req.user.id;
+    return this.projectIdeasService.toggleWish(userId, ideaId);
   }
 }
