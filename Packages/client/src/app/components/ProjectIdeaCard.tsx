@@ -5,18 +5,29 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
+import { formatImageUrl } from "./utils/imageUtils";
+import { formatTimeAgo } from "./utils/dateUtils";
+import { useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
 
 
 //Project idea objects created
 interface ProjectIdeaProps {
   project: {
-    id: number;
-    user: { name: string; avatar: string };
+    id: string; //CHANGE: to string to match backend UUID
+    title: string;
     idea: string;
     skills: string[];
-    wishes: number;
+    wishesCount: number;
+    hasWished: boolean; // Indicates if the current user has already wished for this idea
+    userId: string;
+    createdAt: string;
+    user: { name: string; profilePicture: string };
+    
   };
   delay: number;
+  activeTab: 'latest' | 'forYou';
 }
 
 
@@ -26,7 +37,7 @@ interface ProjectIdeaProps {
  * * Handles user interactions like "Wishing" (voting) on an idea and opening the Join form.
  * * @param {ProjectIdeaProps} props - Contains the idea data and animation delay.
  */
-export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
+export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
 
   // =========================================
   // State Definitions
@@ -37,11 +48,69 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
 
   // Local state for the "Wish" (Like) count. 
   // Initialized with the value from props so we can increment it locally.
-  const [wishes, setWishes] = useState(project.wishes);
+  const [wishes, setWishes] = useState(project.wishesCount);
 
   // Boolean flag to track if the current user has already clicked "Wish".
   // Prevents multiple votes on the same item during this session.
   const [hasWished, setHasWished] = useState(false);
+
+  // =========================================
+  // Nutation Function for "Wishing" (Liking) an Idea
+  // =========================================
+
+  const queryClient = useQueryClient();
+
+  const wishMutation = useMutation({
+    mutationFn: () => projectIdeasApi.toggleWish(project.id),
+    
+    // 1. OPTIMISTIC UPDATE: Fires immediately on click
+    onMutate: async () => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['projectIdeas', activeTab] });
+
+      // Snapshot the previous value in case we need to roll back
+      const previousFeed = queryClient.getQueryData(['projectIdeas', activeTab]);
+
+      // Update the cache instantly
+      queryClient.setQueryData(['projectIdeas', activeTab], (oldData: any) => {
+        if (!oldData) return oldData;
+        
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((idea: any) => {
+              if (idea.id === project.id) {
+                // Toggle the state and increment/decrement math
+                const isWishing = !idea.hasWished;
+                return {
+                  ...idea,
+                  hasWished: isWishing,
+                  wishesCount: isWishing ? idea.wishesCount + 1 : idea.wishesCount - 1,
+                };
+              }
+              return idea;
+            }),
+          })),
+        };
+      });
+
+      return { previousFeed }; // Pass snapshot to onError
+    },
+    
+    // 2. ERROR ROLLBACK: If the API fails, revert to the snapshot
+    onError: (err, variables, context) => {
+      if (context?.previousFeed) {
+        queryClient.setQueryData(['projectIdeas', activeTab], context.previousFeed);
+      }
+      console.error("Failed to update wish status");
+    },
+    
+    // 3. SETTLED: Always refetch in the background to ensure strict server sync
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectIdeas', activeTab] });
+    },
+  });
 
 
   // =========================================
@@ -50,17 +119,17 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
 
   /**
    * Handles the "Make a Wish" (Like) action.
-   * Increments the counter only if the user hasn't voted yet.
+   * - Prevents multiple rapid clicks while a mutation is in flight.
+   * - Triggers the mutation which optimistically updates the UI and syncs with the backend.
    */
   const handleWish = () => {
-    if (!hasWished) {
-        // Optimistic Update: Increment UI immediately for better responsiveness
-      setWishes(wishes + 1);
-
-      // Lock the button to prevent spamming
-      setHasWished(true);
-    }
+    // Prevent spam clicking while a request is actively resolving
+    if (wishMutation.isPending) return;
+    wishMutation.mutate();
   };
+
+  // Format the URL once before rendering
+  const profilePicUrl = formatImageUrl(project.user.profilePicture);
 
     return (
     <>
@@ -72,7 +141,7 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
         // Animation States:
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay }}
+        transition={{ delay: 0.1 }}
 
         // Card Styling:
         // - hover:shadow-xl: Increases shadow depth on mouseover for interactivity.
@@ -88,8 +157,16 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
               - flex-shrink-0: CRITICAL. Prevents the avatar circle from squishing 
                 if the flex container gets crowded.
           */}
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white flex-shrink-0">
-            {project.user.avatar}
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <img 
+              className="w-full h-full object-cover"
+              src={profilePicUrl} 
+              alt={`${project.user.name}'s profile`} 
+              // Optional: Add a fallback image locally in your public folder in case the backend image 404s
+              onError={(e) => {
+                e.currentTarget.src = '/default-avatar.png'; 
+              }}
+            />
           </div>
 
           {/* Content Wrapper 
@@ -98,11 +175,21 @@ export function ProjectIdeaCard({ project, delay }: ProjectIdeaProps) {
                 instead of overflowing the container.
           */}
           <div className="flex-1 min-w-0">
-            <h4 className="text-gray-800 mb-1">{project.user.name}</h4>
+            {/* Header Row: Name + Timestamp */}
+            <div className="flex items-center gap-2 mb-2.5"> {/* mb-2.5 adds exactly 10px of space below */}
+              <h4 className="text-gray-800 font-medium leading-none">{project.user.name}</h4>
+              
+              <div className="flex items-center text-gray-500 text-sm leading-none">
+                <span className="mr-2 text-gray-400">•</span>
+                
+                <span>{formatTimeAgo(project.createdAt)}</span>
+              </div>
+            </div>
 
-            {/* Project Idea / Pitch 
-                - leading-relaxed: Increases line-height for better readability of paragraph text.
-            */}
+            {/* Project Title */}
+            <h3 className="font-semibold text-gray-900 mb-1">{project.title}</h3>
+            
+            {/* Project Idea / Pitch */}
             <p className="text-gray-700 leading-relaxed">{project.idea}</p>
           </div>
         </div>

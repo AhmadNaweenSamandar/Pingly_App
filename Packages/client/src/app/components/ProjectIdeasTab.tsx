@@ -14,7 +14,6 @@ export function ProjectIdeasTab({ setShowProjectDialog }) {
     // 1. The Invisible Tripwire setup
   const { ref, inView } = useInView({ rootMargin: '200px' }); // Triggers the fetch 200px BEFORE the user hits the bottom
 
-
   // 2. The React Query Magic (Replaces useState/useEffect)
   const {
     data,
@@ -28,7 +27,7 @@ export function ProjectIdeasTab({ setShowProjectDialog }) {
     queryFn: ({ pageParam }) => projectIdeasApi.getFeed(activeTab, pageParam),
     initialPageParam: undefined as string | undefined,
 
-    // This tells React Query how to find the next cursor from your backend response
+    // This tells React Query how to find the next cursor from our backend response
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined, 
   });
 
