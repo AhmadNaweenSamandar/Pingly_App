@@ -47,6 +47,7 @@ export class ProjectIdeasController {
   }
 
   @Post(':id/wish')
+  @UseGuards(JwtAuthGuard) // Ensure only authenticated users can toggle wishes
   async toggleWish(
     @Param('id') ideaId: string,  // This will now resolve correctly
     @Req() req: any // Inject the standard Express request object
