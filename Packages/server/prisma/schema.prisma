@@ -95,6 +95,7 @@ model User {
   posts            Post[]            // Questions & Discussions
   comments         Comment[]         // Replies
   sentMessages     Message[]         @relation("SentMessages")
+  joinRequests     ProjectJoinRequest[]. // one user can have many join requests
 
   // --- UPDATED: Our new Scalable Discussion Architecture ---
   discussions        Discussion[]        // A user can author many discussions
