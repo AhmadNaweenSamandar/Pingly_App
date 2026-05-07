@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Leaf, Users, X } from "lucide-react";
 import { Button } from "./ui/button";
@@ -46,6 +46,18 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
   // Controls the visibility of the "Request to Join" modal/form
   const [showJoinForm, setShowJoinForm] = useState(false);
 
+  // 1. local states to immediately reflect changes in the UI when a user clicks "Wish" without waiting for the server response.
+  const [localWishes, setLocalWishes] = useState(project.wishesCount);
+  const [localHasWished, setLocalHasWished] = useState(project.hasWished);
+
+  // 2. Sync Local State with Server Data
+  // This ensures that if the cache updates in the background (or after a refresh), 
+  // our local state doesn't get out of sync.
+  useEffect(() => {
+    setLocalWishes(project.wishesCount);
+    setLocalHasWished(project.hasWished);
+  }, [project.wishesCount, project.hasWished]);
+
   // =========================================
   // Mutation Function for "Wishing" (Liking) an Idea
   // =========================================
@@ -55,58 +67,29 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
   const wishMutation = useMutation({
     mutationFn: () => projectIdeasApi.toggleWish(project.id),
     
-    // 1. OPTIMISTIC UPDATE: Fires immediately on click
     onMutate: async () => {
-      // Cancel any outgoing refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: ['projectIdeas', activeTab] });
-
-      // Snapshot the previous value in case we need to roll back
-      const previousFeed = queryClient.getQueryData(['projectIdeas', activeTab]);
-
-      // Update the cache instantly
-      queryClient.setQueryData(['projectIdeas', activeTab], (oldData: any) => {
-        if (!oldData) return oldData;
-        
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
-            ...page,
-            data: page.data.map((idea: any) => {
-              // Target the specific idea that was wished/unwished
-              if (idea.id === project.id) {
-                // Toggle the state and increment/decrement math
-                const isWishing = !idea.hasWished;
-                return {
-                  ...idea,
-                  hasWished: isWishing,
-                  // safely handle the math based on the current state
-                  wishesCount: isWishing
-                   ? idea.wishesCount + 1 
-                   : Math.max(0,idea.wishesCount - 1), // prevent negative counts just in case
-                };
-              }
-              return idea;
-            }),
-          })),
-        };
-      });
-
-      return { previousFeed }; // Pass snapshot to onError
+      // INSTANT UI UPDATE: We don't mess with the complex global cache here.
+      // We just immediately flip our local state variables so the user sees it instantly.
+      const isNowWishing = !localHasWished;
+      
+      setLocalHasWished(isNowWishing);
+      setLocalWishes((prev) => isNowWishing ? prev + 1 : Math.max(0, prev - 1));
     },
     
-    // 2. ERROR ROLLBACK: If the API fails, revert to the snapshot
-    onError: (err, variables, context) => {
-      if (context?.previousFeed) {
-        queryClient.setQueryData(['projectIdeas', activeTab], context.previousFeed);
-      }
+    onError: () => {
+      // ROLLBACK: If the API fails, revert the visual state back to the true server props
+      setLocalWishes(project.wishesCount);
+      setLocalHasWished(project.hasWished);
       console.error("Failed to update wish status");
     },
     
-    // 3. SETTLED: Always refetch in the background to ensure strict server sync
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['projectIdeas', activeTab] });
+      // BACKGROUND SYNC: Tell React Query to fetch the fresh list quietly in the background.
+      // Note: We are strictly invalidating the base key to ensure it catches everything.
+      queryClient.invalidateQueries({ queryKey: ['projectIdeas'] });
     },
   });
+  
 
 
   // =========================================
@@ -236,13 +219,13 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
                  - FALSE (Default): Light Green Background + Border (Interactive look).
               */
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-                project.hasWished
+                localHasWished
                   ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
                   : "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 hover:from-green-100 hover:to-emerald-100 border border-green-200"
               }`}
             >
               <Leaf className="w-4 h-4" />
-              <span>{project.wishesCount}</span>
+              <span>{localWishes}</span>
             </motion.button>
 
             {/* Join Project Button 
