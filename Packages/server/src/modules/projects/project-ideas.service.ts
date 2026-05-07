@@ -10,12 +10,20 @@ export class ProjectIdeasService {
 
   async createIdea(userId: string, dto: CreateProjectIdeaDto) {
     try {
-      const newIdea = await this.prisma.projectIdea.create({
-        data: {
-          title: dto.title,
-          idea: dto.description, // Mapping frontend 'description' to DB 'idea'
-          skills: dto.skills,
-          userId: userId,
+      // SCALABILITY & INTEGRITY: Interactive Transaction
+      // We use a transaction because if the Project creation fails, 
+      // we want to rollback the Idea creation too. No orphaned data.
+      const newIdea = await this.prisma.$transaction(async (tx) => {
+
+        // 1. Create the Idea (The Pitch)
+        const idea = await tx.projectIdea.create({
+          data: {
+            title: dto.title,
+            idea: dto.description, // Mapping frontend 'description' to DB 'idea'
+            skills: dto.skills,
+            userId: userId,
+            maxMembers: dto.maxMembers,
+            status: 'OPEN',             // Explicitly set to OPEN for feed visibility
           // wishesCount naturally defaults to 0 as defined in our Prisma schema
         },
         // EFFICIENCY: Return the newly created item with the user data attached
@@ -30,10 +38,26 @@ export class ProjectIdeasService {
         },
       });
 
+      // 2. Auto-Provision the Workspace (The Execution)
+        // Creates an empty project workspace linked to this idea
+        await tx.project.create({
+          data: {
+            title: dto.title,        // Inherit title from the idea
+            description: dto.description, 
+            projectIdeaId: idea.id,  // Link back to the parent idea
+            ownerId: userId,         // Assumes your Project model tracks the owner
+            // Note: We do NOT create any ProjectMember records yet. 
+            // It stays at 0 members until requests are accepted.
+          },
+        });
+
+      return newIdea;
+
+      });
+
       return newIdea;
     } catch (error) {
-      // Log the actual error to our server console for debugging
-      console.error('Error creating project idea:', error);
+      console.error('Error creating project idea and auto-provisioning workspace:', error);
       throw new InternalServerErrorException('Failed to post project idea');
     }
   }
