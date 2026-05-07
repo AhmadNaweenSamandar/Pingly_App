@@ -46,16 +46,8 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
   // Controls the visibility of the "Request to Join" modal/form
   const [showJoinForm, setShowJoinForm] = useState(false);
 
-  // Local state for the "Wish" (Like) count. 
-  // Initialized with the value from props so we can increment it locally.
-  const [wishes, setWishes] = useState(project.wishesCount);
-
-  // Boolean flag to track if the current user has already clicked "Wish".
-  // Prevents multiple votes on the same item during this session.
-  const [hasWished, setHasWished] = useState(false);
-
   // =========================================
-  // Nutation Function for "Wishing" (Liking) an Idea
+  // Mutation Function for "Wishing" (Liking) an Idea
   // =========================================
 
   const queryClient = useQueryClient();
