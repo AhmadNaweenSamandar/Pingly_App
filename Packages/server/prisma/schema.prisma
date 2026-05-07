@@ -201,6 +201,9 @@ model ProjectIdea {
   wishes      ProjectIdeaWish[]
   joinRequests  ProjectJoinRequest[] // Links the requests
 
+  // The Idea connects 1-to-1 with the actual active Project workspace
+  project       Project?
+
   createdAt   DateTime          @default(now())
 
   // Efficiency: Index for sorting the Ideas feed
