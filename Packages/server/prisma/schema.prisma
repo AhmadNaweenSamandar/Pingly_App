@@ -126,12 +126,21 @@ model User {
 
 model Project {
   id             String       @id @default(cuid())
-  name           String
-  description    String
+
+
+  // Inherited from the Idea during auto-provisioning
+  title           String         // Renamed from 'name' to match ProjectIdea
+  description     String         @db.Text
+
+  // --- THE WORKSPACE LINK ---
+  // Connects this active workspace back to the original feed pitch.
+  // The @unique guarantees a strict 1-to-1 relationship.
+  projectIdeaId   String         @unique
+  projectIdea     ProjectIdea    @relation(fields: [projectIdeaId], references: [id], onDelete: Cascade)
 
   // Ownership 
-  ownerId        String
-  owner          User      @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId         String
+  owner           User           @relation("ProjectOwner", fields: [ownerId], references: [id])
 
   // Membership & Join Requests (Explicit Junction Table)
   memberships ProjectMember[]
@@ -139,11 +148,11 @@ model Project {
   //Group Chat
   messages    Message[] @relation("ProjectGroupChat")
 
-  datePosted     DateTime  @default(now())
+  createdAt       DateTime       @default(now()) // Renamed from datePosted for standard convention
   
   // Efficiency: Indexes for feed sorting and fast owner lookups
   @@index([ownerId])
-  @@index([datePosted(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
 }
 
 
