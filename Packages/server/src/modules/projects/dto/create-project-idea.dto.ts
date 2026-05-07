@@ -1,5 +1,5 @@
 // create-project-idea.dto.ts
-import { IsString, IsArray, IsNotEmpty, MaxLength, ArrayNotEmpty, Max, Min } from 'class-validator';
+import { IsString, IsArray, IsNotEmpty, MaxLength, ArrayNotEmpty, Max, Min, IsInt   } from 'class-validator';
 
 export class CreateProjectIdeaDto {
   @IsString()
@@ -12,9 +12,10 @@ export class CreateProjectIdeaDto {
   @MaxLength(3000)
   description: string; // We map this to 'idea' in the database
 
-  @IsString()
-  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
   @Max(10)
+  @IsNotEmpty()
   maxMembers: number; // New field to specify how many members are needed for the project idea
 
   @IsArray()

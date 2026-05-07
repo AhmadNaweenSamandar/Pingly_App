@@ -45,7 +45,7 @@ export class ProjectIdeasService {
             title: dto.title,        // Inherit title from the idea
             description: dto.description, 
             projectIdeaId: idea.id,  // Link back to the parent idea
-            ownerId: userId,         // Assumes your Project model tracks the owner
+            ownerId: userId,         // Project model tracks the owner
             // Note: We do NOT create any ProjectMember records yet. 
             // It stays at 0 members until requests are accepted.
           },
