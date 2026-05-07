@@ -198,7 +198,8 @@ model ProjectIdea {
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Concurrency: Explicit table to track who wished for what
-  wishes      ProjectIdeaWish[] 
+  wishes      ProjectIdeaWish[]
+  joinRequests  ProjectJoinRequest[] // Links the requests
 
   createdAt   DateTime          @default(now())
 
