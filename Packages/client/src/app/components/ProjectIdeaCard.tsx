@@ -236,13 +236,13 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
                  - FALSE (Default): Light Green Background + Border (Interactive look).
               */
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-                hasWished
+                project.hasWished
                   ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
                   : "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 hover:from-green-100 hover:to-emerald-100 border border-green-200"
               }`}
             >
               <Leaf className="w-4 h-4" />
-              <span>{wishes}</span>
+              <span>{project.wishesCount}</span>
             </motion.button>
 
             {/* Join Project Button 
