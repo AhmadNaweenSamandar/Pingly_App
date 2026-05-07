@@ -66,7 +66,12 @@ export class ProjectIdeasService {
     try {
       const { tab, cursor, limit = 20 } = queryDto;
       
-      let whereClause: any = {};
+      // MAINTAINABILITY: Base Where Clause
+      // ONLY show OPEN ideas in the feed. 
+      // Filled or closed ideas are automatically filtered out globally.
+      let whereClause: any = {
+        status: 'OPEN', // Only show ideas that are still open for joining
+      };
 
     
       // --------------------------------------
@@ -82,7 +87,9 @@ export class ProjectIdeasService {
 
         // If the user has skills, filter ideas that overlap with their skills
         if (currentUser && currentUser.skills.length > 0) {
+          // Combine the global status filter with the skills filter
           whereClause = {
+            ...whereClause,
             skills: { hasSome: currentUser.skills },
           };
         }
