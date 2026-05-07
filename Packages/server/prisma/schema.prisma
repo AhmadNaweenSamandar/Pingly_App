@@ -16,12 +16,27 @@ datasource db {
 
 
 
+
+// -----------------------------------------
+// Enums: Join Request Status
+// -----------------------------------------
+
+// --- ENUMS ---
+enum JoinRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+
 // -----------------------------------------------------------------------------
 // CORE USER & IDENTITY
 // Handles Auth, Profile (Social & Pro), and Leaderboard Stats
 // -----------------------------------------------------------------------------
 // This is user model that stores all entities related to user 
 // these entities are shared among different features of the application
+
 
 model User {
   id            String    @id @default(cuid())
@@ -124,6 +139,8 @@ model Project {
   @@index([datePosted(sort: Desc)])
 }
 
+
+
 // The State Machine for Join Requests & Membership
 model ProjectMember {
   id             String   @id @default(cuid())
@@ -154,6 +171,9 @@ model ProjectMember {
   @@index([userId])
 }
 
+
+
+
 // project idea posting feature model
 
 // ==========================================
@@ -179,6 +199,8 @@ model ProjectIdea {
   @@index([createdAt(sort: Desc)])
 }
 
+
+
 // Concurrency fix: Prevents users from wishing multiple times and tracks engagement
 model ProjectIdeaWish {
   id            String      @id @default(cuid())
@@ -193,6 +215,8 @@ model ProjectIdeaWish {
   @@unique([userId, projectIdeaId])
   @@index([projectIdeaId])
 }
+
+
 
 
 // The Main Discussion Model
