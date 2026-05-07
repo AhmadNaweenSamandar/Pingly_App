@@ -29,6 +29,13 @@ enum JoinRequestStatus {
   WITHDRAWN
 }
 
+// Controls feed visibility
+enum IdeaStatus {
+  OPEN      // Visible in feed, accepting requests
+  FILLED    // Hidden from feed, max members reached
+  CLOSED    // Manually closed by owner
+}
+
 
 // -----------------------------------------------------------------------------
 // CORE USER & IDENTITY
