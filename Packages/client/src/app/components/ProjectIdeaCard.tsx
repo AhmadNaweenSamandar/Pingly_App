@@ -72,13 +72,17 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
           pages: oldData.pages.map((page: any) => ({
             ...page,
             data: page.data.map((idea: any) => {
+              // Target the specific idea that was wished/unwished
               if (idea.id === project.id) {
                 // Toggle the state and increment/decrement math
                 const isWishing = !idea.hasWished;
                 return {
                   ...idea,
                   hasWished: isWishing,
-                  wishesCount: isWishing ? idea.wishesCount + 1 : idea.wishesCount - 1,
+                  // safely handle the math based on the current state
+                  wishesCount: isWishing
+                   ? idea.wishesCount + 1 
+                   : Math.max(0,idea.wishesCount - 1), // prevent negative counts just in case
                 };
               }
               return idea;
