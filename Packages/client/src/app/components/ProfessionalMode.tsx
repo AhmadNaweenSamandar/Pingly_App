@@ -181,6 +181,8 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
 
   
 
+  
+
 
 
 // ------------------------------------
@@ -200,6 +202,9 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+
+  // 3. state variable to track the max members needed for the project idea, which is a new field we added to the form. This will allow us to send this information to the backend and display it in the project idea feed.
+  const [maxMembers, setMaxMembers] = useState(5); // Default to 5 members needed
 
   // 3. Add skill handler
   const handleAddSkill = (skill: string) => {
@@ -638,6 +643,25 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
                 onChange={(e) => setDescription(e.target.value)} //Update state on typing
               />
             </div>
+
+            {/* --- NEW: Max Members Section --- */}
+            <div>
+              <label htmlFor="maxMembers" className="block mb-2 text-sm font-medium">Max Members Needed</label>
+              <select
+                id="maxMembers"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={maxMembers}
+                onChange={(e) => setMaxMembers(Number(e.target.value))}
+              >
+                <option value="" disabled>Select maximum team size...</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <option key={num} value={num}>
+                    {num} {num === 1 ? 'Member' : 'Members'}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* --- End of Max Members Section --- */}
 
             {/* New updates to skills input: drop down menu to select the skills */}
 
