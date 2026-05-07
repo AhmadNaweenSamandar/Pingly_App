@@ -194,9 +194,12 @@ model ProjectIdea {
   skills      String[]          // Postgres Array for display/filtering
   wishesCount Int               @default(0) // Cached integer for fast UI reads
   
+  maxMembers  Int               @default(5)       // Step 1: Max capacity
+  status      IdeaStatus        @default(OPEN)    // Step 6: Feed visibility
+
   userId      String
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // Concurrency: Explicit table to track who wished for what
   wishes      ProjectIdeaWish[]
   joinRequests  ProjectJoinRequest[] // Links the requests
