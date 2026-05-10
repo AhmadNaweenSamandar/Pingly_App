@@ -16,12 +16,34 @@ datasource db {
 
 
 
+
+// -----------------------------------------
+// Enums: Join Request Status
+// -----------------------------------------
+
+// --- ENUMS ---
+enum JoinRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+// Controls feed visibility
+enum IdeaStatus {
+  OPEN      // Visible in feed, accepting requests
+  FILLED    // Hidden from feed, max members reached
+  CLOSED    // Manually closed by owner
+}
+
+
 // -----------------------------------------------------------------------------
 // CORE USER & IDENTITY
 // Handles Auth, Profile (Social & Pro), and Leaderboard Stats
 // -----------------------------------------------------------------------------
 // This is user model that stores all entities related to user 
 // these entities are shared among different features of the application
+
 
 model User {
   id            String    @id @default(cuid())
@@ -73,6 +95,7 @@ model User {
   posts            Post[]            // Questions & Discussions
   comments         Comment[]         // Replies
   sentMessages     Message[]         @relation("SentMessages")
+  joinRequests     ProjectJoinRequest[] // one user can have many join requests
 
   // --- UPDATED: Our new Scalable Discussion Architecture ---
   discussions        Discussion[]        // A user can author many discussions
@@ -104,12 +127,21 @@ model User {
 
 model Project {
   id             String       @id @default(cuid())
-  name           String
-  description    String
+
+
+  // Inherited from the Idea during auto-provisioning
+  title           String         // Renamed from 'name' to match ProjectIdea
+  description     String         @db.Text
+
+  // --- THE WORKSPACE LINK ---
+  // Connects this active workspace back to the original feed pitch.
+  // The @unique guarantees a strict 1-to-1 relationship.
+  projectIdeaId   String         @unique
+  projectIdea     ProjectIdea    @relation(fields: [projectIdeaId], references: [id], onDelete: Cascade)
 
   // Ownership 
-  ownerId        String
-  owner          User      @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId         String
+  owner           User           @relation("ProjectOwner", fields: [ownerId], references: [id])
 
   // Membership & Join Requests (Explicit Junction Table)
   memberships ProjectMember[]
@@ -117,12 +149,14 @@ model Project {
   //Group Chat
   messages    Message[] @relation("ProjectGroupChat")
 
-  datePosted     DateTime  @default(now())
+  createdAt       DateTime       @default(now()) // Renamed from datePosted for standard convention
   
   // Efficiency: Indexes for feed sorting and fast owner lookups
   @@index([ownerId])
-  @@index([datePosted(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
 }
+
+
 
 // The State Machine for Join Requests & Membership
 model ProjectMember {
@@ -154,6 +188,9 @@ model ProjectMember {
   @@index([userId])
 }
 
+
+
+
 // project idea posting feature model
 
 // ==========================================
@@ -167,17 +204,26 @@ model ProjectIdea {
   skills      String[]          // Postgres Array for display/filtering
   wishesCount Int               @default(0) // Cached integer for fast UI reads
   
+  maxMembers  Int               @default(5)       // Step 1: Max capacity
+  status      IdeaStatus        @default(OPEN)    // Step 6: Feed visibility
+
   userId      String
   user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // Concurrency: Explicit table to track who wished for what
-  wishes      ProjectIdeaWish[] 
+  wishes      ProjectIdeaWish[]
+  joinRequests  ProjectJoinRequest[] // Links the requests
+
+  // The Idea connects 1-to-1 with the actual active Project workspace
+  project       Project?
 
   createdAt   DateTime          @default(now())
 
   // Efficiency: Index for sorting the Ideas feed
   @@index([createdAt(sort: Desc)])
 }
+
+
 
 // Concurrency fix: Prevents users from wishing multiple times and tracks engagement
 model ProjectIdeaWish {
@@ -193,6 +239,32 @@ model ProjectIdeaWish {
   @@unique([userId, projectIdeaId])
   @@index([projectIdeaId])
 }
+
+// The Project Join Request
+model ProjectJoinRequest {
+  id             String            @id @default(cuid())
+  
+  userId         String
+  projectIdeaId  String
+  
+  userMessage    String            @db.Text
+  userSkills     String[]          // Immutable snapshot
+  status         JoinRequestStatus @default(PENDING)
+  
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectIdea    ProjectIdea       @relation(fields: [projectIdeaId], references: [id], onDelete: Cascade)
+
+  // One active/historical request per user per idea
+  @@unique([userId, projectIdeaId])
+  
+  // Fast querying for the "Your Projects" dashboard
+  @@index([projectIdeaId, status, createdAt(sort: Desc)])
+}
+
+
 
 
 // The Main Discussion Model
