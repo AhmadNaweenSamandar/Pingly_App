@@ -87,5 +87,75 @@ export class ProjectJoinRequestService {
   }
 
 
+// =========================================================================
+  // 3. ACCEPT REQUEST (The Core Workflow Transaction)
+  // =========================================================================
+  async acceptRequest(ownerId: string, requestId: string) {
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        // 1. Fetch Request with all necessary relational data
+        const request = await tx.projectJoinRequest.findUnique({
+          where: { id: requestId },
+          include: {
+            projectIdea: {
+              include: { project: true }, // We need the workspace ID
+            },
+          },
+        });
+
+        if (!request) throw new NotFoundException('Join request not found');
+        if (request.projectIdea.userId !== ownerId) throw new ForbiddenException('Unauthorized action');
+        if (request.status !== 'PENDING') throw new BadRequestException('This request is already processed');
+        
+        const workspaceId = request.projectIdea.project?.id;
+        if (!workspaceId) throw new InternalServerErrorException('Critical Error: Linked workspace not found');
+
+        // 2. Count current members (including the owner)
+        const currentMemberCount = await tx.projectMember.count({
+          where: { projectId: workspaceId },
+        });
+
+        if (currentMemberCount >= request.projectIdea.maxMembers) {
+          throw new BadRequestException('Project has already reached maximum capacity');
+        }
+
+        // 3. Update Request Status
+        const updatedRequest = await tx.projectJoinRequest.update({
+          where: { id: requestId },
+          data: { status: 'ACCEPTED' },
+        });
+
+        // 4. Add User to the Workspace (ProjectMember)
+        await tx.projectMember.create({
+          data: {
+            userId: request.userId,
+            projectId: workspaceId,
+            role: 'MEMBER',
+          },
+        });
+
+        // 5. Check if project is now full. If so, hide it from the feed.
+        if (currentMemberCount + 1 >= request.projectIdea.maxMembers) {
+          await tx.projectIdea.update({
+            where: { id: request.projectIdeaId },
+            data: { status: 'FILLED' },
+          });
+        }
+
+        // TODO: [NOTIFICATION HOOK] 
+        // Alert the applicant (request.userId) that they were accepted into the project!
+
+        return { message: 'Request accepted successfully' };
+      });
+    } catch (error) {
+      // Re-throw known HTTP exceptions
+      if (error instanceof NotFoundException || error instanceof BadRequestException || error instanceof ForbiddenException) {
+        throw error;
+      }
+      console.error('Error accepting request:', error);
+      throw new InternalServerErrorException('Failed to process acceptance');
+    }
+  }
+
 
 }
