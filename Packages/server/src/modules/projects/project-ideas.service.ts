@@ -74,7 +74,12 @@ export class ProjectIdeasService {
       // ONLY show OPEN ideas in the feed. 
       // Filled or closed ideas are automatically filtered out globally.
       let whereClause: any = {
-        status: 'OPEN', // Only show ideas that are still open for joining
+        // Only show ideas that are still open for joining
+        // Open idea means the maxMembers limit has not been reached yet. 
+        // This is a critical part of our feed logic to ensure users only see joinable projects.
+        // The status changes to filled or closed when the project owner accepts join requests and reaches the maxMembers limit or manually closes the idea.
+        // The join request acceptance logic in the project module will enforce the maxMembers limit and update the idea status accordingly, which in turn affects its visibility in the feed.
+        status: 'OPEN', 
       };
 
     
