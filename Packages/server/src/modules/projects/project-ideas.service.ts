@@ -55,7 +55,7 @@ export class ProjectIdeasService {
           },
         });
 
-      return newIdea;
+      return idea;
 
       });
 
