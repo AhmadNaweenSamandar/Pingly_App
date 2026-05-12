@@ -15,14 +15,17 @@ export class ProjectIdeasService {
       // we want to rollback the Idea creation too. No orphaned data.
       const newIdea = await this.prisma.$transaction(async (tx) => {
 
-        // 1. Create the Idea (The Pitch)
+        // 1. Create the Idea (The idea is created in the projectIdea table, which is the source of truth for the project idea feed)
         const idea = await tx.projectIdea.create({
           data: {
             title: dto.title,
             idea: dto.description, // Mapping frontend 'description' to DB 'idea'
             skills: dto.skills,
             userId: userId,
-            maxMembers: dto.maxMembers,
+            // maxMembers is new addtion to the projectIdea model to track the limit directly on the idea for feed filtering
+            // User can set this when creating the idea, and it will be enforced when accepting join requests in the project module.
+            // When user maxMember limit is reach the idea will automatically be filtered out from the feed as we only show OPEN ideas in the feed.
+            maxMembers: dto.maxMembers, 
             status: 'OPEN',             // Explicitly set to OPEN for feed visibility
           // wishesCount naturally defaults to 0 as defined in our Prisma schema
         },
@@ -38,7 +41,8 @@ export class ProjectIdeasService {
         },
       });
 
-      // 2. Auto-Provision the Workspace (The Execution)
+      // 2. Auto-Provision the Workspace (This part creates a new Project in the projects table that is linked to the idea.)
+      // in Project Module we also have chat and members tables linked but initially we only the project with title, user and project id
         // Creates an empty project workspace linked to this idea in project database.
         await tx.project.create({
           data: {
