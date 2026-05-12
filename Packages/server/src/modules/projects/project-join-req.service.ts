@@ -157,5 +157,28 @@ export class ProjectJoinRequestService {
     }
   }
 
+    // =========================================================================
+  // 4. REJECT REQUEST
+  // =========================================================================
+  async rejectRequest(ownerId: string, requestId: string) {
+    const request = await this.prisma.projectJoinRequest.findUnique({
+      where: { id: requestId },
+      include: { projectIdea: true },
+    });
+
+    if (!request) throw new NotFoundException('Join request not found');
+    if (request.projectIdea.userId !== ownerId) throw new ForbiddenException('Unauthorized action');
+
+    await this.prisma.projectJoinRequest.update({
+      where: { id: requestId },
+      data: { status: 'REJECTED' },
+    });
+
+    // Note: Usually, we don't send notifications for rejections to avoid a negative UX, 
+    // but the status is saved so it can be viewed in an "Application History" tab if we build one.
+
+    return { message: 'Request dismissed' };
+  }
+
 
 }
