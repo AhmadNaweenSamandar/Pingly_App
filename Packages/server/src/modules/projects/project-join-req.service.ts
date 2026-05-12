@@ -56,4 +56,36 @@ export class ProjectJoinRequestService {
 
     return { message: 'Join request submitted successfully', request };
   }
+  
+  
+  // =========================================================================
+  // 2. GET PENDING REQUESTS (For the Owner's Dashboard)
+  // =========================================================================
+  async getPendingRequests(ownerId: string, projectIdeaId: string) {
+    // Ensure the user requesting this data actually owns the idea
+    const idea = await this.prisma.projectIdea.findUnique({
+      where: { id: projectIdeaId },
+      select: { userId: true },
+    });
+
+    if (!idea || idea.userId !== ownerId) {
+      throw new ForbiddenException('You do not have permission to view these requests');
+    }
+
+    return this.prisma.projectJoinRequest.findMany({
+      where: {
+        projectIdeaId: projectIdeaId,
+        status: 'PENDING',
+      },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: { id: true, name: true, profilePicture: true, university: true },
+        },
+      },
+    });
+  }
+
+
+
 }
