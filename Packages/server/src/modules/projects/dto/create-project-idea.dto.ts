@@ -24,6 +24,3 @@ export class CreateProjectIdeaDto {
   skills: string[]; // Validates that it's an array of strings
 }
 
-function IsInteger(): (target: CreateProjectIdeaDto, propertyKey: "maxMembers") => void {
-  throw new Error('Function not implemented.');
-}

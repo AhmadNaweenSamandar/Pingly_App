@@ -39,7 +39,7 @@ export class ProjectIdeasService {
       });
 
       // 2. Auto-Provision the Workspace (The Execution)
-        // Creates an empty project workspace linked to this idea
+        // Creates an empty project workspace linked to this idea in project database.
         await tx.project.create({
           data: {
             title: dto.title,        // Inherit title from the idea
