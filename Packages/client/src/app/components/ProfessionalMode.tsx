@@ -36,30 +36,6 @@ const quillModules = {
   ],
 };
 
-// Mock data for project ideas
-const projectIdeas = [
-  {
-    id: 1,
-    user: { name: "Alex Chen", avatar: "AC" },
-    idea: "Building a collaborative note-taking app with real-time synchronization for study groups",
-    skills: ["React", "Node.js", "WebSocket"],
-    wishes: 24,
-  },
-  {
-    id: 2,
-    user: { name: "Sarah Johnson", avatar: "SJ" },
-    idea: "Creating an AI-powered flashcard generator that uses spaced repetition algorithms",
-    skills: ["Python", "TensorFlow", "React"],
-    wishes: 18,
-  },
-  {
-    id: 3,
-    user: { name: "Mike Torres", avatar: "MT" },
-    idea: "Developing a peer-to-peer tutoring marketplace for university students",
-    skills: ["Vue.js", "Firebase", "Stripe API"],
-    wishes: 31,
-  },
-];
 
 // Mock data for questions
 const questions = [
@@ -112,33 +88,6 @@ interface ProfessionalModeProps {
     | "questions";
 }
 
-// 2. THE MISSING DATA: mock data for discussions!
-const initialDiscussionsData = [
-  {
-    id: 1,
-    title: "Best frameworks for full-stack development in 2024",
-    author: "Alex Rivera",
-    authorProfilePicture: "https://i.pravatar.cc/150?u=alex",
-    replyCount: 47,
-    hasImage: true, 
-    imageUrl: "https://i.pravatar.cc/150?u=jamie",
-    content: "<p>What are your thoughts on the best frameworks for full-stack development this year?</p>",
-    messages: [
-      { 
-        id: 101, 
-        user: "Jamie Lee", 
-        profilePicture: "https://i.pravatar.cc/150?u=jamie", 
-        text: "<p>I've been loving Next.js with Supabase for the backend. The DX is <em>amazing</em>!</p>", 
-        time: "1 hour ago",
-        children: [
-          {
-            id: 201, user: "Taylor Smith", profilePicture: null, text: "<p>Agreed! The new app router makes data fetching so much cleaner.</p>", time: "30 min ago", parentId: 101
-          }
-        ]
-      }
-    ]
-  }
-];
 
 // skills list for the project idea form (can be used for a dropdown)
 const professionalSkills = [
@@ -281,6 +230,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
       title,
       description,
       skills: selectedSkills,
+      maxMembers, // Don't forget to include the maxMembers in the payload
     });
   };
 

@@ -30,6 +30,23 @@ interface ProjectIdeaProps {
   activeTab: 'latest' | 'forYou';
 }
 
+interface ProjectJoinRequest {
+  name: string;
+  email: string;
+  skills: string[];
+  motivation: string;
+
+}
+
+
+// skills list for the project idea join request (can be used for a dropdown)
+const professionalSkills = [
+  "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
+  "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
+  "Machine Learning", "Data Science", "Mobile Development",
+  "UI/UX Design", "Graphic Design", "Video Editing", "Copywriting", "3D Modeling",
+  "Project Management", "Financial Modeling", "Marketing", "Sales", "Public Speaking", "Data Analysis"
+];
 
 /**
  * ProjectIdeaCard Component
@@ -43,12 +60,18 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
   // State Definitions
   // =========================================
 
+  // Manages the list of skills the user selects when applying to join a project idea.
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+
   // Controls the visibility of the "Request to Join" modal/form
   const [showJoinForm, setShowJoinForm] = useState(false);
 
   // 1. local states to immediately reflect changes in the UI when a user clicks "Wish" without waiting for the server response.
   const [localWishes, setLocalWishes] = useState(project.wishesCount);
   const [localHasWished, setLocalHasWished] = useState(project.hasWished);
+
+  
+
 
   // 2. Sync Local State with Server Data
   // This ensures that if the cache updates in the background (or after a refresh), 
@@ -105,6 +128,23 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
     // Prevent spam clicking while a request is actively resolving
     if (wishMutation.isPending) return;
     wishMutation.mutate();
+  };
+
+  /**
+   * Handles adding a skill to the selected skills list.
+   * @param skill 
+   * handling skills removal and addition in the join request form. 
+   * This allows users to select their relevant skills when applying to join a project idea, and also remove any mistakenly added skills before submitting their join request.
+   */
+
+  const handleAddSkill = (skill: string) => {
+    if (skill && !selectedSkills.includes(skill)) {
+      setSelectedSkills([...selectedSkills, skill]);
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSelectedSkills(selectedSkills.filter(skill => skill !== skillToRemove));
   };
 
   // Format the URL once before rendering
@@ -331,11 +371,55 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
                   </div>
 
                 {/* Field: Skills 
-                      - Asks the user to list relevant tech stack experience.
+                      - Asks the user to select relevant tech stack experience from predefined skills.
                   */}
                   <div>
-                    <label className="block mb-2 text-gray-700">Your Skills</label>
-                    <Input placeholder="e.g., React, Node.js, UI/UX Design" />
+                    <label htmlFor="joinRequestSkills" className="block mb-2 text-sm font-medium">Your Skills</label>
+                    
+                    {/* Display selected skills as removable badges */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {selectedSkills.length === 0 && (
+                        <span className="text-sm text-gray-500 italic">No skills selected yet.</span>
+                      )}
+                      {selectedSkills.map(skill => (
+                        <span 
+                          key={skill} 
+                          className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 border border-blue-200"
+                        >
+                          {skill}
+                          <button 
+                            type="button" // Prevents accidental form submission
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="hover:text-red-600 transition-colors focus:outline-none"
+                            aria-label={`Remove ${skill}`}
+                          >
+                            <X size={14} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Dropdown to add new skill */}
+                    <select
+                      id="joinRequestSkills"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      onChange={(e) => {
+                        handleAddSkill(e.target.value);
+                        e.target.value = ""; // Reset the select dropdown back to default after choosing
+                      }}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Select a skill to add...</option>
+                      {professionalSkills
+                        .filter(skill => !selectedSkills.includes(skill)) // Efficiency: Hide skills they already selected
+                        .sort() // Maintainability: Alphabetical sorting
+                        .map(skill => (
+                          <option key={skill} value={skill}>
+                            {skill}
+                          </option>
+                        ))
+                      }
+                    </select>
                   </div>
 
                 {/* Field: Motivation Message 
