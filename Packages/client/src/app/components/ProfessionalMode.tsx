@@ -281,6 +281,7 @@ export function ProfessionalMode({ currentSection }: ProfessionalModeProps) {
       title,
       description,
       skills: selectedSkills,
+      maxMembers, // Don't forget to include the maxMembers in the payload
     });
   };
 

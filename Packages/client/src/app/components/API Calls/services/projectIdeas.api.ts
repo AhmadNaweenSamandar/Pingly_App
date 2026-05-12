@@ -5,6 +5,7 @@ interface CreateIdeaPayload {
   title: string;
   description: string;
   skills: string[];
+  maxMembers: number; // New field to specify how many members are needed for the project idea
 }
 
 export const projectIdeasApi = {
