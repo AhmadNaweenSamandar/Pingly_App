@@ -30,6 +30,14 @@ interface ProjectIdeaProps {
   activeTab: 'latest' | 'forYou';
 }
 
+interface ProjectJoinRequest {
+  name: string;
+  email: string;
+  skills: string[];
+  motivation: string;
+
+}
+
 
 // skills list for the project idea join request (can be used for a dropdown)
 const professionalSkills = [
