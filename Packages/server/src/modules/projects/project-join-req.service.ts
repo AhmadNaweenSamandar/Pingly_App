@@ -175,7 +175,6 @@ export class ProjectJoinRequestService {
     });
 
     // Note: Usually, we don't send notifications for rejections to avoid a negative UX, 
-    // but the status is saved so it can be viewed in an "Application History" tab if we build one.
 
     return { message: 'Request dismissed' };
   }
