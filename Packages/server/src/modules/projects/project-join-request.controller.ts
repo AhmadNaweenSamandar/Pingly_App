@@ -30,4 +30,20 @@ export class ProjectJoinRequestController {
     // req.user.id comes directly from our JWT payload, not the frontend body
     return this.joinRequestService.createRequest(req.user.id, dto);
   }
+
+
+  // =========================================================================
+  // 2. GET PENDING REQUESTS 
+  // GET /projects/:ideaId/requests
+  // =========================================================================
+  @Get(':ideaId/requests')
+  async getPendingRequests(
+    @Request() req,
+    @Param('ideaId') ideaId: string
+  ) {
+    // The service will verify that req.user.id is the actual owner of the ideaId
+    return this.joinRequestService.getPendingRequests(req.user.id, ideaId);
+  }
+
+ 
 }
