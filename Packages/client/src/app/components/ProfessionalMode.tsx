@@ -21,7 +21,7 @@ import { Textarea } from "./ui/textarea";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { ScrollArea } from "./ui/scroll-area";
-import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
+import { projectIdeasApi } from "./api/projectIdeaApi/projectIdeas.api";
 import { ProjectIdeasTab } from "./ProjectIdeasTab";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

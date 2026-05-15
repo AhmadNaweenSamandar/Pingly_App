@@ -4,7 +4,7 @@ import { Lightbulb } from "lucide-react";
 import { ProjectIdeaCard } from "./ProjectIdeaCard";
 import { Button } from "./ui/button";
 import "react-quill-new/dist/quill.snow.css";
-import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
+import { projectIdeasApi } from "./api/projectIdeaApi/projectIdeas.api";
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 
