@@ -45,5 +45,29 @@ export class ProjectJoinRequestController {
     return this.joinRequestService.getPendingRequests(req.user.id, ideaId);
   }
 
+   // =========================================================================
+  // 3. ACCEPT REQUEST
+  // PATCH /projects/requests/:requestId/accept
+  // =========================================================================
+  @Patch('requests/:requestId/accept')
+  async acceptRequest(
+    @Request() req,
+    @Param('requestId') requestId: string
+  ) {
+    return this.joinRequestService.acceptRequest(req.user.id, requestId);
+  }
+
+  // =========================================================================
+  // 4. REJECT REQUEST
+  // PATCH /projects/requests/:requestId/reject
+  // =========================================================================
+  @Patch('requests/:requestId/reject')
+  async rejectRequest(
+    @Request() req,
+    @Param('requestId') requestId: string
+  ) {
+    return this.joinRequestService.rejectRequest(req.user.id, requestId);
+  }
+
  
 }
