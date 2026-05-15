@@ -9,7 +9,7 @@ import { formatImageUrl } from "./utils/imageUtils";
 import { formatTimeAgo } from "./utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
-import { projectIdeasApi } from "./API Calls/services/projectIdeas.api";
+import { projectIdeasApi } from "./api/projectIdeaApi/projectIdeas.api";
 
 
 //Project idea objects created
