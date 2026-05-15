@@ -1,15 +1,17 @@
-// ---------------------------------------------------------
-// TYPES & INTERFACES (Maintainability)
-// ---------------------------------------------------------
+// src/api/projectJoinRequestsApi.ts
+import { apiClient } from '../apiClient'; // Import our global engine
 
-// Maps exactly to our backend CreateJoinRequestDto
+// ---------------------------------------------------------
+// TYPES & INTERFACES
+// It is exactly as our backend expects, 
+// so we can directly pass these objects to Axios without transformation.
+// ---------------------------------------------------------
 export interface CreateJoinRequestPayload {
   projectIdeaId: string;
   skills: string[];
   motivation: string;
 }
 
-// Maps to the backend response for the Owner's Dashboard
 export interface JoinRequestResponse {
   id: string;
   userId: string;
@@ -18,7 +20,6 @@ export interface JoinRequestResponse {
   userSkills: string[];
   status: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
   createdAt: string;
-  // Included relation from our backend query
   user: {
     id: string;
     name: string;
@@ -28,51 +29,31 @@ export interface JoinRequestResponse {
 }
 
 // ---------------------------------------------------------
-// API METHODS (Scalability)
+// API METHODS
 // ---------------------------------------------------------
-const API_BASE_URL = 'http://localhost:3000/api';
-
-// We export a single cohesive object so it's easy to import and mock in tests.
 export const projectJoinRequestsApi = {
   
   /**
    * 1. CREATE JOIN REQUEST
    * Submits an application for a project idea.
-   * Backend Route: POST /projects/join
    */
   createRequest: async (payload: CreateJoinRequestPayload) => {
-    const token = localStorage.getItem("access_token"); // jwt access token stored in localStorage after login 
-    // Replace 'apiClient' with your actual configured Axios or fetch wrapper
-    // The JWT token should be automatically attached by your HTTP client
-    const response = await fetch(`${API_BASE_URL}/projects/join`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-    return response.json(); 
+    // Axios automatically stringifies the payload and throws on 400/500 errors
+    const response = await apiClient.post('/projects/join', payload);
+    return response.data; 
   },
 
   /**
    * 2. GET PENDING REQUESTS
-   * Fetches all pending applications for a specific project. (Owner Only)
-   * Backend Route: GET /projects/:ideaId/requests
+   * Fetches all pending applications for a specific project.
    */
   getPendingRequests: async (ideaId: string): Promise<JoinRequestResponse[]> => {
-    const token = localStorage.getItem("access_token");
-    const response = await fetch(`${API_BASE_URL}/projects/${ideaId}/requests`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return response.json();
+    const response = await apiClient.get(`/projects/${ideaId}/requests`);
+    return response.data;
   },
 
   // ---------------------------------------------------------
-  // DEFERRED ENDPOINTS (To be implemented with Notifications)
+  // DEFERRED ENDPOINTS
   // ---------------------------------------------------------
   // acceptRequest: async (requestId: string) => { ... },
   // rejectRequest: async (requestId: string) => { ... },
