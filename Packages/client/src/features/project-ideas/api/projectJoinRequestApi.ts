@@ -1,5 +1,5 @@
 // src/api/projectJoinRequestsApi.ts
-import { apiClient } from '../apiClient'; // Import our global engine
+import { apiClient } from '../../../app/components/api/apiClient'; // Import our global engine
 
 // ---------------------------------------------------------
 // TYPES & INTERFACES

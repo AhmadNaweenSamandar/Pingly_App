@@ -11,7 +11,7 @@ import {
 import { PointTable } from "./PointTable";
 import { Discussion } from "./Discussion";
 import { Projects } from "./Projects";
-import { ProjectIdeaCard } from "./ProjectIdeaCard";
+import { ProjectIdeaCard } from "../../features/project-ideas/components/ProjectIdeaCard";
 import { QuestionCard } from "./QuestionCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -21,7 +21,7 @@ import { Textarea } from "./ui/textarea";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { ScrollArea } from "./ui/scroll-area";
-import { projectIdeasApi } from "./api/projectIdeaApi/projectIdeas.api";
+import { projectIdeasApi } from "../../features/project-ideas/api/projectIdeas.api";
 import { ProjectIdeasTab } from "./ProjectIdeasTab";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

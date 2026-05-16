@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Leaf, Users, X } from "lucide-react";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { formatImageUrl } from "./utils/imageUtils";
-import { formatTimeAgo } from "./utils/dateUtils";
+import { Button } from "../../../app/components/ui/button";
+import { Badge } from "../../../app/components/ui/badge";
+import { Input } from "../../../app/components/ui/input";
+import { Textarea } from "../../../app/components/ui/textarea";
+import { formatImageUrl } from "../../../app/components/utils/imageUtils";
+import { formatTimeAgo } from "../../../app/components/utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
-import { projectIdeasApi } from "./api/projectIdeaApi/projectIdeas.api";
-
+import { projectIdeasApi } from "../api/projectIdeas.api";
+import { useJoinProject } from '../hooks/projectJoinRequest'; // Custom hook for handling join requests
+import { JoinProjectModal } from "./projectIdeaJoinRequest";
 
 //Project idea objects created
 interface ProjectIdeaProps {
@@ -54,7 +55,7 @@ const professionalSkills = [
  * * Handles user interactions like "Wishing" (voting) on an idea and opening the Join form.
  * * @param {ProjectIdeaProps} props - Contains the idea data and animation delay.
  */
-export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
+export function ProjectIdeaCard({ project}: ProjectIdeaProps) {
 
   // =========================================
   // State Definitions
@@ -137,18 +138,11 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
    * This allows users to select their relevant skills when applying to join a project idea, and also remove any mistakenly added skills before submitting their join request.
    */
 
-  const handleAddSkill = (skill: string) => {
-    if (skill && !selectedSkills.includes(skill)) {
-      setSelectedSkills([...selectedSkills, skill]);
-    }
-  };
 
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setSelectedSkills(selectedSkills.filter(skill => skill !== skillToRemove));
-  };
 
   // Format the URL once before rendering
   const profilePicUrl = formatImageUrl(project.user.profilePicture);
+
 
     return (
     <>
@@ -279,189 +273,16 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
               <Users className="w-4 h-4 mr-2" />
               Join
             </Button>
+
+            {/* The Cleaned Up Modal */}
+            <JoinProjectModal 
+              project={project} 
+              isOpen={showJoinForm} 
+              onClose={() => setShowJoinForm(false)} 
+            />
           </div>
         </div>
       </motion.div>
-
-
-
-      {/* Join Form Popup 
-          - AnimatePresence: Ensures the 'exit' animation plays before the component 
-            is removed from the DOM.
-      */}
-      <AnimatePresence>
-        {showJoinForm && (
-          <>
-        {/* =========================================
-            OUTER WRAPPER (THE FIX)
-            - fixed inset-0: Fills the whole screen.
-            - flex items-center justify-center: Forces the modal to the dead center.
-            - z-50: Sits on top of everything.
-            - p-4: Adds padding so the modal doesn't touch screen edges on mobile.
-           ========================================= */}
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-
-          {/* Backdrop Overlay 
-                - fixed inset-0: Stretches to fill the entire viewport.
-                - backdrop-blur-sm: Blurs the content behind the modal for focus.
-                - z-50: High z-index to sit on top of all other content.
-                - onClick: Closes the modal if the user clicks the dark background.
-                - Changed to 'absolute' to fill the wrapper.
-                - Handled click to close.
-            */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-              onClick={() => setShowJoinForm(false)}
-            />
-
-            {/* Modal Window Container 
-                - fixed top-1/2 left-1/2...: Centers the element perfectly.
-                - max-w-2xl: Sets a comfortable maximum width for the form.
-                - Removed: fixed top-1/2 left-1/2 -translate... (The cause of the bug)
-                - Added: relative (to sit above backdrop)
-                - Added: bg-white (Fixes the "void" background issue)
-                - Added: w-full max-w-2xl (Size constraints)
-            */}
-            <motion.div
-            // Entrance Animation: Slide Up + Scale Up + Fade In
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8 mx-4"
-              // CRITICAL: Stop Propagation
-              // Prevents clicks inside the white form box from bubbling up 
-              // to the backdrop and closing the modal.
-              onClick={(e) => e.stopPropagation()}
-            >
-              
-
-                {/* Close Button (Top Right) 
-                    - absolute: Positioned relative to the white container.
-                */}
-                <button
-                  onClick={() => setShowJoinForm(false)}
-                  className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-
-                {/* Form Header */}
-                <h3 className="text-gray-800 mb-6">Join Project: {project.user.name}'s Idea</h3>
-
-                {/* Form Fields Container 
-                    - space-y-4: Adds vertical spacing between each input group (Name, Email, etc.)
-                */}
-                <div className="space-y-4">
-
-                {/* Field: Full Name */}
-                  <div>
-                    <label className="block mb-2 text-gray-700">Your Name</label>
-                    <Input placeholder="Enter your full name" />
-                  </div>
-
-                {/* Field: Email Address 
-                      - type="email": Ensures mobile keyboards show the "@" symbol.
-                  */}
-                  <div>
-                    <label className="block mb-2 text-gray-700">Email</label>
-                    <Input type="email" placeholder="your.email@example.com" />
-                  </div>
-
-                {/* Field: Skills 
-                      - Asks the user to select relevant tech stack experience from predefined skills.
-                  */}
-                  <div>
-                    <label htmlFor="joinRequestSkills" className="block mb-2 text-sm font-medium">Your Skills</label>
-                    
-                    {/* Display selected skills as removable badges */}
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {selectedSkills.length === 0 && (
-                        <span className="text-sm text-gray-500 italic">No skills selected yet.</span>
-                      )}
-                      {selectedSkills.map(skill => (
-                        <span 
-                          key={skill} 
-                          className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 border border-blue-200"
-                        >
-                          {skill}
-                          <button 
-                            type="button" // Prevents accidental form submission
-                            onClick={() => handleRemoveSkill(skill)}
-                            className="hover:text-red-600 transition-colors focus:outline-none"
-                            aria-label={`Remove ${skill}`}
-                          >
-                            <X size={14} />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Dropdown to add new skill */}
-                    <select
-                      id="joinRequestSkills"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      onChange={(e) => {
-                        handleAddSkill(e.target.value);
-                        e.target.value = ""; // Reset the select dropdown back to default after choosing
-                      }}
-                      defaultValue=""
-                    >
-                      <option value="" disabled>Select a skill to add...</option>
-                      {professionalSkills
-                        .filter(skill => !selectedSkills.includes(skill)) // Efficiency: Hide skills they already selected
-                        .sort() // Maintainability: Alphabetical sorting
-                        .map(skill => (
-                          <option key={skill} value={skill}>
-                            {skill}
-                          </option>
-                        ))
-                      }
-                    </select>
-                  </div>
-
-                {/* Field: Motivation Message 
-                      - Uses Textarea for longer content.
-                  */}
-                  <div>
-                    <label className="block mb-2 text-gray-700">Why do you want to join?</label>
-                    <Textarea
-                      placeholder="Tell the project owner why you're interested..."
-                      rows={4}
-                    />
-                  </div>
-
-                {/* Action Footer (Buttons) 
-                      - pt-4: Padding top to separate buttons from the last input.
-                      - justify-end: Aligns buttons to the right (standard modal pattern).
-                  */}
-                  <div className="flex gap-3 justify-end pt-4">
-
-                    {/* Cancel Button: Closes the modal without saving */}
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowJoinForm(false)}
-                    >
-                      Cancel
-                    </Button>
-
-                    {/* Submit Button 
-                        - NOTE: Currently missing an 'onClick' or 'onSubmit' handler.
-                        - Styled with the Blue/Purple gradient to match the "Join" theme.
-                    */}
-                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      Send Join Request
-                    </Button>
-                  </div>
-                </div>
-              
-            </motion.div>
-            </div>
-          </>
-        )}
-      </AnimatePresence>
     </>
   );
 }
