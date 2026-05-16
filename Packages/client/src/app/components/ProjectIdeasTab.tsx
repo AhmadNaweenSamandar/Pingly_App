@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { motion } from "motion/react";
 import { Lightbulb } from "lucide-react";
-import { ProjectIdeaCard } from "./ProjectIdeaCard";
+import { ProjectIdeaCard } from "../../features/project-ideas/components/ProjectIdeaCard";
 import { Button } from "./ui/button";
 import "react-quill-new/dist/quill.snow.css";
-import { projectIdeasApi } from "./api/projectIdeaApi/projectIdeas.api";
+import { projectIdeasApi } from "../../features/project-ideas/api/projectIdeas.api";
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 

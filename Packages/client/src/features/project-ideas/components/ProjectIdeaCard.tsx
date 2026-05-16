@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Leaf, Users, X } from "lucide-react";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { formatImageUrl } from "./utils/imageUtils";
-import { formatTimeAgo } from "./utils/dateUtils";
+import { Button } from "../../../app/components/ui/button";
+import { Badge } from "../../../app/components/ui/badge";
+import { Input } from "../../../app/components/ui/input";
+import { Textarea } from "../../../app/components/ui/textarea";
+import { formatImageUrl } from "../../../app/components/utils/imageUtils";
+import { formatTimeAgo } from "../../../app/components/utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
-import { projectIdeasApi } from "./api/projectIdeaApi/projectIdeas.api";
-import { useJoinProject } from '../components/hooks/projectJoinRequest'; // Custom hook for handling join requests
+import { projectIdeasApi } from "../api/projectIdeas.api";
+import { useJoinProject } from '../hooks/projectJoinRequest'; // Custom hook for handling join requests
 
 //Project idea objects created
 interface ProjectIdeaProps {
@@ -54,7 +54,7 @@ const professionalSkills = [
  * * Handles user interactions like "Wishing" (voting) on an idea and opening the Join form.
  * * @param {ProjectIdeaProps} props - Contains the idea data and animation delay.
  */
-export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
+export function ProjectIdeaCard({ project, showJoinForm, setShowJoinForm}: ProjectIdeaProps) {
 
   // =========================================
   // State Definitions

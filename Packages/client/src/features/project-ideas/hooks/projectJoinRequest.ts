@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { 
   projectJoinRequestsApi, 
   CreateJoinRequestPayload 
-} from '../api/projectIdeaApi/projectJoinRequestApi'; 
+} from '../api/projectJoinRequestApi'; 
 
 export const useJoinProject = (projectId: string, onClose: () => void) => {
   const [motivation, setMotivation] = useState("");
