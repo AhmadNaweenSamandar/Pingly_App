@@ -10,7 +10,7 @@ import { formatTimeAgo } from "./utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { projectIdeasApi } from "./api/projectIdeaApi/projectIdeas.api";
-
+import { useJoinProject } from '../components/hooks/projectJoinRequest'; // Custom hook for handling join requests
 
 //Project idea objects created
 interface ProjectIdeaProps {
@@ -149,6 +149,11 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
 
   // Format the URL once before rendering
   const profilePicUrl = formatImageUrl(project.user.profilePicture);
+
+
+  const { 
+    motivation, setMotivation, isSubmitDisabled, isPending, handleSendRequest 
+  } = useJoinProject(project.id, onClose);
 
     return (
     <>
@@ -439,21 +444,33 @@ export function ProjectIdeaCard({ project, activeTab }: ProjectIdeaProps) {
                   */}
                   <div className="flex gap-3 justify-end pt-4">
 
-                    {/* Cancel Button: Closes the modal without saving */}
+                    {/* Cancel Button: Closes the modal and resets state */}
                     <Button
                       variant="outline"
-                      onClick={() => setShowJoinForm(false)}
+                      onClick={() => {
+                        setShowJoinForm(false);
+                        setMotivation(""); // Clean up on cancel
+                        setSelectedSkills([]);
+                      }}
+                      disabled={joinMutation.isPending} // Prevent cancel while submitting
                     >
                       Cancel
                     </Button>
 
-                    {/* Submit Button 
-                        - NOTE: Currently missing an 'onClick' or 'onSubmit' handler.
-                        - Styled with the Blue/Purple gradient to match the "Join" theme.
-                    */}
-                    <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      Send Join Request
+                    {/* Submit Button */}
+                    <Button 
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50"
+                      onClick={handleSendRequest}
+                      // Disable if currently submitting, OR if required fields are missing
+                      disabled={
+                        joinMutation.isPending || 
+                        selectedSkills.length === 0 || 
+                        !motivation.trim()
+                      }
+                    >
+                      {joinMutation.isPending ? "Sending..." : "Send Join Request"}
                     </Button>
+
                   </div>
                 </div>
               
