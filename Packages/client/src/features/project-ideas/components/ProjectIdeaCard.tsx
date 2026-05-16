@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { projectIdeasApi } from "../api/projectIdeas.api";
 import { useJoinProject } from '../hooks/projectJoinRequest'; // Custom hook for handling join requests
+import { JoinProjectModal } from "./projectIdeaJoinRequest";
 
 //Project idea objects created
 interface ProjectIdeaProps {
@@ -54,7 +55,7 @@ const professionalSkills = [
  * * Handles user interactions like "Wishing" (voting) on an idea and opening the Join form.
  * * @param {ProjectIdeaProps} props - Contains the idea data and animation delay.
  */
-export function ProjectIdeaCard({ project, showJoinForm, setShowJoinForm}: ProjectIdeaProps) {
+export function ProjectIdeaCard({ project}: ProjectIdeaProps) {
 
   // =========================================
   // State Definitions
@@ -137,23 +138,11 @@ export function ProjectIdeaCard({ project, showJoinForm, setShowJoinForm}: Proje
    * This allows users to select their relevant skills when applying to join a project idea, and also remove any mistakenly added skills before submitting their join request.
    */
 
-  const handleAddSkill = (skill: string) => {
-    if (skill && !selectedSkills.includes(skill)) {
-      setSelectedSkills([...selectedSkills, skill]);
-    }
-  };
 
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setSelectedSkills(selectedSkills.filter(skill => skill !== skillToRemove));
-  };
 
   // Format the URL once before rendering
   const profilePicUrl = formatImageUrl(project.user.profilePicture);
 
-
-  const { 
-    motivation, setMotivation, isSubmitDisabled, isPending, handleSendRequest 
-  } = useJoinProject(project.id, onClose);
 
     return (
     <>
@@ -284,6 +273,13 @@ export function ProjectIdeaCard({ project, showJoinForm, setShowJoinForm}: Proje
               <Users className="w-4 h-4 mr-2" />
               Join
             </Button>
+
+            {/* The Cleaned Up Modal */}
+            <JoinProjectModal 
+              project={project} 
+              isOpen={showJoinForm} 
+              onClose={() => setShowJoinForm(false)} 
+            />
           </div>
         </div>
       </motion.div>
