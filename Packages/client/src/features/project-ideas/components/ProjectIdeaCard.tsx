@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { Leaf, Users, X } from "lucide-react";
 import { Button } from "../../../app/components/ui/button";
 import { Badge } from "../../../app/components/ui/badge";
-import { Input } from "../../../app/components/ui/input";
-import { Textarea } from "../../../app/components/ui/textarea";
 import { formatImageUrl } from "../../../app/components/utils/imageUtils";
 import { formatTimeAgo } from "../../../app/components/utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { projectIdeasApi } from "../api/projectIdeas.api";
-import { useJoinProject } from '../hooks/projectJoinRequest'; // Custom hook for handling join requests
 import { JoinProjectModal } from "./projectIdeaJoinRequest";
 
 //Project idea objects created
@@ -39,15 +36,6 @@ interface ProjectJoinRequest {
 
 }
 
-
-// skills list for the project idea join request (can be used for a dropdown)
-const professionalSkills = [
-  "JavaScript", "Python", "Java", "C++", "React", "Node.js", 
-  "TypeScript", "SQL", "MongoDB", "Docker", "AWS", "Git",
-  "Machine Learning", "Data Science", "Mobile Development",
-  "UI/UX Design", "Graphic Design", "Video Editing", "Copywriting", "3D Modeling",
-  "Project Management", "Financial Modeling", "Marketing", "Sales", "Public Speaking", "Data Analysis"
-];
 
 /**
  * ProjectIdeaCard Component
