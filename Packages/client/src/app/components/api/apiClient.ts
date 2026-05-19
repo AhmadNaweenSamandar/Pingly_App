@@ -1,5 +1,4 @@
-import axios from 'axios';
-import dotenv from 'dotenv';    
+import axios from 'axios';   
 
 // ---------------------------------------------------------
 // API CLIENT SETUP (Scalability & Maintainability)
@@ -8,10 +7,8 @@ import dotenv from 'dotenv';
 // It includes the base URL configuration and a request interceptor to automatically attach the JWT token for authentication.
 // This way, we can easily manage all our API calls in one place and ensure consistency across the app.
 
-dotenv.config(); // Load environment variables from .env file
-
 // SCALABILITY: we use environment variables so this doesn't break in production
-const API_BASE_URL = process.env.BACKEND_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3000/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
