@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { Leaf, Users, X } from "lucide-react";
 import { Button } from "../../../app/components/ui/button";
 import { Badge } from "../../../app/components/ui/badge";
