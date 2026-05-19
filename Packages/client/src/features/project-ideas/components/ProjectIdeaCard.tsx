@@ -3,14 +3,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { Leaf, Users, X } from "lucide-react";
 import { Button } from "../../../app/components/ui/button";
 import { Badge } from "../../../app/components/ui/badge";
-import { Input } from "../../../app/components/ui/input";
-import { Textarea } from "../../../app/components/ui/textarea";
 import { formatImageUrl } from "../../../app/components/utils/imageUtils";
 import { formatTimeAgo } from "../../../app/components/utils/dateUtils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 import { projectIdeasApi } from "../api/projectIdeas.api";
-import { useJoinProject } from '../hooks/projectJoinRequest'; // Custom hook for handling join requests
 import { JoinProjectModal } from "./projectIdeaJoinRequest";
 
 //Project idea objects created
