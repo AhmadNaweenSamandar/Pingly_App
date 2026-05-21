@@ -8,7 +8,7 @@ import axios from 'axios';
 // This way, we can easily manage all our API calls in one place and ensure consistency across the app.
 
 // SCALABILITY: we use environment variables so this doesn't break in production
-const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:3000/';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
